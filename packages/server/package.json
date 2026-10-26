@@ -1,0 +1,20 @@
+{
+	"name": "@vcm/server",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "SDK host: runs pi sessions on tasks, checkpoints workspaces, serves the trace over WebSocket",
+	"scripts": {
+		"start": "node --env-file-if-exists=../../.env src/main.ts",
+		"dev": "node --env-file-if-exists=../../.env --watch src/main.ts",
+		"typecheck": "tsc --noEmit -p ."
+	},
+	"dependencies": {
+		"@earendil-works/pi-ai": "1.4.0",
+		"@earendil-works/pi-coding-agent": "1.4.0",
+		"@vcm/extension": "*",
+		"@vcm/protocol": "*",
+		"ws": "8.22.0",
+		"yaml": "2.9.1"
+	}
+}

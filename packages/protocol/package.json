@@ -1,0 +1,13 @@
+{
+	"name": "@vcm/protocol",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "Trace schema, module data model, and the shared trace reducer",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit -p ."
+	}
+}

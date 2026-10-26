@@ -1,0 +1,9 @@
+[project]
+name = "vcm-tasks"
+version = "0.1.0"
+description = "Python environment shared by the task repos (the agent's python/pytest) and the grader"
+requires-python = ">=3.11"
+dependencies = ["pytest>=8"]
+
+[tool.uv]
+package = false

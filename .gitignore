@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# Agent runs: workspaces, traces, pi sessions, shadow-git snapshots. Regenerate or archive separately.
+runs/
+.vcm/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+.DS_Store
+*.log
+
+# Local only: full reference prototype and Claude Code settings
+_prototype/
+.claude/

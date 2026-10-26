@@ -1,0 +1,30 @@
+{
+	"name": "vcm",
+	"private": true,
+	"type": "module",
+	"description": "Visible and Controllable Modules for human oversight of coding agents (CS329Z project)",
+	"workspaces": [
+		"packages/*"
+	],
+	"engines": {
+		"node": ">=22.19.0"
+	},
+	"scripts": {
+		"dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @vcm/server\" \"npm run dev -w @vcm/web\"",
+		"server": "npm run start -w @vcm/server",
+		"build": "npm run build -w @vcm/web",
+		"typecheck": "npm run typecheck --workspaces --if-present",
+		"test": "vitest run",
+		"check": "biome check . && npm run typecheck",
+		"format": "biome check --write .",
+		"grade": "tasks/.venv/bin/python tasks/grade.py"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.6.3",
+		"@types/node": "^26.6.5",
+		"@types/ws": "^8.18.2",
+		"concurrently": "^10.0.6",
+		"typescript": "^7.0.2",
+		"vitest": "^5.0.5"
+	}
+}
