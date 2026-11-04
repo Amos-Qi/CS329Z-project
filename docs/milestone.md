@@ -14,8 +14,11 @@ evidence that the study is feasible**, not a finished system.
 1. **Live run, end to end.** `npm run dev` → pick a task → the pi agent runs on a Python repo,
    declares modules, and starts/finishes them. Every tool call is attributed (or visibly
    unassigned) and the trace is saved to `runs/<id>/trace.jsonl`.
-2. **Modular view.** Module graph with status and declared dependencies, an attempt timeline linked
-   to the graph, and a detail pane (purpose, instructions with versions, actions, diffs, test results).
+2. **Modular view.** Levels 0–2 of the panel in [`design/mockups/panel.html`](../design/mockups/panel.html):
+   - the Now bar (with the amber decision card when waiting);
+   - the Metro line with status glyphs and dependency arcs;
+   - the module card (done-when criteria, files, tests, instruction versions).
+   Level 3 only needs the action list and the per-attempt diff.
 3. **Log view.** The same trace as a searchable chronological log, using the same reducer.
 4. **Boundary intervention.** Pause at the next boundary → edit a module's instructions → continue;
    the edit shows up as a new version and in the agent's next `start_module` result.
@@ -38,17 +41,17 @@ The work splits into two tracks of roughly equal size that meet at the trace for
 
 - **Track A — agent and backend:** `packages/extension`, `packages/server`. Module protocol
   prompt, capture hooks, BoundaryGate, Checkpointer, rewind, audit, model bake-off.
-- **Track B — interface, tasks and study:** `packages/web`, `tasks/`, `study/`. Graph/timeline/detail,
+- **Track B — interface, tasks and study:** `packages/web`, `tasks/`, `study/`. Now bar / Metro line / module card,
   log view, replay scrubber, task curation, hidden tests, seeded failures, walkthrough protocol.
 
 ## Day-by-day
 
 | Day           | Track A (agent/backend)                                                                   | Track B (UI/tasks/study)                                                       | Joint checkpoint                                               |
 | ------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| **Mon 10/26** | Repo set up (done). Run the faux smoke test; get one live OpenRouter run on the toy task. | Run `npm run dev`; read the trace schema; sketch graph/timeline/detail layout. | Agree on the trace schema (`packages/protocol`) and freeze v0. |
-| **Tue 10/27** | Prompt tuning for protocol compliance; capture `edit`/`write` diffs; test parsing.        | Module graph + status colors; timeline grouped by attempt; selection linking.  | First live trace visible in the modular view.                  |
+| **Mon 10/26** | Repo set up (done). Run the faux smoke test; get one live OpenRouter run on the toy task. | Run `npm run dev`; read the trace schema; study the panel mockup and its states. | Agree on the trace schema (`packages/protocol`) and freeze v0. |
+| **Tue 10/27** | Prompt tuning for protocol compliance; capture `edit`/`write` diffs; test parsing.        | Now bar + Metro line with status glyphs; station selection drives the card.   | First live trace visible in the modular view.                  |
 | **Wed 10/28** | Model bake-off (2–3 models × toy + 1 task × 2 runs): compliance, cost, success.           | Pick 2 public Python repos and write the task specs + hidden tests.            | Pick the model; email course staff re: IRB (Q8).               |
-| **Thu 10/29** | Checkpointer + per-attempt diffs + audit; pause/edit/continue end to end.                 | Detail pane (instruction versions, diffs, tests); log view with search/filter. | Intervention demo works on the toy task.                       |
+| **Thu 10/29** | Checkpointer + per-attempt diffs + audit; pause/edit/continue end to end.                 | Module card (criteria, files, tests, versions) + evidence; log view with search/filter. | Intervention demo works on the toy task.                       |
 | **Fri 10/30** | Seeded-failure injection (`file_overlay`, `read_rewrite`); record pilot traces.           | Replay mode + scrubber in both views; walkthrough script + probe questions.    | Freeze the demo traces.                                        |
 | **Sat–Sun**   | Stretch: live rewind; `run_tests` tool. Bug fixes.                                        | 1–2 walkthroughs with classmates; collect timing and notes.                    | Write the milestone report draft.                              |
 | **Mon 11/2**  | Polish + record a backup demo video.                                                      | Polish + figures/screenshots.                                                  | Rehearse the demo; submit.                                     |
@@ -59,8 +62,8 @@ log-view filters → audit panel UI (keep the JSON). Never cut items 1, 2, 4 or 
 ## Midpoint demo script (≈5 min)
 
 1. _(30 s)_ Problem: long agent runs are hard to follow; show 60 lines of raw log.
-2. _(90 s)_ Start the toy task live; the agent declares modules and the graph appears; click
-   through the timeline to see actions and diffs for a module.
+2. _(90 s)_ Start the toy task live. The agent declares modules and the Metro line fills in. Open a
+   module card to see its done-when criteria, files and tests, then one level down its actions and diff.
 3. _(60 s)_ Arm "pause at next boundary"; at `start_module(M3)` edit its instructions; continue;
    show v2 of the instructions and the agent following them.
 4. _(60 s)_ Replay a recorded seeded-failure trace in the modular view, then the log view, to show the

@@ -29,9 +29,9 @@ function useUrlState() {
 	};
 }
 
-/** Treatment condition. TODO: module graph + linked attempt timeline + module detail (docs/design.md §6.1). */
+/** Treatment condition. TODO: Metro line + module card + evidence (docs/design.md §6.1, design/mockups/panel.html). */
 function ModularView() {
-	return <div className="empty">TODO: modular view (graph, timeline, detail). See docs/design.md §6.1.</div>;
+	return <div className="empty">TODO: modular view (Metro line, module card, evidence). See docs/design.md §6.1.</div>;
 }
 
 /** Baseline condition. TODO: searchable, filterable log with the same controls (docs/design.md §6.2). */
@@ -121,7 +121,7 @@ export function App() {
 				<>
 					<div className="statusline">
 						Task: {state.run?.taskId ?? "…"} · Run: {state.status} · {events.length} events
-						{/* TODO: control bar (pause at boundaries, continue, stop) and replay scrubber, shared by both views */}
+						{/* TODO: the shared Now bar (state, active module, flags, pause, note, stop; decision card when waiting) and replay scrubber (docs/design.md §6) */}
 					</div>
 					<main>{url.view === "modular" ? <ModularView /> : <LogView events={events} />}</main>
 				</>

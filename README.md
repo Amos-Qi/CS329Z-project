@@ -7,6 +7,7 @@ and revise. We compare a modular interface against a conventional chronological 
 - **Proposal:** [docs/proposal.pdf](docs/proposal.pdf)
 - **Refined design** (architecture, data model, protocol, evaluation, open questions): [docs/design.md](docs/design.md)
 - **Midway milestone plan:** [docs/milestone.md](docs/milestone.md)
+- **Panel design** (clickable mockup; open it in a browser): [design/mockups/panel.html](design/mockups/panel.html)
 
 This is **starter code**: the structure, tooling, trace schema and pi wiring are in place, and the
 project work is marked `TODO` with pointers to the design doc.
@@ -23,6 +24,7 @@ tasks/         Python task suite: repo, prompt, hidden tests, seeded-failure var
 analysis/      Trace and study analysis (Python)
 study/         Study protocol, probes, rubrics, consent
 docs/          Proposal, design, milestone plan
+design/        Panel mockups (design/mockups/panel.html is the chosen design)
 runs/          Agent runs: workspace, trace.jsonl, pi session (git-ignored)
 ```
 
