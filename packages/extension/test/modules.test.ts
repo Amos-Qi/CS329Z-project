@@ -1,7 +1,9 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { fauxAssistantMessage, fauxText, fauxToolCall } from "@earendil-works/pi-ai/compat";
-import type { TraceEvent, TraceEventBody } from "@vcm/protocol";
+import { reduceTrace, type TraceEvent, type TraceEventBody } from "@vcm/protocol";
 import { afterEach, describe, expect, it } from "vitest";
-import { createModulesExtension } from "../src/index.ts";
+import { type BoundaryDecision, type BoundaryRequest, createModulesExtension } from "../src/index.ts";
 import { createFauxSession, type FauxSession } from "../src/testing.ts";
 
 function call(name: string, args: object) {
@@ -10,41 +12,187 @@ function call(name: string, args: object) {
 	});
 }
 
-describe("modules extension (starter)", () => {
+const PLAN = {
+	rationale: "Explore first, then implement.",
+	modules: [
+		{
+			title: "Explore",
+			purpose: "Find where greetings live",
+			instructions: "Read greet.txt",
+			validation: ["Know the current greeting"],
+		},
+		{
+			title: "Implement",
+			purpose: "Write the new greeting",
+			instructions: "Write hello.txt",
+			dependsOn: ["Explore"],
+			validation: ["hello.txt exists"],
+		},
+	],
+};
+
+describe("modules extension", () => {
 	let ctx: FauxSession | undefined;
 	afterEach(() => ctx?.cleanup());
 
-	it("loads into a pi session and exposes the module tools to a scripted agent", async () => {
+	it("records plan, attempts and attributed actions, and applies user edits at a boundary", async () => {
 		const events: TraceEvent[] = [];
+		const boundaries: BoundaryRequest[] = [];
 		const { factory } = createModulesExtension({
 			emit: (body: TraceEventBody) => events.push({ ...body, seq: events.length, t: Date.now() } as TraceEvent),
+			async boundary(request): Promise<BoundaryDecision> {
+				boundaries.push(request);
+				if (request.boundary === "before_start" && request.moduleId === "M2") {
+					return {
+						action: "continue",
+						edits: [{ moduleId: "M2", changes: { instructions: "Write hello.txt containing exactly 'hi'" } }],
+						note: "keep it short",
+					};
+				}
+				return { action: "continue" };
+			},
+		});
+
+		ctx = await createFauxSession(factory, [
+			call("plan_modules", PLAN),
+			call("start_module", { id: "M1" }),
+			call("read", { path: "greet.txt" }),
+			call("finish_module", {
+				id: "M1",
+				status: "completed",
+				summary: "Greeting is 'hello'.",
+				validation: [{ criterion: "Know the current greeting", met: true }],
+			}),
+			call("start_module", { id: "M2" }),
+			call("write", { path: "hello.txt", content: "hi" }),
+			call("finish_module", { id: "M2", status: "completed", summary: "Wrote hello.txt." }),
+			fauxAssistantMessage(fauxText("All done.")),
+		]);
+		writeFileSync(join(ctx.dir, "greet.txt"), "hello\n");
+
+		await ctx.session.prompt("Change the greeting.");
+
+		expect(readFileSync(join(ctx.dir, "hello.txt"), "utf8")).toBe("hi");
+		expect(boundaries.map((b) => `${b.boundary}:${b.moduleId ?? ""}`)).toEqual([
+			"after_plan:",
+			"before_start:M1",
+			"after_finish:M1",
+			"before_start:M2",
+			"after_finish:M2",
+		]);
+
+		const state = reduceTrace(events);
+		expect(state.moduleOrder).toEqual(["M1", "M2"]);
+		expect(state.modules.M2?.latest.dependsOn).toEqual(["M1"]);
+		expect(state.modules.M2?.latest.author).toBe("user");
+		expect(state.modules.M2?.versions).toHaveLength(2);
+		expect(state.attemptOrder).toEqual(["M1.1", "M2.1"]);
+		expect(state.attempts["M2.1"]?.moduleVersion).toBe(2);
+		expect(state.modules.M1?.status).toBe("completed");
+		expect(state.modules.M2?.status).toBe("completed");
+
+		const [readAction, writeAction] = state.actionOrder.map((id) => state.actions[id]);
+		expect(readAction?.tool).toBe("read");
+		expect(readAction?.attemptId).toBe("M1.1");
+		expect(writeAction?.tool).toBe("write");
+		expect(writeAction?.attemptId).toBe("M2.1");
+		expect(writeAction?.fileChanges).toEqual([{ path: "hello.txt", kind: "write" }]);
+		expect(state.actionsByAttempt.unassigned).toEqual([]);
+		expect(state.narration.at(-1)?.text).toBe("All done.");
+
+		// The edited instructions and the note reached the agent through start_module's result.
+		const startResult = ctx.session.messages.find(
+			(m) => m.role === "toolResult" && m.toolName === "start_module" && JSON.stringify(m.content).includes("M2.1"),
+		);
+		expect(JSON.stringify(startResult)).toContain("exactly 'hi'");
+		expect(JSON.stringify(startResult)).toContain("keep it short");
+	});
+
+	it("records actions outside a module as unassigned and reminds the agent", async () => {
+		const events: TraceEvent[] = [];
+		const { factory } = createModulesExtension({
+			emit: (body) => events.push({ ...body, seq: events.length, t: Date.now() } as TraceEvent),
 			boundary: async () => ({ action: "continue" }),
 		});
-		let firstRequest = "";
 		ctx = await createFauxSession(factory, [
-			(context) => {
-				firstRequest = JSON.stringify(context);
-				return call("plan_modules", {
-					rationale: "One step.",
-					modules: [{ title: "Explore", purpose: "Look around", instructions: "Read files" }],
-				});
-			},
-			call("start_module", { id: "M1" }),
-			call("finish_module", { id: "M1", status: "completed", summary: "Looked around." }),
-			fauxAssistantMessage(fauxText("Done.")),
+			call("plan_modules", PLAN),
+			call("write", { path: "stray.txt", content: "x" }),
+			fauxAssistantMessage(fauxText("Oops.")),
 		]);
 
 		await ctx.session.prompt("Go.");
 
-		const results = ctx.session.messages.filter((m) => m.role === "toolResult");
-		expect(results.map((m) => m.role === "toolResult" && m.toolName)).toEqual([
-			"plan_modules",
-			"start_module",
-			"finish_module",
-		]);
-		expect(results.every((m) => m.role === "toolResult" && !m.isError)).toBe(true);
-		expect(firstRequest).toContain("module_protocol"); // the protocol section reached the model
+		const state = reduceTrace(events);
+		expect(state.actionsByAttempt.unassigned).toHaveLength(1);
+		const result = ctx.session.messages.find((m) => m.role === "toolResult" && m.toolName === "write");
+		expect(JSON.stringify(result)).toContain("recorded as unassigned");
+	});
 
-		// TODO: once the store and hooks are implemented, assert on the trace with reduceTrace(events).
+	it("rejects starting a second module while one is active", async () => {
+		const events: TraceEvent[] = [];
+		const { factory } = createModulesExtension({
+			emit: (body) => events.push({ ...body, seq: events.length, t: Date.now() } as TraceEvent),
+			boundary: async () => ({ action: "continue" }),
+		});
+		ctx = await createFauxSession(factory, [
+			call("plan_modules", PLAN),
+			call("start_module", { id: "M1" }),
+			call("start_module", { id: "M2" }),
+			fauxAssistantMessage(fauxText("Stopping.")),
+		]);
+
+		await ctx.session.prompt("Go.");
+
+		const results = ctx.session.messages.filter((m) => m.role === "toolResult" && m.toolName === "start_module");
+		expect(results).toHaveLength(2);
+		expect(results[1] && "isError" in results[1] && results[1].isError).toBe(true);
+		expect(JSON.stringify(results[1])).toContain("M1 is still active");
+		expect(reduceTrace(events).attemptOrder).toEqual(["M1.1"]);
+	});
+	it("reminds about changes before the plan and made with shell commands", async () => {
+		const events: TraceEvent[] = [];
+		const { factory } = createModulesExtension({
+			emit: (body) => events.push({ ...body, seq: events.length, t: Date.now() } as TraceEvent),
+			boundary: async () => ({ action: "continue" }),
+		});
+		ctx = await createFauxSession(factory, [
+			call("bash", { command: "ls" }),
+			call("write", { path: "early.txt", content: "x" }),
+			call("plan_modules", PLAN),
+			call("start_module", { id: "M1" }),
+			call("bash", { command: "cat > a.txt <<'E'\nhi\nE" }),
+			call("bash", { command: "python -m pytest -q" }),
+			fauxAssistantMessage(fauxText("Stop.")),
+		]);
+		await ctx.session.prompt("Go.");
+
+		const results = ctx.session.messages.filter((m) => m.role === "toolResult").map((m) => JSON.stringify(m));
+		expect(results[0]).not.toContain("[modules]");
+		expect(results[1]).toContain("there is no module plan yet");
+		expect(results[4]).toContain("not with shell commands");
+		expect(results[5]).not.toContain("[modules]");
+		const state = reduceTrace(events);
+		expect(state.actions[state.actionOrder[3] ?? ""]?.isTest).toBe(true);
+	});
+
+	it("blocks edits outside a module when the gate is on", async () => {
+		const events: TraceEvent[] = [];
+		const { factory } = createModulesExtension(
+			{
+				emit: (body) => events.push({ ...body, seq: events.length, t: Date.now() } as TraceEvent),
+				boundary: async () => ({ action: "continue" }),
+			},
+			{ gateEdits: true },
+		);
+		ctx = await createFauxSession(factory, [
+			call("write", { path: "early.txt", content: "x" }),
+			fauxAssistantMessage(fauxText("Stop.")),
+		]);
+		await ctx.session.prompt("Go.");
+
+		const result = ctx.session.messages.find((m) => m.role === "toolResult");
+		expect(result && "isError" in result && result.isError).toBe(true);
+		expect(JSON.stringify(result)).toContain("Blocked: no module is active");
+		expect(existsSync(join(ctx.dir, "early.txt"))).toBe(false);
 	});
 });

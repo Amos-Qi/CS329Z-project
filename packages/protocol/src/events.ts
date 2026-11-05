@@ -31,7 +31,8 @@ export interface AuditReport {
 	/** Raw tool executions that have no trace action. */
 	missingActions: string[];
 	/** Files changed between checkpoints that no edit/write action accounts for. */
-	unattributedChanges: { attemptId: string | null; path: string }[];
+	/** `patch`: the change's diff, for changes outside any module (from the final diff; absent in older traces). */
+	unattributedChanges: { attemptId: string | null; path: string; patch?: string }[];
 	assignedActions: number;
 	unassignedActions: number;
 }
@@ -66,6 +67,8 @@ export type TraceEventBody =
 	| { type: "boundary_paused"; boundaryId: string; boundary: BoundaryKind; moduleId?: ModuleId }
 	| { type: "boundary_resumed"; boundaryId: string; decision: "continue" | "edit" | "revise" | "stop" }
 	| { type: "intervention"; intervention: Intervention }
+	/** A steered note or correction left pi's steering queue and reached the agent. */
+	| { type: "intervention_delivered"; interventionId: string }
 	| { type: "audit"; report: AuditReport }
 	| { type: "run_ended"; status: "completed" | "aborted" | "error"; error?: string };
 

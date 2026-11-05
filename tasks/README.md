@@ -14,11 +14,11 @@ requirements), `test_command`, `hidden_tests`, `setup` (optional shell commands 
 
 Seeded-failure variant kinds (docs/design.md §8):
 
-| kind              | what it does                                                                            |
-| ----------------- | --------------------------------------------------------------------------------------- |
-| `prompt_override` | replaces the prompt (omitted or misstated requirement)                                  |
-| `file_overlay`    | writes plausible but wrong files into the workspace (docs, comments)                    |
-| `read_rewrite`    | rewrites the result of reading a file (incorrect API assumption) — _TODO in the server_ |
+| kind              | what it does                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `prompt_override` | replaces the prompt (omitted or misstated requirement)                                                       |
+| `file_overlay`    | writes plausible but wrong files into the workspace (docs, comments)                                         |
+| `read_rewrite`    | rewrites the result of reading a file (incorrect API assumption): `rewrites: [{tool?, path, find, replace}]` |
 
 Each variant records its `origin` and `expected_affected` changes for analysis.
 

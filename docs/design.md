@@ -82,11 +82,11 @@ for debugging, writing its trace to `.vcm/trace.jsonl` and auto-continuing at bo
 **Where the panel runs (D6).** In the study, pi runs headless inside our host, and the web panel is
 the only window and the only controller. We rejected three alternatives:
 
-| Alternative                                    | Why not                                                                                                                                                                                                                       |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The panel inside pi's terminal UI              | pi's screen is a fixed vertical stack. Extension widgets are full-width bands capped at 10 lines, overlays cover the chat, and full screens are modal, so the Now bar, plan and card cannot stay on screen together. pi's chat is itself a chronological log, so the treatment would contain the baseline. |
-| A web panel attached to a live terminal session | pi removed its multi-client stack in 1.2.0, so we would own the bridge. Esc and `/tree` in the terminal would race with the panel's pause and rewind.                                                                          |
-| pi rebuilt as a web app                        | There is no maintained base. It is weeks of work that do not answer the research question, and it puts a chronological chat back inside the modular view.                                                                     |
+| Alternative                                     | Why not                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The panel inside pi's terminal UI               | pi's screen is a fixed vertical stack. Extension widgets are full-width bands capped at 10 lines, overlays cover the chat, and full screens are modal, so the Now bar, plan and card cannot stay on screen together. pi's chat is itself a chronological log, so the treatment would contain the baseline. |
+| A web panel attached to a live terminal session | pi removed its multi-client stack in 1.2.0, so we would own the bridge. Esc and `/tree` in the terminal would race with the panel's pause and rewind.                                                                                                                                                      |
+| pi rebuilt as a web app                         | There is no maintained base. It is weeks of work that do not answer the research question, and it puts a chronological chat back inside the modular view.                                                                                                                                                  |
 
 How the browser talks to the host:
 - The browser sends **intents**. The host runs them one at a time. Each intent carries the state version it was based on, so a stale click shows a conflict instead of acting on the wrong module.
@@ -120,16 +120,27 @@ The extension adds this contract to the system prompt (abbreviated):
 2. Work on **exactly one module at a time**: `start_module(id)` → explore/edit/test →
    `finish_module(id, status, summary, outputs, validation[])`.
 3. If you learn something that changes the plan, call `plan_modules` again. Keep the ids of
-   modules that persist, and add or drop the others. Earlier definitions and attempts are kept.
+   modules that persist, and add or drop the others. Earlier definitions and attempts are kept, and a
+   re-plan that repeats a module unchanged keeps the user's edit to it.
 4. The result of `start_module` is the **authoritative** instruction for that module. It may
    contain edits from the user. Follow them.
 5. A boundary call may take a while (the user may be reviewing). Never work around it.
 
-**Enforcement.** The extension never blocks normal tools. Actions taken with no active module are
-recorded as **unassigned** (shown in both views, as the proposal requires) and the tool result gets a
-one-line reminder appended. `start_module` while another module is active returns an error that
-tells the agent to finish the current one first. **Protocol compliance** is itself reported per run:
-the % of actions assigned, the number of plan revisions, and the mean actions per module.
+**Enforcement.** The extension never blocks normal tools by default. Actions taken with no active module are
+recorded as **unassigned** (shown in both views, as the proposal requires). A file change outside a module
+(before the plan or between modules) gets a one-line reminder appended to its result, and so does a file
+change made with a shell command (redirection, heredoc, `sed -i`…) inside a module, since only `edit`/`write`
+give exact diffs. `plan_modules` requires 2–7 modules (schema), and `start_module` while another module is
+active returns an error that tells the agent to finish the current one first. An opt-in **light gate**
+(`VCM_GATE_EDITS=1`, `npm run record -- --gate`) blocks `edit`/`write` outside a module. **Protocol
+compliance** is itself reported per run (`npm run record`): the % of actions assigned after the plan, the
+number of plan revisions, the mean actions per attempt, flags, the audit, cost and the grade.
+
+_First live results (claude-sonnet-5.5, toy task, Nov 4)._ With the first prompt the model skipped the
+protocol entirely and wrote every file with one bash heredoc (0 modules, 3 unattributed changes). Making the
+protocol explicitly required, reminding before the plan and on shell writes, and requiring 2–7 modules
+fixed it: 2 modules, 100% of actions assigned, 0 unattributed changes, 0 missing actions, with or without
+the gate. The model ignored the planted `docs/CONTRIBUTING.md`, so strong models need subtler seeded failures.
 
 **Granularity guidance.** We target 3–6 modules for a 15–30-minute task. Pilot runs will show
 whether we need stronger prompting or a minimum/maximum module size.
@@ -179,6 +190,8 @@ their state with the same `reduceTrace(events)`. Replay at time _t_ is simply
 - **Omission audit**: the host records raw pi events (`raw.jsonl`). At run end it checks that every
   `tool_execution_end` has a trace action and that every file changed between the first and last
   checkpoint is attributed or flagged. The audit is shown in both views and reported in the paper.
+  Tool calls pi rejects before any extension hook runs (invalid arguments) are recorded by the host from
+  the raw events, marked `source: "host"`, so failed attempts are evidence too.
 
 ---
 
@@ -191,13 +204,13 @@ browser; its floating MOCKUP pill switches the state, the view and the theme.
 
 **Hide complexity by hierarchy.** Each level answers one question and has one primary action. Esc goes up a level.
 
-| Level                  | Answers                                | Shows                                                                                                                                                                                                       | Kept one level down            |
-| ---------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| L0 Now bar (shared)    | What is it doing? Does it need me?     | State glyph, active module, current action (icon + object), flag count, pause-at-next-boundary, note to agent, Stop. _Treatment only:_ segmented progress and "next: Mk".                                    | ids, tokens, cost              |
-| L1 Metro line          | How far along? Where is trouble?       | Modules as stations in plan order (status glyph, short label), one compact evidence graphic each, dependency arcs, and the pause marker on the boundary where the agent will wait.                           | instructions, full titles      |
-| L2 Module card         | What does "done" mean? Is there proof? | Goal; done-when criteria with their source (agent says / tests show); files with diff bars; latest tests as pips; files looked at; activity strip; instruction version chip; one primary button. | single actions, diff contents  |
-| L3 Evidence            | Exactly what happened?                 | Typed action rows (routine reads fold, edits and failures never do), your notes and corrections where they reached the module, the diff, test output, instruction versions.                                   | raw JSON                       |
-| L4 Raw (researchers)   | —                                      | Events and ids.                                                                                                                                                                                            | —                              |
+| Level                | Answers                                | Shows                                                                                                                                                                                            | Kept one level down           |
+| -------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| L0 Now bar (shared)  | What is it doing? Does it need me?     | State glyph, active module, current action (icon + object), flag count, pause-at-next-boundary, note to agent, Stop. _Treatment only:_ segmented progress and "next: Mk".                        | ids, tokens, cost             |
+| L1 Metro line        | How far along? Where is trouble?       | Modules as stations in plan order (status glyph, short label), one compact evidence graphic each, dependency arcs, and the pause marker on the boundary where the agent will wait.               | instructions, full titles     |
+| L2 Module card       | What does "done" mean? Is there proof? | Goal; done-when criteria with their source (agent says / tests show); files with diff bars; latest tests as pips; files looked at; activity strip; instruction version chip; one primary button. | single actions, diff contents |
+| L3 Evidence          | Exactly what happened?                 | Typed action rows (routine reads fold, edits and failures never do), your notes and corrections where they reached the module, the diff, test output, instruction versions.                      | raw JSON                      |
+| L4 Raw (researchers) | —                                      | Events and ids.                                                                                                                                                                                  | —                             |
 
 **Only one thing interrupts.** When the agent waits at a boundary, the Now bar turns amber and
 becomes a decision card. The card shows a waiting timer and what just happened, as a glyph and a
@@ -208,25 +221,29 @@ short phrase. It offers **Continue to Mk** (primary), **Change Mk first**, **Red
 button also has a text alternative (aria label or visually hidden text), so accessibility costs no
 visible words. Status is always a **shape plus a colour**:
 
-| Status                                                       | Glyph                    |
-| ------------------------------------------------------------ | ------------------------ |
-| verified (a passing test after the module's last edit)       | filled circle with check |
-| done, unverified (claimed done; no passing test after its last edit) | half-filled circle |
-| working                                                      | ring with a moving arc   |
-| waiting at a boundary                                        | diamond                  |
-| pending                                                      | hollow circle            |
-| failed                                                       | circle with ×            |
-| replaced by a redo                                           | slashed circle           |
-| stopped by you                                               | rounded square           |
-| run finished                                                 | end bar (line terminus)  |
+| Status                                                                                                                                                                                                                        | Glyph                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| verified (a passing test after the module's last edit, in the same attempt; a file changed only by a shell command counts that command as the edit; a module that changed nothing and ran no failing test counts as verified) | filled circle with check |
+| done, unverified (claimed done; no passing test after its last edit)                                                                                                                                                          | half-filled circle       |
+| working                                                                                                                                                                                                                       | ring with a moving arc   |
+| waiting at a boundary                                                                                                                                                                                                         | diamond                  |
+| pending                                                                                                                                                                                                                       | hollow circle            |
+| failed                                                                                                                                                                                                                        | circle with ×            |
+| replaced by a redo                                                                                                                                                                                                            | slashed circle           |
+| stopped by you                                                                                                                                                                                                                | rounded square           |
+| run finished                                                                                                                                                                                                                  | end bar (line terminus)  |
 
 **Flags are quiet and neutral.** The Now bar has one count, hidden at zero. Five fixed rules raise it:
 
-1. tests failing after the module's last edit;
-2. claimed done without a passing test;
+1. tests failing after the module's last edit (the latest test run after it);
+2. claimed done without a passing test after its last edit (one flag per module: a finished module with failing tests gets this one), or never finished at all (the agent ended without `finish_module`);
 3. a file changed by `bash` (an unattributed change, §5);
 4. an edit outside any module (unassigned);
-5. stuck (no new progress for a set number of actions).
+5. stuck: 10 actions in a row without progress in the running module. Progress is an edit, a better test
+   result, or a file read or command not seen before in that attempt.
+
+All of this (statuses, criteria sources, flags, pause slots, the decision card) is computed once in
+`packages/protocol/src/derive.ts` from the shared reducer's state, so both views show the same thing.
 
 Flags are on in both conditions. Pilots also run with them off (Q10).
 
@@ -271,21 +288,21 @@ The log adds no per-module aggregates (no plan overview, no status summary) beyo
 
 ### 6.3 Equivalence contract (both conditions)
 
-|                                                              | Modular                       | Log                                 |
-| ------------------------------------------------------------ | ----------------------------- | ----------------------------------- |
-| Agent, prompt, module protocol, model, budget                | same                          | same                                |
-| Events, diffs, test results, plan & instruction text         | same (same reducer)           | same                                |
-| Now bar: state, active module, current action, flags         | ✓                             | ✓                                   |
-| Decision card when waiting (Continue / Change / Redo / Stop) | ✓                             | ✓                                   |
-| Pause at next boundary, note to agent, Stop                  | ✓                             | ✓                                   |
-| What you sent (notes, corrections), reviewable later         | note popover + the Steps of the module it reached | note popover + its rows |
-| Module tag on every action                                   | station + card                | column                              |
-| Dependencies (declared/recorded)                             | arcs on the line              | fields on plan and module rows      |
-| Change a future module's instructions                        | its card                      | its plan row                        |
-| Correct the running module                                   | its card                      | its rows                            |
-| Redo from a module (rewind), with consequence preview        | its card                      | its start/finish row                |
-| Segmented progress, "next", Metro line, module card, summary | ✓                             | — (this is the manipulation)        |
-| Replay scrubber (trace study)                                | ✓                             | ✓                                   |
+|                                                              | Modular                                           | Log                            |
+| ------------------------------------------------------------ | ------------------------------------------------- | ------------------------------ |
+| Agent, prompt, module protocol, model, budget                | same                                              | same                           |
+| Events, diffs, test results, plan & instruction text         | same (same reducer)                               | same                           |
+| Now bar: state, active module, current action, flags         | ✓                                                 | ✓                              |
+| Decision card when waiting (Continue / Change / Redo / Stop) | ✓                                                 | ✓                              |
+| Pause at next boundary, note to agent, Stop                  | ✓                                                 | ✓                              |
+| What you sent (notes, corrections), reviewable later         | note popover + the Steps of the module it reached | note popover + its rows        |
+| Module tag on every action                                   | station + card                                    | column                         |
+| Dependencies (declared/recorded)                             | arcs on the line                                  | fields on plan and module rows |
+| Change a future module's instructions                        | its card                                          | its plan row                   |
+| Correct the running module                                   | its card                                          | its rows                       |
+| Redo from a module (rewind), with consequence preview        | its card                                          | its start/finish row           |
+| Segmented progress, "next", Metro line, module card, summary | ✓                                                 | — (this is the manipulation)   |
+| Replay scrubber (trace study)                                | ✓                                                 | ✓                              |
 
 The _only_ manipulated factor is organization and navigation: the Metro line and module-card
 hierarchy versus a flat log.
@@ -307,7 +324,9 @@ later addition. A live panel with its own controls is not planned (§2).
 
 **Boundaries.** `after_plan`, `before_start(Mi)`, `after_finish(Mi)`. The boundary tool calls
 `host.boundary(request)`, which resolves at once unless _pause at next boundary_ is armed (or
-auto-pause after the plan is on). While paused, the UI shows the pending boundary and these choices:
+auto-pause after the plan is on). The armed pause is **one-shot**: it holds the agent at the next boundary
+and disarms, so Continue goes on into the next module instead of stopping again at its start; Stop and the
+end of the run also disarm it. While paused, the UI shows the pending boundary and these choices:
 
 | Decision                      | Effect                                                                                                                                                         |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -317,8 +336,10 @@ auto-pause after the plan is on). While paused, the UI shows the pending boundar
 | **Stop**                      | `session.abort()`                                                                                                                                              |
 
 Edits to the **active** module while it is running go through `session.steer()`, labeled as a
-user instruction update, and also create a new version. A **note to agent** (both conditions) is
-also delivered with `steer()` after the current turn and recorded as a `note` intervention.
+user instruction update, and also create a new version. A **correction** for the running module (the card's
+**Correct Mk…**) and a **note to agent** (both conditions) are delivered with `steer()` after the current
+turn and recorded as `correct` / `note` interventions. When pi appends the steered message to the
+conversation, the host records `intervention_delivered`, so the panel can show what is still queued.
 
 In the UI's decision card these choices appear as:
 - **Continue to Mk**;
@@ -338,7 +359,9 @@ Each module card and log row offers the same edit and revise actions outside a p
    declared a dependency. Being conservative here keeps the restore correct; the dependency info is
    only used to explain the invalidation in the UI.
 3. Workspace ← `Mk.startCheckpoint` (shadow-git `reset --hard` + `clean`, excluding `.venv` etc.).
-4. Conversation ← `session.navigateTree(Mk.startEntryId, { summarize: false })`. This is the entry
+4. Conversation ← `session.navigateTree(Mk.startEntryId, { summarize: false })`. If the redo goes back past a
+   re-plan, the plan order and the module definitions are restored as they were at Mk's start checkpoint
+   (later user edits are kept). This is the entry
    just before the assistant message that called `start_module(Mk)`.
 5. New `ModuleVersion` for Mk with the user's revision instructions. Then the host prompts:
    *"The user revised Mk; the workspace was restored to before Mk. Call start_module(Mk)."*
@@ -431,6 +454,10 @@ revisions and repeated attempts is preserved as the proposal requires.
   progress and "next" are treatment-only.
 - **D9** **Note to agent** exists in both conditions.
 - **D10** **Flags** (five neutral rules, §6) are on in both conditions. Pilots compare on vs. off (Q10).
+- **D11** "Pause at next boundary" is one-shot (§7).
+- **D12** Each run picks its agent: the configured model, or a **scripted demo agent** for the toy task
+  (`packages/server/src/demo-agent.ts`). The scripted agent is a small policy over the conversation, so it
+  reacts to redo, change-first, corrections and notes. It needs no API key and backs up the live demo.
 
 ## 12. Open questions (to discuss)
 

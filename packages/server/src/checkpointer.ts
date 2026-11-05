@@ -1,40 +1,76 @@
 /**
- * Workspace snapshots in a shadow git repository (runs/<id>/snapshots.git), so the task repo's own
- * .git is never touched and the agent cannot see or change the snapshots. See docs/design.md §5, §7.
- *
- * Suggested approach: run git with GIT_DIR=<gitDir> and GIT_WORK_TREE=<workTree>, exclude .venv and
- * caches via <gitDir>/info/exclude, `add --all` + `commit --allow-empty` per snapshot, and keep a ref
- * per checkpoint so restores never lose history.
+ * Workspace snapshots in a shadow git repository (runs/<id>/snapshots.git). The task repo's own
+ * .git, if any, is never touched, and the agent cannot see or change the snapshots.
  */
 
+import { execFile } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { promisify } from "node:util";
 import type { FileChange } from "@vcm/protocol";
 
+const exec = promisify(execFile);
+
+const EXCLUDES = [".venv/", "__pycache__/", ".pytest_cache/", "*.pyc", ".mypy_cache/", ".ruff_cache/", "node_modules/"];
+
 export class Checkpointer {
-	readonly gitDir: string;
-	readonly workTree: string;
+	private readonly env: NodeJS.ProcessEnv;
+	private readonly gitDir: string;
 
 	constructor(gitDir: string, workTree: string) {
 		this.gitDir = gitDir;
-		this.workTree = workTree;
+		this.env = {
+			...process.env,
+			GIT_DIR: gitDir,
+			GIT_WORK_TREE: workTree,
+			GIT_AUTHOR_NAME: "vcm",
+			GIT_AUTHOR_EMAIL: "vcm@localhost",
+			GIT_COMMITTER_NAME: "vcm",
+			GIT_COMMITTER_EMAIL: "vcm@localhost",
+		};
+	}
+
+	private async git(...args: string[]): Promise<string> {
+		const { stdout } = await exec("git", args, { env: this.env, maxBuffer: 64 * 1024 * 1024 });
+		return stdout;
 	}
 
 	/** Creates the shadow repo and returns the baseline commit. */
 	async init(): Promise<string> {
-		throw new Error("TODO: Checkpointer.init");
+		mkdirSync(this.gitDir, { recursive: true });
+		await this.git("init", "--quiet");
+		mkdirSync(join(this.gitDir, "info"), { recursive: true });
+		writeFileSync(join(this.gitDir, "info", "exclude"), `${EXCLUDES.join("\n")}\n`);
+		return this.snapshot("baseline");
 	}
 
-	/** Snapshots the workspace and returns the commit id. */
-	async snapshot(_label: string): Promise<string> {
-		throw new Error("TODO: Checkpointer.snapshot");
+	async snapshot(label: string): Promise<string> {
+		await this.git("add", "--all");
+		await this.git("commit", "--quiet", "--allow-empty", "--no-verify", "-m", label);
+		const commit = (await this.git("rev-parse", "HEAD")).trim();
+		await this.git("update-ref", `refs/vcm/${label.replace(/[^\w.-]+/g, "_")}`, commit);
+		return commit;
 	}
 
-	/** Files changed between two snapshots, with patches. */
-	async diff(_from: string, _to: string): Promise<FileChange[]> {
-		throw new Error("TODO: Checkpointer.diff");
+	/**
+	 * Files changed between two commits. No rename detection (a move is a deletion plus an addition, so
+	 * both paths are listed) and no path quoting (non-ASCII names come back as they are).
+	 */
+	async diff(from: string, to: string): Promise<FileChange[]> {
+		const plain = ["-c", "core.quotePath=false", "diff", "--no-renames"];
+		const names = (await this.git(...plain, "--name-only", "-z", from, to)).split("\0").filter(Boolean);
+		return Promise.all(
+			names.map(async (path) => ({
+				path,
+				kind: "diff" as const,
+				patch: await this.git(...plain, from, to, "--", path),
+			})),
+		);
 	}
 
-	/** Restores the workspace to a snapshot exactly (ignored paths such as .venv are kept). */
-	async restore(_commit: string): Promise<void> {
-		throw new Error("TODO: Checkpointer.restore");
+	/** Restores the workspace to `commit` exactly (ignored paths such as .venv are kept). */
+	async restore(commit: string): Promise<void> {
+		await this.git("reset", "--quiet", "--hard", commit);
+		await this.git("clean", "--quiet", "-fd");
 	}
 }

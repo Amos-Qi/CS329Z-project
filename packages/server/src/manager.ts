@@ -1,7 +1,8 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { RunSummary, TaskSummary, TraceEvent } from "@vcm/protocol";
+import type { AgentKind, RunSummary, StartRunRequest, TaskSummary, TraceEvent } from "@vcm/protocol";
 import type { Config } from "./config.ts";
+import { DEMO_TASK } from "./demo-agent.ts";
 import { Run } from "./run.ts";
 import type { SessionFactory } from "./session.ts";
 import { loadTasks, summarizeTask, type TaskSpec } from "./tasks.ts";
@@ -12,14 +13,24 @@ function timestamp(date = new Date()): string {
 	return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
 }
 
+/** A run id not used by a live run or a run directory: `<timestamp>-<task>[-<variant>]`, `-2`, `-3`… on a clash. */
+function uniqueRunId(base: string, taken: (id: string) => boolean): string {
+	let id = base;
+	for (let n = 2; taken(id); n++) id = `${base}-${n}`;
+	return id;
+}
+
 export class RunManager {
 	private readonly runs = new Map<string, Run>();
+	/** Run ids being created (Run.create is async), so a second start in the same second gets another id. */
+	private readonly starting = new Set<string>();
 	private readonly config: Config;
-	private readonly createSession: SessionFactory;
+	private readonly agents: Partial<Record<AgentKind, SessionFactory>>;
 
-	constructor(config: Config, createSession: SessionFactory) {
+	/** `agents.model` runs the configured model; `agents.scripted` is the scripted demo agent. */
+	constructor(config: Config, agents: Partial<Record<AgentKind, SessionFactory>>) {
 		this.config = config;
-		this.createSession = createSession;
+		this.agents = agents;
 	}
 
 	tasks(): TaskSpec[] {
@@ -27,22 +38,36 @@ export class RunManager {
 	}
 
 	listTasks(): TaskSummary[] {
-		return this.tasks().map(summarizeTask);
+		return this.tasks().map((task) => summarizeTask(task, !!this.agents.scripted && task.id === DEMO_TASK));
 	}
 
-	async startRun(taskId: string, variantId?: string): Promise<Run> {
+	async startRun({ taskId, variant: variantId, agent = "model", pauseAfterPlan }: StartRunRequest): Promise<Run> {
+		const createSession = this.agents[agent];
+		if (!createSession) throw new Error(`No ${agent} agent is configured`);
 		const task = this.tasks().find((t) => t.id === taskId);
 		if (!task) throw new Error(`Unknown task ${taskId}`);
 		const variant = variantId ? task.variants.find((v) => v.id === variantId) : undefined;
 		if (variantId && !variant) throw new Error(`Task ${taskId} has no variant ${variantId}`);
-		const runId = `${timestamp()}-${task.id}${variant ? `-${variant.id}` : ""}`;
-		const run = await Run.create({
-			runId,
-			runDir: join(this.config.runsDir, runId),
-			task,
-			variant,
-			createSession: this.createSession,
-		});
+		// two starts of the same task within one second must not share a directory, trace and workspace
+		const runId = uniqueRunId(
+			`${timestamp()}-${task.id}${variant ? `-${variant.id}` : ""}`,
+			(id) => this.runs.has(id) || this.starting.has(id) || existsSync(join(this.config.runsDir, id)),
+		);
+		this.starting.add(runId);
+		let run: Run;
+		try {
+			run = await Run.create({
+				runId,
+				runDir: join(this.config.runsDir, runId),
+				task,
+				variant,
+				createSession,
+				pauseAfterPlan: pauseAfterPlan ?? this.config.pauseAfterPlan,
+				gateEdits: this.config.gateEdits,
+			});
+		} finally {
+			this.starting.delete(runId);
+		}
 		this.runs.set(runId, run);
 		run.start();
 		return run;

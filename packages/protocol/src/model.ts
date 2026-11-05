@@ -11,6 +11,8 @@ export type Author = "agent" | "user";
 /** The fields an agent (or user) writes when defining a module. */
 export interface ModuleSpec {
 	title: string;
+	/** One or two words for the plan overview (the Metro line), e.g. "Rounding". */
+	label?: string;
 	purpose: string;
 	instructions: string;
 	/** Optional pi skill names this module relies on. */
@@ -97,6 +99,13 @@ export interface Action {
 	startedAt: number;
 	endedAt?: number;
 	isError?: boolean;
+	/** A bash command matching the task's test pattern (set at the start, before the result is parsed). */
+	isTest?: boolean;
+	/**
+	 * "host": pi rejected the call before any extension hook ran (e.g. invalid arguments), so the host
+	 * recorded it from pi's raw events. Omitted for actions the extension captured.
+	 */
+	source?: "host";
 	resultPreview?: string;
 	fileChanges?: FileChange[];
 	test?: TestRun;
@@ -124,7 +133,11 @@ export interface Dependency {
 	label?: string;
 }
 
-export type InterventionKind = "pause" | "resume" | "edit_instructions" | "note" | "revise" | "stop";
+/**
+ * pause/resume arm and disarm "pause at the next boundary". note = note to the agent (whole run);
+ * correct = a correction for the running module. Both are delivered with session.steer().
+ */
+export type InterventionKind = "pause" | "resume" | "edit_instructions" | "note" | "correct" | "revise" | "stop";
 
 export interface Intervention {
 	interventionId: string;
@@ -133,4 +146,6 @@ export interface Intervention {
 	attemptId?: string;
 	note?: string;
 	at: number;
+	/** Set when a steered note or correction reached the agent (intervention_delivered). */
+	deliveredAt?: number;
 }

@@ -9,8 +9,10 @@ and revise. We compare a modular interface against a conventional chronological 
 - **Midway milestone plan:** [docs/milestone.md](docs/milestone.md)
 - **Panel design** (clickable mockup; open it in a browser): [design/mockups/panel.html](design/mockups/panel.html)
 
-This is **starter code**: the structure, tooling, trace schema and pi wiring are in place, and the
-project work is marked `TODO` with pointers to the design doc.
+The panel is **wired to pi end to end**: a live run (OpenRouter model or the scripted demo agent) streams
+its trace into the modular view and the log view, and every intervention in the mockup works against the
+real session (pause at the next boundary, continue, change a module first, correct the running module, note
+to the agent, redo from a module with rewind, stop), plus replay of recorded runs.
 
 ## Layout
 
@@ -31,7 +33,9 @@ runs/          Agent runs: workspace, trace.jsonl, pi session (git-ignored)
 How the pieces connect: the server creates a pi `AgentSession` with the modules extension loaded inline.
 The extension reports everything as `TraceEvent`s through a `ModulesHost`; the server appends them to
 `runs/<id>/trace.jsonl` and streams them to the UI over `/ws`. Both UI views derive their state from the
-same `reduceTrace()`, which keeps the comparison fair (design §6.3).
+same `reduceTrace()` and the same derivations in `packages/protocol/src/derive.ts` (statuses, flags,
+boundaries), which keeps the comparison fair (design §6.3). The UI turns that state into a view model
+(`packages/web/src/model/panel.ts`) that mirrors the mockup's data, so the components port it 1:1.
 
 ## Setup
 
@@ -54,28 +58,40 @@ Then put your `OPENROUTER_API_KEY` in `.env` and pick `VCM_MODEL`.
 
 ## Commands
 
-| Command                                              | What it does                                                  |
-| ---------------------------------------------------- | ------------------------------------------------------------- |
-| `npm run dev`                                        | Server on :8787 and UI on http://localhost:5173               |
-| `npm test`                                           | Offline tests (pi's scripted faux model; no API key, no cost) |
-| `npm run typecheck`                                  | Type-check every package                                      |
-| `npm run check`                                      | Lint/format check (Biome) + typecheck                         |
-| `npm run format`                                     | Apply Biome formatting                                        |
-| `npm run grade -- tasks/<task> runs/<run>/workspace` | Hidden + visible tests on a finished workspace                |
+| Command                                              | What it does                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------------------- |
+| `npm run dev`                                        | Server on :8787 and UI on http://localhost:5173                     |
+| `npm test`                                           | Offline tests (pi's scripted faux model; no API key, no cost)       |
+| `npm run record -- [--variant <id>] [--model <id>]`  | Record one live run headless; prints compliance, flags, cost, grade |
+| `npm run demo:record [-- --variant misleading-doc]`  | Same with the scripted demo agent (no API key)                      |
+| `npm run typecheck`                                  | Type-check every package                                            |
+| `npm run check`                                      | Lint/format check (Biome) + typecheck                               |
+| `npm run format`                                     | Apply Biome formatting                                              |
+| `npm run grade -- tasks/<task> runs/<run>/workspace` | Hidden + visible tests on a finished workspace                      |
 
 To try the extension in the stock pi CLI without the server, run `pi -e packages/extension/src/cli.ts`
 inside a task repo. The trace is written to `.vcm/trace.jsonl`.
 
-## Where to start
+## Running a demo
 
-The milestone plan splits the work into two tracks (docs/milestone.md):
+`npm run dev`, open http://localhost:5173, pick the task, a variant (`misleading-doc` plants the seeded
+error), the agent and "Pause after plan", then Start. The **scripted agent** needs no API key and is paced
+for a live demo. It is a small policy over the conversation, so it reacts to the controls: with
+`misleading-doc` it truncates cents in M3 and claims done without a passing test (1 flag); a redo of M3, a
+"Change M3 first" or a correction that asks for rounding half up fixes it, and the grade turns to PASS. The
+harness bar at the bottom (researcher chrome, not part of either condition) switches Modules / Log / Raw,
+the theme, and scrubs any run for replay. `?view=log&study=1` fixes the condition for a participant.
 
-- **Track A — agent & backend:** `packages/extension/src/index.ts` (module store, tools, capture hooks),
-  `packages/server/src/{boundary-gate,checkpointer,run}.ts` (pause/edit/revise, snapshots, audit).
-- **Track B — UI, tasks & study:** `packages/protocol/src/reduce.ts` (the reducer both views share),
-  `packages/web/src/App.tsx` (modular view, log view, controls, replay), `tasks/` (curate tasks), `study/`.
+## What is done, and what is next
 
-Agree on the trace schema in `packages/protocol/src/{model,events}.ts` first; both tracks build on it.
+Done (docs/milestone.md items 1–6): the module protocol with reminders and a 2–7 module plan, capture of
+every action (including calls pi rejects), shadow-git checkpoints with per-attempt diffs and the omission
+audit, the boundary gate (one-shot pause), edit / correct / note / redo (rewind) / stop, the five flags,
+the modular view (Now bar, Metro line, module card, evidence), the log view, replay, and seeded failures
+(`prompt_override`, `file_overlay`, `read_rewrite`).
+
+Next: the pilot task set from public repos and a subtler seeded failure (claude-sonnet-5.5 ignores the
+planted guide), the model bake-off (`npm run record -- --model <id>` across 2–3 models), walkthroughs.
 
 ## Conventions
 

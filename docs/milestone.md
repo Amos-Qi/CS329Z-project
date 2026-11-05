@@ -7,6 +7,19 @@ The proposal put capture and rendering in weeks 3–5 and interventions plus a p
 With one week left, the milestone is a **working end-to-end vertical slice** plus the **first
 evidence that the study is feasible**, not a finished system.
 
+## Status (Nov 4)
+
+| Item                    | Status                                                                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Live run, end to end  | Done. OpenRouter `claude-sonnet-5.5` and the scripted demo agent; every action attributed or visibly unassigned.                                                                 |
+| 2 Modular view          | Done: the Now bar with the decision card, the Metro line, the module card, and the evidence (L3).                                                                                |
+| 3 Log view              | Done: same reducer and derivations, search, and filters.                                                                                                                         |
+| 4 Boundary intervention | Done: one-shot pause, Change Mk first, Correct Mk, note to agent, redo, Stop.                                                                                                    |
+| 5 Checkpoints + audit   | Done: shadow git per boundary, per-attempt diffs, the audit in the run summary and in the log.                                                                                   |
+| 6 Replay                | Done: a scrubber in both views.                                                                                                                                                  |
+| 7 Pilot task set        | Toy task + 3 variants. **Open:** 2 public-repo tasks, plus a subtler seeded failure (the strong model ignores the planted guide).                                                |
+| 8 Feasibility evidence  | First compliance numbers for 1 model: `npm run record` gives 2 modules, 100% assigned, 0 unattributed changes, PASS, about $0.05 per run. **Open:** 2–3 models and walkthroughs. |
+
 ## Definition of done
 
 **Must have (demo-able):**
@@ -18,7 +31,7 @@ evidence that the study is feasible**, not a finished system.
    - the Now bar (with the amber decision card when waiting);
    - the Metro line with status glyphs and dependency arcs;
    - the module card (done-when criteria, files, tests, instruction versions).
-   Level 3 only needs the action list and the per-attempt diff.
+     Level 3 only needs the action list and the per-attempt diff.
 3. **Log view.** The same trace as a searchable chronological log, using the same reducer.
 4. **Boundary intervention.** Pause at the next boundary → edit a module's instructions → continue;
    the edit shows up as a new version and in the agent's next `start_module` result.
@@ -46,15 +59,15 @@ The work splits into two tracks of roughly equal size that meet at the trace for
 
 ## Day-by-day
 
-| Day           | Track A (agent/backend)                                                                   | Track B (UI/tasks/study)                                                       | Joint checkpoint                                               |
-| ------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| **Mon 10/26** | Repo set up (done). Run the faux smoke test; get one live OpenRouter run on the toy task. | Run `npm run dev`; read the trace schema; study the panel mockup and its states. | Agree on the trace schema (`packages/protocol`) and freeze v0. |
-| **Tue 10/27** | Prompt tuning for protocol compliance; capture `edit`/`write` diffs; test parsing.        | Now bar + Metro line with status glyphs; station selection drives the card.   | First live trace visible in the modular view.                  |
-| **Wed 10/28** | Model bake-off (2–3 models × toy + 1 task × 2 runs): compliance, cost, success.           | Pick 2 public Python repos and write the task specs + hidden tests.            | Pick the model; email course staff re: IRB (Q8).               |
+| Day           | Track A (agent/backend)                                                                   | Track B (UI/tasks/study)                                                                | Joint checkpoint                                               |
+| ------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Mon 10/26** | Repo set up (done). Run the faux smoke test; get one live OpenRouter run on the toy task. | Run `npm run dev`; read the trace schema; study the panel mockup and its states.        | Agree on the trace schema (`packages/protocol`) and freeze v0. |
+| **Tue 10/27** | Prompt tuning for protocol compliance; capture `edit`/`write` diffs; test parsing.        | Now bar + Metro line with status glyphs; station selection drives the card.             | First live trace visible in the modular view.                  |
+| **Wed 10/28** | Model bake-off (2–3 models × toy + 1 task × 2 runs): compliance, cost, success.           | Pick 2 public Python repos and write the task specs + hidden tests.                     | Pick the model; email course staff re: IRB (Q8).               |
 | **Thu 10/29** | Checkpointer + per-attempt diffs + audit; pause/edit/continue end to end.                 | Module card (criteria, files, tests, versions) + evidence; log view with search/filter. | Intervention demo works on the toy task.                       |
-| **Fri 10/30** | Seeded-failure injection (`file_overlay`, `read_rewrite`); record pilot traces.           | Replay mode + scrubber in both views; walkthrough script + probe questions.    | Freeze the demo traces.                                        |
-| **Sat–Sun**   | Stretch: live rewind; `run_tests` tool. Bug fixes.                                        | 1–2 walkthroughs with classmates; collect timing and notes.                    | Write the milestone report draft.                              |
-| **Mon 11/2**  | Polish + record a backup demo video.                                                      | Polish + figures/screenshots.                                                  | Rehearse the demo; submit.                                     |
+| **Fri 10/30** | Seeded-failure injection (`file_overlay`, `read_rewrite`); record pilot traces.           | Replay mode + scrubber in both views; walkthrough script + probe questions.             | Freeze the demo traces.                                        |
+| **Sat–Sun**   | Stretch: live rewind; `run_tests` tool. Bug fixes.                                        | 1–2 walkthroughs with classmates; collect timing and notes.                             | Write the milestone report draft.                              |
+| **Mon 11/2**  | Polish + record a backup demo video.                                                      | Polish + figures/screenshots.                                                           | Rehearse the demo; submit.                                     |
 
 **If you fall behind,** cut in this order: stretch items → second public repo task →
 log-view filters → audit panel UI (keep the JSON). Never cut items 1, 2, 4 or 6.

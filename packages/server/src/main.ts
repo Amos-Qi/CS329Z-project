@@ -1,27 +1,31 @@
 /**
  * HTTP + WebSocket server for the inspection UI.
  *
+ *   GET  /api/info                configured model, and whether an API key is set
  *   GET  /api/tasks               task list
  *   GET  /api/runs                live and recorded runs
- *   POST /api/runs                { taskId, variant? } → start a live run
+ *   POST /api/runs                StartRunRequest { taskId, variant?, agent?, pauseAfterPlan? } → start a live run
  *   GET  /api/runs/:id/trace      full trace (for replay)
  *   WS   /ws                      ClientMessage in, ServerMessage out
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { delimiter } from "node:path";
-import type { ClientMessage, ServerMessage } from "@vcm/protocol";
+import type { ClientMessage, ServerInfo, ServerMessage } from "@vcm/protocol";
 import { type WebSocket, WebSocketServer } from "ws";
-import { config } from "./config.ts";
+import { config, prepareAgentEnvironment } from "./config.ts";
+import { demoSessionFactory } from "./demo-agent.ts";
 import { RunManager } from "./manager.ts";
 import { piSessionFactory } from "./session.ts";
 
-if (config.pythonBin) process.env.PATH = `${config.pythonBin}${delimiter}${process.env.PATH ?? ""}`;
+prepareAgentEnvironment();
 if (config.provider === "openrouter" && !process.env.OPENROUTER_API_KEY) {
-	console.warn("[vcm] OPENROUTER_API_KEY is not set; live runs will fail. Copy .env.example to .env.");
+	console.warn(
+		"[vcm] OPENROUTER_API_KEY is not set: only the scripted demo agent will work. Copy .env.example to .env.",
+	);
 }
 
-const manager = new RunManager(config, piSessionFactory(config));
+// Each run picks its agent: the configured model, or the scripted demo agent (paced to be watchable).
+const manager = new RunManager(config, { model: piSessionFactory(config), scripted: demoSessionFactory(120, 2500) });
 
 function json(res: ServerResponse, status: number, body: unknown): void {
 	res.writeHead(status, { "content-type": "application/json" });
@@ -37,11 +41,24 @@ async function readBody(req: IncomingMessage): Promise<any> {
 const server = createServer(async (req, res) => {
 	const url = new URL(req.url ?? "/", "http://localhost");
 	try {
+		if (req.method === "GET" && url.pathname === "/api/info") {
+			const info: ServerInfo = {
+				model: `${config.provider}/${config.model}`,
+				hasApiKey: config.provider !== "openrouter" || !!process.env.OPENROUTER_API_KEY,
+				pauseAfterPlan: config.pauseAfterPlan,
+			};
+			return json(res, 200, info);
+		}
 		if (req.method === "GET" && url.pathname === "/api/tasks") return json(res, 200, manager.listTasks());
 		if (req.method === "GET" && url.pathname === "/api/runs") return json(res, 200, manager.listRuns());
 		if (req.method === "POST" && url.pathname === "/api/runs") {
 			const body = await readBody(req);
-			const run = await manager.startRun(String(body.taskId), body.variant ? String(body.variant) : undefined);
+			const run = await manager.startRun({
+				taskId: String(body.taskId),
+				variant: body.variant ? String(body.variant) : undefined,
+				agent: body.agent === "scripted" ? "scripted" : "model",
+				pauseAfterPlan: typeof body.pauseAfterPlan === "boolean" ? body.pauseAfterPlan : undefined,
+			});
 			return json(res, 201, run.summary());
 		}
 		const trace = /^\/api\/runs\/([^/]+)\/trace$/.exec(url.pathname);
