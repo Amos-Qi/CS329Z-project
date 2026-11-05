@@ -2,6 +2,8 @@
  * The mockup's global tooltip manager and the small DOM helpers that go with it (bar sizes,
  * ensureVisible). It is imperative on purpose: one `#tip` element for the whole page, driven by
  * document listeners, so any element with `data-tip` gets a tooltip on hover AND keyboard focus.
+ * Focus from a mouse click shows no tip (see focusVisible), and a focus tip goes when its trigger
+ * loses focus.
  *
  * Rules kept from the mockup (WCAG 1.4.13): a hover tip survives the trip from its trigger onto the
  * tip itself; a focus tip never takes the pointer; an open popover's trigger (`aria-expanded="true"`)
@@ -76,6 +78,19 @@ export function hideTip(): void {
 	tipEl = null;
 	tipSrc = null;
 	tipText = null;
+}
+
+/**
+ * Whether `el` has keyboard focus (`:focus-visible`): Tab, or a script moving focus after keyboard
+ * use. A mouse click also focuses a button, but the pointer already shows its hover tip, and a focus
+ * tip would stay after the pointer leaves.
+ */
+export function focusVisible(el: Element): boolean {
+	try {
+		return el.matches(":focus-visible");
+	} catch {
+		return true; // an engine without :focus-visible: keep the tip for keyboard users
+	}
 }
 
 /** Whether a tooltip is showing for the keyboard focus. */
@@ -158,11 +173,15 @@ export function installTooltips(): () => void {
 	const onFocus = (e: FocusEvent) => {
 		const target = e.target as Element | null;
 		const el = target?.closest ? target.closest("[data-tip]") : null;
-		if (el) showTip(el, "focus");
+		if (el && target && focusVisible(target)) showTip(el, "focus");
 		else if (tipSrc !== "hover") hideTip();
 		requestAnimationFrame(() => {
 			if (document.activeElement === target) ensureVisible(target);
 		});
+	};
+	const onBlur = (e: FocusEvent) => {
+		const target = e.target as Node | null;
+		if (tipSrc === "focus" && tipEl && target && tipEl.contains(target)) hideTip();
 	};
 	const onLeave = () => {
 		if (tipSrc === "hover") hideTip();
@@ -178,6 +197,7 @@ export function installTooltips(): () => void {
 	};
 	document.addEventListener("mousemove", onMove, { passive: true });
 	document.addEventListener("focusin", onFocus);
+	document.addEventListener("focusout", onBlur);
 	document.documentElement.addEventListener("mouseleave", onLeave);
 	window.addEventListener("scroll", onScroll, true);
 	window.addEventListener("resize", onResize);
@@ -187,6 +207,7 @@ export function installTooltips(): () => void {
 	return () => {
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("focusin", onFocus);
+		document.removeEventListener("focusout", onBlur);
 		document.documentElement.removeEventListener("mouseleave", onLeave);
 		window.removeEventListener("scroll", onScroll, true);
 		window.removeEventListener("resize", onResize);

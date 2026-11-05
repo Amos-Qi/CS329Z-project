@@ -21,7 +21,7 @@ import type { Controls } from "../controls.ts";
 import { cssKey } from "../model/format.ts";
 import { type Flag, type LogEvent, type LogType, type Panel, PRE, redoPreview, type SelId } from "../model/panel.ts";
 import { toast } from "../ui/announce.tsx";
-import { ensureVisible, focusTipShown, hideTip, setBarVars, showTip, syncTip } from "../ui/tooltip.ts";
+import { ensureVisible, focusTipShown, focusVisible, hideTip, setBarVars, showTip, syncTip } from "../ui/tooltip.ts";
 
 // ---- types -----------------------------------------------------------------------------------
 
@@ -987,7 +987,7 @@ export function useUi(panel: Panel, controls: Controls, init?: Partial<UiState>)
 		if (store.refocusTip) {
 			store.refocusTip = false;
 			const active = document.activeElement;
-			if (active?.hasAttribute("data-tip")) showTip(active, "focus");
+			if (active?.hasAttribute("data-tip") && focusVisible(active)) showTip(active, "focus");
 		}
 	});
 
