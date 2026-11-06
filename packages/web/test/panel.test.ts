@@ -699,6 +699,42 @@ function raw(b: ReturnType<typeof trace>, body: TraceEventBody) {
 	return b;
 }
 
+describe("buildPanel: between modules (where the train waits)", () => {
+	it("names the gap after the module that ended and the next one, live and in a recording", () => {
+		const b = trace().start().plan(["M1", "M2", "M3"]);
+		expect(panelOf(b.events, { control: LIVE }).between).toEqual({ after: null, next: "M1" });
+		b.begin("M1").edit("a.py").test(1);
+		expect(panelOf(b.events, { control: LIVE }).between).toBeUndefined();
+		b.finish("M1");
+		expect(panelOf(b.events, { control: LIVE }).between).toEqual({ after: "M1", next: "M2" });
+		expect(panelOf(b.events).between).toEqual({ after: "M1", next: "M2" });
+	});
+
+	it("after the last module it waits at the end of the line, with no next module", () => {
+		const b = trace().start().plan(["M1", "M2"]);
+		b.begin("M1").test(1).finish("M1").begin("M2").test(1).finish("M2");
+		expect(panelOf(b.events, { control: LIVE }).between).toEqual({ after: "M2" });
+		b.end();
+		expect(panelOf(b.events).between).toBeUndefined();
+	});
+
+	it("after the plan and before the first module starts, the card shows the module about to run", () => {
+		const b = trace().start().plan(["M1", "M2"]);
+		expect(panelOf(b.events, { control: LIVE }).defaultSel).toBe("M1");
+	});
+
+	it("is unset before a plan, while held, and once you stopped the agent", () => {
+		expect(panelOf(trace().start().events, { control: LIVE }).between).toBeUndefined();
+		const held = trace().start().plan(["M1", "M2"]);
+		held.begin("M1").test(1).finish("M1").hold("after_finish", "M1");
+		const pending = { boundaryId: "b1", boundary: "after_finish" as const, moduleId: "M1" };
+		expect(panelOf(held.events, { control: { ...LIVE, pending } }).between).toBeUndefined();
+		const stopped = trace().start().plan(["M1", "M2"]);
+		stopped.begin("M1").test(1).finish("M1").intervene("stop");
+		expect(panelOf(stopped.events, { control: LIVE }).between).toBeUndefined();
+	});
+});
+
 describe("buildPanel: review fixes", () => {
 	it("the run summary counts files changed outside modules and by modules a re-plan dropped", () => {
 		const b = trace().start().plan(["M1", "M2"]);
@@ -906,6 +942,19 @@ describe("UiStore: editors stay true to the run", () => {
 		expect(sent).toEqual([]);
 		expect(store.state.editor).toBeNull();
 		expect(store.state.drafts["change:M2"]?.text).toBe("Write it in capitals");
+	});
+
+	it("sending a redo lets the card follow the agent again, as Continue does", () => {
+		sent.length = 0;
+		const b = trace().start().plan(["M1", "M2"]);
+		b.begin("M1").edit("a.py").test(1).finish("M1").begin("M2").edit("b.py").test(1).finish("M2");
+		const store = ui(panelOf(b.events, { control: LIVE }));
+		store.openEditor("redo", "M1");
+		expect(store.state.pinned).toBe(true);
+		store.redoGo();
+		expect(sent).toEqual(["redo M1"]);
+		expect(store.state.pinned).toBe(false);
+		expect(store.state.sel).toBeNull();
 	});
 
 	it("a Redo panel for a module another redo replaced closes; nothing is sent", () => {

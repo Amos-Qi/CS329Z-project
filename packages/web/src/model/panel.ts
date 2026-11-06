@@ -541,6 +541,13 @@ export interface Panel {
 	summary?: SummaryView;
 	/** The selection when you have not picked one: the active/held module; null after the run ends. */
 	defaultSel: SelId | null;
+	/**
+	 * The agent is between modules (it left one and has not started the next): it waits in the gap after
+	 * `after` (null: the before-plan station), before `next` (none: every planned module has ended). The
+	 * same rule as the next pause boundary (pauseSlot), in replay too. Unset while a module runs, at a
+	 * hold, once you stopped the agent, and before there is a plan.
+	 */
+	between?: { after: ModuleId | null; next?: ModuleId };
 	/** Latest plan version and module count, if a plan exists. */
 	plan?: { version: number; count: number };
 }
@@ -1184,8 +1191,21 @@ class Builder {
 			events,
 			summary: this.liveRun || state.status === "idle" ? undefined : this.summary(byId, now.runClock),
 			defaultSel: this.defaultSel(now),
+			between: this.between(),
 		};
 		return panel;
+	}
+
+	private between(): Panel["between"] {
+		const state = this.state;
+		if (state.status !== "running" || state.activeAttemptId || state.pendingBoundary || !state.plans.length)
+			return undefined;
+		if (stoppedByYou(state)) return undefined; // stopping: the run ends next, the agent is not heading anywhere
+		const slot = pauseSlot(state);
+		if (!slot || slot.boundary === "after_finish") return undefined;
+		return slot.boundary === "before_start" && slot.moduleId
+			? { after: slot.after, next: slot.moduleId }
+			: { after: slot.after };
 	}
 
 	private defaultSel(now: NowView): SelId | null {
@@ -1198,7 +1218,9 @@ class Builder {
 		}
 		const last = state.attemptOrder.at(-1);
 		const lastModule = last ? state.attempts[last]?.moduleId : undefined;
-		return lastModule && planModules(state).includes(lastModule) ? lastModule : PRE;
+		if (lastModule && planModules(state).includes(lastModule)) return lastModule;
+		/* after the plan, before the first module has started: the module about to run, not back to before-plan */
+		return this.between()?.next ?? PRE;
 	}
 
 	private now(byId: Record<SelId, ModView>, modules: ModView[], live: boolean): NowView {

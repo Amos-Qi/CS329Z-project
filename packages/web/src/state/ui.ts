@@ -21,6 +21,7 @@ import type { Controls } from "../controls.ts";
 import { cssKey } from "../model/format.ts";
 import { type Flag, type LogEvent, type LogType, type Panel, PRE, redoPreview, type SelId } from "../model/panel.ts";
 import { toast } from "../ui/announce.tsx";
+import { reducedMotion } from "../ui/motion.ts";
 import { ensureVisible, focusTipShown, focusVisible, hideTip, setBarVars, showTip, syncTip } from "../ui/tooltip.ts";
 
 // ---- types -----------------------------------------------------------------------------------
@@ -549,10 +550,13 @@ export class UiStore implements UiActions {
 		const preview = redoPreview(panel, ed.id);
 		if (!preview) return;
 		if (!this.controls?.redo(ed.id, preview.attemptId, ed.text, ed.note.trim() || undefined)) return;
+		// like Continue, the card follows the agent again: the new attempt, the modules after it, the summary
 		this.set({
 			drafts: this.withoutDraft(ed),
 			editor: null,
 			edOpener: null,
+			pinned: false,
+			sel: null,
 			focus: s.view === "modules" ? ["prim", `st-${ed.id}`] : [`lr-${ed.row}`],
 		});
 		toast(`${preview.running ? "Agent stopped · redo" : "Redo"} from ${ed.id} started`);
@@ -959,7 +963,10 @@ export function useUi(panel: Panel, controls: Controls, init?: Partial<UiState>)
 		const s = store.state;
 		const effective = s.pinned ? s.sel : (store.panel?.defaultSel ?? null);
 		if (s.tail) window.scrollTo(0, document.documentElement.scrollHeight);
-		if (s.scrollEd) document.querySelector(".lred, .redo, .ed")?.scrollIntoView({ block: "nearest" });
+		if (s.scrollEd)
+			document
+				.querySelector(".lred, .redo, .ed")
+				?.scrollIntoView({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" });
 		const keys = s.focus;
 		if (s.tail || s.scrollEd || keys) store.quietly({ tail: false, scrollEd: false, focus: null });
 		let el: HTMLElement | null = null;

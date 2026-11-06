@@ -1,15 +1,17 @@
 /**
  * The harness bar: the mockup's floating MOCKUP pill restyled as researcher chrome (`#harness`,
  * `.harness`, `.hg` groups, `.hb` buttons, `.scrub`). Back to runs, view switch (Modules / Log /
- * Raw; hidden in study mode), theme toggle, and the replay scrubber (slider over trace positions,
- * play/pause, step, jump to the end). Not part of either condition.
+ * Raw; hidden in study mode), theme toggle, the Motion switch (stops the vaporwave animations, as
+ * prefers-reduced-motion does), and the replay scrubber (slider over trace positions, play/pause,
+ * step, jump to the end). Not part of either condition.
  *
- * Home renders it without a run (no `ui`): then only the theme toggle is shown, driven by
- * `theme`/`onTheme`.
+ * Home renders it without a run (no `ui`): then only the theme toggle and the Motion switch are
+ * shown, the theme driven by `theme`/`onTheme`.
  */
 
 import type { Theme, Ui, View } from "../state/ui.ts";
 import { Icon } from "../ui/icons.tsx";
+import { setMotionOff, useMotionOff } from "../ui/motion.ts";
 
 /** The replay scrubber's state and commands (owned by the app shell). */
 export interface ReplayControl {
@@ -57,6 +59,7 @@ const VIEWS: [View, string][] = [
 export function Harness({ ui, study, onBack, replay, theme: homeTheme, onTheme }: HarnessProps) {
 	const theme = ui?.s.theme ?? homeTheme ?? "dark";
 	const other = theme === "dark" ? "light" : "dark";
+	const still = useMotionOff();
 	const keys = ui ? `Keys: ${study ? "" : "v view · "}t theme · j/k move · Enter open · Esc back` : "Keys: t theme";
 	return (
 		<section id="harness" className="harness" aria-label="Harness controls (not part of the product)">
@@ -97,6 +100,19 @@ export function Harness({ ui, study, onBack, replay, theme: homeTheme, onTheme }
 			>
 				<Icon name={theme === "dark" ? "moon" : "sun"} size={14} />
 				{theme === "dark" ? "Dark" : "Light"}
+			</button>
+			<button
+				type="button"
+				className="hb"
+				data-k="hmotion"
+				aria-pressed={!still}
+				data-tip={
+					still ? "Motion off: animations stopped. Click to turn them on" : "Motion on. Click to stop the animations"
+				}
+				onClick={() => setMotionOff(!still)}
+			>
+				<Icon name={still ? "pause" : "activity"} size={14} />
+				Motion
 			</button>
 		</section>
 	);

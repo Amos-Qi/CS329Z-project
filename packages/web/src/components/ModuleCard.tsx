@@ -5,10 +5,14 @@
  * renderWork(), moduleCard(), cardTools(), critHTML(), factsHTML(), primaryBtn(), evidenceHTML(),
  * tabBody(), stepsHTML(), stepRow(), stepDetail(), versionsHTML() and summaryCard(). The detail
  * pieces (StepDetail, VersionList, CriteriaList, TextDetail) are exported for LogView's row details.
+ *
+ * When the card changes station or a redo starts a new attempt (the selection follows the agent, or
+ * you pick a station), the new card slides in from the side it comes from with a light sweep while a
+ * copy of the old one fades out underneath (ui/motion.ts).
  */
 
 import type { CriterionStatus, Flag } from "@vcm/protocol";
-import type { ReactNode } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 import { type CodeLine, joinAnd, oneLine, plural } from "../model/format.ts";
 import {
 	ACT_ICON,
@@ -26,24 +30,124 @@ import {
 } from "../model/panel.ts";
 import { type EvTab, type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
 import { Icon, type IconName } from "../ui/icons.tsx";
+import { EASE, EASE_TRAIN, play, reducedMotion } from "../ui/motion.ts";
 import { CodeBlock, DiffBar, Glyph, Pips, Strip, tipImg } from "../ui/primitives.tsx";
 import { Editor, RedoPanel } from "./Editors.tsx";
 
 /** Props of Work: the shared PanelProps. */
 export type WorkProps = PanelProps;
 
+/** What the work area shows, for the change transition: a station (and attempt), or the run summary. */
+const SUMMARY = "summary";
+
+/** The card being replaced, copied before React changes it, and where it sat in the work area. */
+interface Snapshot {
+	key: string;
+	node: HTMLElement;
+	top: number;
+	left: number;
+	width: number;
+}
+
+/** A copy of a card that only fades out: no ids, no tab stops, hidden from assistive tech. */
+function ghostCard(s: Snapshot): HTMLElement {
+	const g = s.node;
+	for (const el of [g, ...g.querySelectorAll<HTMLElement>("*")]) {
+		for (const a of ["id", "data-k", "data-tip", "tabindex", "aria-labelledby", "aria-describedby"])
+			el.removeAttribute(a);
+	}
+	g.classList.add("card-ghost");
+	g.setAttribute("aria-hidden", "true");
+	g.inert = true;
+	g.style.top = `${s.top}px`;
+	g.style.left = `${s.left}px`;
+	g.style.width = `${s.width}px`;
+	return g;
+}
+
 /** `<div class="work">`: the run summary when the run ended and nothing is selected, else the selected card. */
 export function Work({ panel, ui }: WorkProps) {
 	const mod = ui.s.sel ? panel.byId[ui.s.sel] : undefined;
+	const card = mod ?? (panel.summary ? undefined : panel.pre);
+	/* a redo's new attempt is a new card; a module's first attempt starting is the same card */
+	const shown = card ? `${card.id}:${Math.max(1, card.attemptN ?? 1)}` : SUMMARY;
+	const shownId: string = card?.id ?? SUMMARY;
+	const workRef = useRef<HTMLDivElement>(null);
+	const last = useRef({ key: shown, id: shownId });
+	const snap = useRef<Snapshot | null>(null);
+	const cardH = useRef<number | null>(null);
+	/* a card that gets much shorter while the page is scrolled (a redo panel closing) would make the page
+	   snap up as the scroll clamps: hold the old height and let it go, so the page glides up instead */
+	useLayoutEffect(() => {
+		const work = workRef.current;
+		const h = (work?.firstElementChild as HTMLElement | null)?.offsetHeight ?? null;
+		const before = cardH.current;
+		cardH.current = h;
+		if (!work || h === null || before === null || before - h < 40 || window.scrollY <= 0) return;
+		const now = work.offsetHeight;
+		play(work, [{ minHeight: `${now + before - h}px` }, { minHeight: `${now}px` }], { duration: 700, easing: EASE });
+	});
+	/* copy the card about to be replaced now: rendering runs before React changes the DOM */
+	if (last.current.key !== shown && !snap.current && !reducedMotion()) {
+		const old = workRef.current?.firstElementChild;
+		if (old instanceof HTMLElement) {
+			const node = old.cloneNode(true) as HTMLElement;
+			snap.current = { key: last.current.key, node, top: old.offsetTop, left: old.offsetLeft, width: old.offsetWidth };
+		}
+	}
+	/* the new card slides in from its side of the line (later modules from the right; the summary comes
+	   after the last) with a light sweep, while the old one fades out underneath toward the other side */
+	useLayoutEffect(() => {
+		const prev = last.current;
+		if (prev.key === shown) return;
+		last.current = { key: shown, id: shownId };
+		const before = snap.current;
+		snap.current = null;
+		const order = (id: string) => (id === PRE ? -1 : id === SUMMARY ? panel.ids.length : panel.ids.indexOf(id));
+		const dir = Math.sign(order(shownId) - order(prev.id)) || 1;
+		const work = workRef.current;
+		const now = work?.firstElementChild;
+		play(
+			now,
+			[
+				{ opacity: 0.3, translate: `${dir * 72}px 0` },
+				{ opacity: 1, translate: "0 0" },
+			],
+			{ duration: 680, easing: EASE },
+		);
+		play(
+			now,
+			[
+				{ opacity: 1, translate: dir > 0 ? "-100% 0" : "100% 0" },
+				{ opacity: 0, translate: dir > 0 ? "100% 0" : "-100% 0" },
+			],
+			{ duration: 950, easing: EASE_TRAIN, pseudoElement: "::after" },
+		);
+		if (work && before?.key === prev.key) {
+			const g = ghostCard(before);
+			work.appendChild(g);
+			const out = play(
+				g,
+				[
+					{ opacity: 0.9, translate: "0 0" },
+					{ opacity: 0, translate: `${-dir * 90}px 0` },
+				],
+				{ duration: 180, easing: EASE },
+			);
+			if (!out) g.remove();
+			else {
+				out.onfinish = () => g.remove();
+				out.oncancel = () => g.remove();
+			}
+		}
+	});
 	return (
-		<div className="work">
-			{mod ? (
-				<ModuleCard panel={panel} ui={ui} mod={mod} />
+		<div className="work" ref={workRef}>
+			{card ? (
+				<ModuleCard panel={panel} ui={ui} mod={card} />
 			) : panel.summary ? (
 				<RunSummary panel={panel} ui={ui} summary={panel.summary} />
-			) : (
-				<ModuleCard panel={panel} ui={ui} mod={panel.pre} />
-			)}
+			) : null}
 		</div>
 	);
 }
@@ -60,13 +164,43 @@ export function ModuleCard({ panel, ui, mod: m }: ModuleCardProps) {
 	const redoHere = ed?.kind === "redo" && ed.id === m.id;
 	const edHere = !!ed && ed.kind !== "redo" && ed.id === m.id;
 	const evOpen = ui.s.evOpen || redoHere;
+	const cardRef = useRef<HTMLElement>(null);
+	const ceRef = useRef<HTMLElement>(null);
+	const shape = useRef({ ev: evOpen, redo: redoHere, h: 0 });
+	/* opening or closing the evidence column (or the redo panel in it) fades the column in and eases the
+	   card's height, instead of reflowing the card in one frame */
+	useLayoutEffect(() => {
+		const card = cardRef.current;
+		const h = card?.offsetHeight ?? 0;
+		const prev = shape.current;
+		shape.current = { ev: evOpen, redo: redoHere, h };
+		if (prev.ev === evOpen && prev.redo === redoHere) return;
+		play(
+			ceRef.current,
+			[
+				{ opacity: 0.2, translate: "0 10px" },
+				{ opacity: 1, translate: "0 0" },
+			],
+			{ duration: 480, easing: EASE },
+		);
+		if (card && prev.h && Math.abs(prev.h - h) > 12) {
+			play(
+				card,
+				[
+					{ height: `${prev.h}px`, overflow: "clip" },
+					{ height: `${h}px`, overflow: "clip" },
+				],
+				{ duration: 480, easing: EASE },
+			);
+		}
+	});
 	const st = m.status;
 	/* keep the real status shape; a small slashed chip says a pending redo will replace it */
 	const replaced = st !== "replaced" && shownStatus(panel, redoTarget(ui.s), m.id) === "replaced";
 	const left = m.goal || m.criteria.length;
 	const hasFacts = !!(m.files.length || m.tests || m.looked.length || m.actions.length);
 	return (
-		<article className={evOpen ? "card" : "card noev"} aria-labelledby="cardT">
+		<article ref={cardRef} className={evOpen ? "card" : "card noev"} aria-labelledby="cardT">
 			<div className="cm">
 				<header className="ch">
 					<Glyph status={st} size={24} />
@@ -109,7 +243,7 @@ export function ModuleCard({ panel, ui, mod: m }: ModuleCardProps) {
 				)}
 			</div>
 			{evOpen ? (
-				<aside className="ce" id="evCol" aria-label={redoHere ? "Redo" : "Evidence"}>
+				<aside className="ce" id="evCol" ref={ceRef} aria-label={redoHere ? "Redo" : "Evidence"}>
 					{redoHere ? <RedoPanel panel={panel} ui={ui} mod={m} /> : <Evidence ui={ui} mod={m} />}
 				</aside>
 			) : null}
@@ -444,6 +578,14 @@ function Empty({ mod: m }: { mod: ModView }) {
 			<div className="empty">
 				<Glyph status="pending" size={14} />
 				<span>Not started</span>
+			</div>
+		);
+	}
+	if (m.status === "working") {
+		return (
+			<div className="empty">
+				<Glyph status="working" size={14} animate />
+				<span>Starting</span>
 			</div>
 		);
 	}

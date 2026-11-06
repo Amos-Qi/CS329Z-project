@@ -24,6 +24,7 @@ import {
 import { type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
 import { announce } from "../ui/announce.tsx";
 import { Icon, type IconName } from "../ui/icons.tsx";
+import { EASE, play } from "../ui/motion.ts";
 import { Glyph, Octagon, tipImg } from "../ui/primitives.tsx";
 
 /** Props of NowBar: the shared PanelProps (the view comes from `ui.s.view`). */
@@ -39,9 +40,17 @@ export function NowBar({ panel, ui }: NowBarProps) {
 	const noteCtlRef = useRef<HTMLDivElement>(null);
 	const flagCtlRef = useRef<HTMLDivElement>(null);
 
+	const nowRef = useRef<HTMLElement>(null);
+
 	useStopModal(pop === "stop", stopPopRef);
 	useFocusClose(ui, noteCtlRef, flagCtlRef);
 	useAnnounceState(panel);
+	useStateChange(
+		nowRef,
+		waiting
+			? `waiting:${now.decision?.after ?? ""}:${now.decision?.next ?? ""}`
+			: `${now.kind}:${now.module?.id ?? ""}`,
+	);
 
 	/* a popover whose trigger went away (run ended, flags cleared by a redo) closes */
 	const orphan = (pop === "flags" && now.flags.length === 0) || ((pop === "note" || pop === "stop") && !live);
@@ -184,6 +193,7 @@ export function NowBar({ panel, ui }: NowBarProps) {
 	return (
 		// biome-ignore lint/a11y/useAriaPropsSupportedByRole: the mockup names the bar ("Agent status" / "Decision needed")
 		<header
+			ref={nowRef}
 			id="now"
 			className={waiting ? "now waiting" : "now"}
 			aria-label={waiting ? "Decision needed" : "Agent status"}
@@ -191,6 +201,44 @@ export function NowBar({ panel, ui }: NowBarProps) {
 			{body}
 		</header>
 	);
+}
+
+/**
+ * When the bar's state changes (working on the next module, between modules, held, finished), its
+ * state row (glyph and title) drops in, so the change reads as one event, and if the bar grew or shrank
+ * (a hold's row of choices came or went) its height eases, so the line and the card below glide instead
+ * of jumping. `key` names the state without the clocks, which change every second.
+ */
+function useStateChange(nowRef: RefObject<HTMLElement | null>, key: string) {
+	const last = useRef(key);
+	const height = useRef<number | null>(null);
+	useLayoutEffect(() => {
+		const bar = nowRef.current;
+		if (!bar) return;
+		const before = height.current;
+		const h = bar.offsetHeight;
+		height.current = h;
+		if (last.current === key) return;
+		last.current = key;
+		play(
+			bar.querySelector(".now-state"),
+			[
+				{ opacity: 0.25, translate: "0 -10px" },
+				{ opacity: 1, translate: "0 0" },
+			],
+			{ duration: 560, easing: EASE },
+		);
+		if (before !== null && Math.abs(before - h) > 2) {
+			play(
+				bar,
+				[
+					{ height: `${before}px`, overflow: "clip" },
+					{ height: `${h}px`, overflow: "clip" },
+				],
+				{ duration: 560, easing: EASE },
+			);
+		}
+	});
 }
 
 // ---- pieces ------------------------------------------------------------------------------------

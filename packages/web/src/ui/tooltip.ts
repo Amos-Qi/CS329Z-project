@@ -11,6 +11,8 @@
  * activity-tick legend.
  */
 
+import { reducedMotion } from "./motion.ts";
+
 const NOW = "#now";
 const HARNESS = "#harness";
 
@@ -145,7 +147,8 @@ export function ensureVisible(el: Element | null | undefined): void {
 	const harness = document.querySelector<HTMLElement>(HARNESS);
 	const bottom = (harness ? harness.getBoundingClientRect().top : innerHeight) - 8;
 	if (r.height > bottom - top) return;
-	if (r.top < top || r.bottom > bottom) el.scrollIntoView({ block: "nearest" });
+	if (r.top < top || r.bottom > bottom)
+		el.scrollIntoView({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" });
 }
 
 /**

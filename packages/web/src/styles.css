@@ -5,109 +5,193 @@
  * the mockup's floating MOCKUP pill (.mock) is the researcher harness bar (.harness), and Home and
  * the Raw table get a few rules in the same tokens. Keep class names in sync with the mockup.
  */
-/* ---------- Tokens: dark (default) ---------- */
+/* ---------- Tokens: dark (default) — Vaporwave "midnight" ---------- */
+/*
+ * Vaporwave skin: deep purple ground, a pink/cyan grid, neon accents and pink+cyan double glows.
+ * State colours keep their meaning (ok green, warn yellow, bad red, act cyan, run purple) and every
+ * text colour passes WCAG AA on --card; shapes still carry each state, so colour is never alone.
+ */
 :root {
-	--bg: #0f172a;
-	--card: #1b2336;
-	--muted: #272f42;
-	--border: #475569;
-	--control-border: #64748b;
-	--ctl-on-warn: #8b7a57;
-	--hair: rgba(148, 163, 184, 0.16);
-	--hair-2: rgba(148, 163, 184, 0.3);
+	--pink: #ff71ce;
+	--cyan: #01cdfe;
+	--purple: #b967ff;
+	--green: #05ffa1;
+	--yellow: #fffb96;
+	--grad: linear-gradient(90deg, #ff71ce, #b967ff, #01cdfe);
+	--grad-flow: linear-gradient(90deg, #ff71ce 0%, #b967ff 25%, #01cdfe 50%, #b967ff 75%, #ff71ce 100%);
+	--bg: #1a0a2e;
+	--bg-2: #16082a;
+	--bg-grad: linear-gradient(180deg, #1a0a2e 0%, #2a0a3c 55%, #1b0f3d 100%);
+	--grid-a: rgba(255, 113, 206, 0.09);
+	--grid-b: rgba(1, 205, 254, 0.07);
+	--scan: rgba(0, 0, 0, 0.16);
+	--card: #22093d;
+	--inset: rgba(10, 2, 24, 0.45);
+	--muted: #34125a;
+	--border: #7a4fa8;
+	--control-border: #8a5cc0;
+	--ctl-on-warn: #e0c070;
+	--hair: rgba(255, 113, 206, 0.16);
+	--hair-2: rgba(255, 113, 206, 0.32);
+	--edge-a: rgba(255, 113, 206, 0.5);
+	--edge-b: rgba(1, 205, 254, 0.5);
 	/* --primary: filled surface of secondary (neutral) buttons; --btn-bg is the high-emphasis primary action */
-	--fg: #f8fafc;
-	--fg-2: #cbd5e1;
-	--muted-fg: #94a3b8;
-	--primary: #1e293b;
-	--ok: #22c55e;
-	--ok-fg: #4ade80;
-	--ok-soft: rgba(34, 197, 94, 0.14);
-	--on-ok: #0f172a;
-	--warn: #f59e0b;
-	--warn-fg: #fbbf24;
-	--warn-soft: rgba(245, 158, 11, 0.14);
-	--warn-surface: #33291a;
-	--warn-solid: #f59e0b;
-	--warn-solid-h: #fbbf24;
-	--on-warn: #0f172a;
-	--bad: #ef4444;
-	--bad-fg: #f87171;
-	--bad-soft: rgba(239, 68, 68, 0.14);
-	--bad-solid: #dc2626;
-	--on-bad: #ffffff;
-	--act: #60a5fa;
-	--act-fg: #93c5fd;
-	--act-soft: rgba(96, 165, 250, 0.16);
-	--pend: #94a3b8;
-	--pend-line: #64748b;
-	--run: #a78bfa;
-	--add-bg: rgba(34, 197, 94, 0.13);
-	--del-bg: rgba(239, 68, 68, 0.15);
-	--add-fg: #86efac;
-	--del-fg: #fca5a5;
-	--focus: #93c5fd;
-	--btn-bg: #f8fafc;
-	--btn-bg-h: #e2e8f0;
-	--btn-fg: #0f172a;
-	--tip-bg: #272f42;
-	--shadow: 0 10px 30px rgba(2, 6, 23, 0.55);
-	--harness-bg: #e2e8f0;
-	--harness-fg: #0f172a;
-	--harness-sub: rgba(15, 23, 42, 0.1);
-	--font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-	--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+	--fg: #fdf0fa;
+	--fg-2: #ecd3f7;
+	--muted-fg: #c4a0e6;
+	--primary: rgba(1, 205, 254, 0.12);
+	--btn2-fg: #8ae9ff;
+	--btn2-border: rgba(1, 205, 254, 0.55);
+	--ok: #05ffa1;
+	--ok-fg: #5dffc0;
+	--ok-soft: rgba(5, 255, 161, 0.14);
+	--on-ok: #1a0a2e;
+	--warn: #fffb96;
+	--warn-fg: #fffb96;
+	--warn-soft: rgba(255, 251, 150, 0.13);
+	--warn-surface: #3d1736;
+	--warn-grad: linear-gradient(90deg, #4a1442 0%, #3d1736 45%, #4b2a18 100%);
+	--warn-solid: #fffb96;
+	--warn-solid-h: #fffdc8;
+	--on-warn: #1a0a2e;
+	--bad: #ff5e5e;
+	--bad-fg: #ff9a9a;
+	--bad-soft: rgba(255, 94, 94, 0.16);
+	--bad-solid: #ff5e5e;
+	--bad-solid-h: #ff8a8a;
+	--on-bad: #1a0a2e;
+	--act: #01cdfe;
+	--act-fg: #7fe6ff;
+	--act-soft: rgba(1, 205, 254, 0.16);
+	--pend: #a98bc9;
+	--pend-line: #7d5ea3;
+	--run: #b967ff;
+	--line-done: #ff71ce;
+	--line-hl: #ffd6f3;
+	--add-bg: rgba(5, 255, 161, 0.12);
+	--del-bg: rgba(255, 94, 94, 0.16);
+	--add-fg: #8affcf;
+	--del-fg: #ffb3b3;
+	--focus: #01cdfe;
+	--btn-bg: var(--grad-flow);
+	--btn-bg-h: var(--grad-flow);
+	--btn-fg: #1a0a2e;
+	--tip-bg: #16082a;
+	--accent-fg: #ff8ad6;
+	--now-bg: linear-gradient(90deg, rgba(43, 0, 87, 0.96), rgba(26, 10, 46, 0.96) 60%, rgba(22, 8, 42, 0.96));
+	--field-bg: rgba(255, 255, 255, 0.05);
+	--field-border: rgba(255, 113, 206, 0.6);
+	--primary-h: rgba(1, 205, 254, 0.22);
+	--hero-sky: linear-gradient(180deg, #0f0326 0%, #2b0a4a 50%, #6a145e 82%, #b0306f 100%);
+	--hero-floor: #13042b;
+	--hero-line-a: rgba(255, 113, 206, 0.6);
+	--hero-line-b: rgba(1, 205, 254, 0.5);
+	--glow-pink: rgba(255, 113, 206, 0.5);
+	--glow-cyan: rgba(1, 205, 254, 0.5);
+	/* the double (pink + cyan) glow at three sizes, and the hover one the style asks for */
+	--glow-sm: -2px 0 8px rgba(255, 113, 206, 0.4), 2px 0 8px rgba(1, 205, 254, 0.35);
+	--glow-md: -3px 0 16px rgba(255, 113, 206, 0.4), 3px 0 16px rgba(1, 205, 254, 0.32);
+	--glow-lg: 0 10px 30px rgba(255, 113, 206, 0.2), 0 0 24px rgba(1, 205, 254, 0.18);
+	--glow-hover: 0 0 30px rgba(255, 113, 206, 0.7), 0 0 32px rgba(1, 205, 254, 0.45);
+	--text-glow:
+		2px 2px 0 rgba(185, 103, 255, 0.5), -1px 0 10px rgba(255, 113, 206, 0.55), 1px 0 10px rgba(1, 205, 254, 0.45);
+	--text-glow-sm: -1px 0 6px rgba(255, 113, 206, 0.45), 1px 0 6px rgba(1, 205, 254, 0.4);
+	--shadow: 0 10px 30px rgba(255, 113, 206, 0.22), 0 0 24px rgba(1, 205, 254, 0.16);
+	--harness-bg: #0d0420;
+	--harness-fg: #8ae9ff;
+	--harness-sub: rgba(1, 205, 254, 0.14);
+	/* floating slowness: hover drifts take 450ms, gradients flow over 500ms, never a bounce */
+	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--float:
+		translate 450ms var(--ease), rotate 450ms var(--ease), box-shadow 500ms var(--ease), background-color 400ms var(
+			--ease
+		),
+		background-position 500ms var(--ease), border-color 400ms var(--ease), color 400ms var(--ease), opacity 300ms var(
+			--ease
+		);
+	--font-ui: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
+	--font-mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	color-scheme: dark;
 }
-/* ---------- Tokens: light (re-tuned, not inverted) ---------- */
+/* ---------- Tokens: light — pastel Vaporwave "sunrise" (re-tuned, not inverted) ---------- */
 [data-theme="light"] {
-	--bg: #f3f5f9;
-	--card: #ffffff;
-	--muted: #ebeff5;
-	--border: #64748b;
-	--control-border: #64748b;
-	--ctl-on-warn: #64748b;
-	--hair: rgba(15, 23, 42, 0.09);
-	--hair-2: rgba(15, 23, 42, 0.16);
-	--fg: #0f172a;
-	--fg-2: #334155;
-	--muted-fg: #475569;
-	--primary: #e2e8f0;
-	--ok: #15803d;
-	--ok-fg: #166534;
-	--ok-soft: #dcfce7;
+	--bg: #f7e6fa;
+	--bg-2: #f3e1fb;
+	--bg-grad: linear-gradient(180deg, #fbe3f4 0%, #efe0fd 55%, #dff1fd 100%);
+	--grid-a: rgba(214, 36, 159, 0.1);
+	--grid-b: rgba(0, 136, 184, 0.09);
+	--scan: rgba(122, 47, 214, 0.05);
+	--card: #fff4fc;
+	--inset: rgba(122, 47, 214, 0.05);
+	--muted: #f1dcf8;
+	--border: #9a6fbf;
+	--control-border: #8f5fb8;
+	--ctl-on-warn: #8a6a10;
+	--hair: rgba(122, 47, 214, 0.13);
+	--hair-2: rgba(122, 47, 214, 0.26);
+	--edge-a: rgba(214, 36, 159, 0.45);
+	--edge-b: rgba(0, 136, 184, 0.45);
+	--fg: #2a0a4a;
+	--fg-2: #48216d;
+	--muted-fg: #693e93;
+	--primary: rgba(0, 136, 184, 0.1);
+	--btn2-fg: #005f82;
+	--btn2-border: rgba(0, 136, 184, 0.55);
+	--ok: #00965f;
+	--ok-fg: #007a4d;
+	--ok-soft: rgba(0, 150, 95, 0.14);
 	--on-ok: #ffffff;
-	--warn: #b45309;
-	--warn-fg: #92400e;
-	--warn-soft: #fef3c7;
-	--warn-surface: #fef3c7;
-	--warn-solid: #b45309;
-	--warn-solid-h: #92400e;
-	--on-warn: #ffffff;
-	--bad: #dc2626;
-	--bad-fg: #b91c1c;
-	--bad-soft: #fee2e2;
-	--bad-solid: #b91c1c;
-	--on-bad: #ffffff;
-	--act: #2563eb;
-	--act-fg: #1d4ed8;
-	--act-soft: #dbeafe;
-	--pend: #64748b;
-	--pend-line: #7b8ba1;
-	--run: #7c3aed;
-	--add-bg: #dcfce7;
-	--del-bg: #fee2e2;
-	--add-fg: #166534;
-	--del-fg: #991b1b;
-	--focus: #2563eb;
-	--btn-bg: #0f172a;
-	--btn-bg-h: #1e293b;
-	--btn-fg: #ffffff;
-	--tip-bg: #ffffff;
-	--shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
-	--harness-bg: #1e293b;
-	--harness-fg: #f8fafc;
-	--harness-sub: rgba(248, 250, 252, 0.12);
+	--warn: #c79400;
+	--warn-fg: #765800;
+	--warn-soft: rgba(255, 214, 0, 0.2);
+	--warn-surface: #fff1c2;
+	--warn-grad: linear-gradient(90deg, #ffe0f2 0%, #fff1c2 55%, #ffe3c4 100%);
+	--warn-solid: #ffe45c;
+	--warn-solid-h: #ffd92e;
+	--on-warn: #2a0a4a;
+	--bad: #e0244a;
+	--bad-fg: #b3102e;
+	--bad-soft: rgba(224, 36, 74, 0.12);
+	--bad-solid: #d61f45;
+	--bad-solid-h: #b3102e;
+	--on-bad: #fff4fc;
+	--act: #0088b8;
+	--act-fg: #006a90;
+	--act-soft: rgba(1, 205, 254, 0.18);
+	--pend: #8a6aae;
+	--pend-line: #9378b8;
+	--run: #8a2be2;
+	--line-done: #c2189a;
+	--line-hl: #5a0b96;
+	--add-bg: rgba(0, 168, 107, 0.14);
+	--del-bg: rgba(224, 36, 74, 0.12);
+	--add-fg: #006b43;
+	--del-fg: #a3102b;
+	--focus: #0088b8;
+	--btn-fg: #2a0a4a;
+	--tip-bg: #fff4fc;
+	--accent-fg: #b0127f;
+	--now-bg: linear-gradient(90deg, rgba(253, 232, 247, 0.96), rgba(243, 230, 254, 0.96) 60%, rgba(230, 244, 254, 0.96));
+	--field-bg: rgba(255, 255, 255, 0.65);
+	--field-border: #8f5fb8;
+	--primary-h: rgba(0, 136, 184, 0.18);
+	--hero-sky: linear-gradient(180deg, #fff0fa 0%, #fbd9f1 50%, #ffb3de 82%, #ff9ad0 100%);
+	--hero-floor: #f4ddfb;
+	--hero-line-a: rgba(214, 36, 159, 0.5);
+	--hero-line-b: rgba(0, 136, 184, 0.45);
+	--glow-pink: rgba(255, 113, 206, 0.45);
+	--glow-cyan: rgba(1, 205, 254, 0.45);
+	--glow-sm: -2px 0 8px rgba(255, 113, 206, 0.3), 2px 0 8px rgba(1, 205, 254, 0.28);
+	--glow-md: -3px 0 16px rgba(255, 113, 206, 0.3), 3px 0 16px rgba(1, 205, 254, 0.26);
+	--glow-lg: 0 10px 30px rgba(255, 113, 206, 0.22), 0 0 24px rgba(1, 205, 254, 0.18);
+	--glow-hover: 0 0 30px rgba(255, 113, 206, 0.6), 0 0 32px rgba(1, 205, 254, 0.4);
+	--text-glow:
+		2px 2px 0 rgba(185, 103, 255, 0.35), -1px 0 10px rgba(255, 113, 206, 0.45), 1px 0 10px rgba(1, 205, 254, 0.4);
+	--text-glow-sm: -1px 0 6px rgba(255, 113, 206, 0.32), 1px 0 6px rgba(1, 205, 254, 0.28);
+	--shadow: 0 8px 24px rgba(214, 36, 159, 0.16), 0 0 20px rgba(0, 136, 184, 0.12);
+	--harness-bg: #2a0a4a;
+	--harness-fg: #ffd6f3;
+	--harness-sub: rgba(255, 214, 243, 0.14);
 	color-scheme: light;
 }
 /* ---------- Base ---------- */
@@ -123,13 +207,52 @@ html {
 	scroll-padding-bottom: calc(var(--harness-h, 56px) + 8px);
 }
 body {
-	background: var(--bg);
+	background-color: var(--bg);
+	/* the retro grid over the purple dusk, fixed so it reads as the room, not the content */
+	background-image:
+		linear-gradient(var(--grid-a) 1px, transparent 1px), linear-gradient(90deg, var(--grid-b) 1px, transparent 1px),
+		var(--bg-grad);
+	background-size:
+		50px 50px,
+		50px 50px,
+		100% 100%;
+	background-attachment: fixed;
 	color: var(--fg);
-	font: 400 14px / 1.45 var(--font-ui);
+	font: 500 14px / 1.5 var(--font-ui);
 	font-variant-numeric: tabular-nums;
 	-webkit-font-smoothing: antialiased;
 	overflow-x: hidden;
 	min-height: 100vh;
+}
+/* VHS scanlines over everything (never takes the pointer), and one slow tracking band rolling down */
+body::before,
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 95;
+}
+body::before {
+	background: repeating-linear-gradient(0deg, var(--scan) 0 1px, transparent 1px 3px);
+}
+body::after {
+	bottom: auto;
+	height: 220px;
+	background: linear-gradient(
+		180deg,
+		transparent 0%,
+		rgba(255, 113, 206, 0.05) 48%,
+		rgba(1, 205, 254, 0.05) 52%,
+		transparent 100%
+	);
+	translate: 0 -220px;
+	animation: vhs 9s linear infinite;
+}
+@keyframes vhs {
+	to {
+		translate: 0 100vh;
+	}
 }
 .mono {
 	font-family: var(--font-mono);
@@ -154,7 +277,7 @@ textarea {
 :focus-visible {
 	outline: 2px solid var(--focus);
 	outline-offset: 2px;
-	border-radius: 4px;
+	border-radius: 6px;
 }
 .sr-only {
 	position: absolute !important;
@@ -2127,15 +2250,1083 @@ select.field {
 	color: var(--fg-2);
 }
 
+/* ---------- Vaporwave skin: surfaces, type, controls, motion ---------- */
+/*
+ * One layer over the ported rules above, so the mockup's layout stays as reviewed. Hover drifts use the
+ * individual translate/rotate properties, which compose with (never replace) a layout transform such as
+ * .harness's centring or a marker's offset. The metro stations get glow only: drawMetro() measures them.
+ */
+
+/* Type: bold, slightly techy, never formal; headings carry the pink + cyan double glow */
+.now-title,
+.dc-title,
+.ch h2,
+.pop h3,
+.redo-h h3,
+.home h2 {
+	font-weight: 700;
+}
+.dc-title,
+.ch h2,
+.redo-h h3 {
+	text-shadow: var(--text-glow-sm);
+}
+.ch h2 {
+	font-size: 20px;
+	letter-spacing: 0.02em;
+}
+.cid {
+	color: var(--accent-fg);
+	font-weight: 700;
+}
+.lab {
+	font-family: var(--font-mono);
+	font-weight: 700;
+	letter-spacing: 0;
+}
+.mono,
+.tag,
+.dn,
+.tn {
+	font-variant-ligatures: none;
+}
+
+/* Surfaces: rounded, asymmetric neon edges (pink top/left, thicker cyan bottom/right), double glow */
+.card,
+.hcard,
+.ll,
+.pop,
+.toast,
+.hero {
+	border-style: solid;
+	border-width: 1px 2px 2px 1px;
+	border-color: var(--edge-a) var(--edge-b) var(--edge-b) var(--edge-a);
+	border-radius: 12px;
+	box-shadow: var(--glow-lg);
+}
+.card,
+.hcard,
+.ll {
+	transition: box-shadow 700ms var(--ease);
+}
+.card:hover,
+.hcard:hover,
+.ll:hover {
+	box-shadow:
+		var(--glow-lg),
+		0 0 40px rgba(1, 205, 254, 0.14);
+}
+.pop {
+	box-shadow: var(--glow-md), var(--shadow);
+}
+/* boxes inside a card are insets, not cards: one hairline, a darker well, no glow */
+.ed,
+.det,
+.cq,
+.rl,
+.lred .redo,
+.vers li,
+.nq li {
+	border: 1px solid var(--hair);
+	border-radius: 8px;
+	background: var(--inset);
+}
+.vers li.cur {
+	border-color: var(--hair-2);
+	background: var(--muted);
+}
+.lred .cq {
+	background: var(--card);
+}
+.ce {
+	border-left: 1px solid transparent;
+	border-image: linear-gradient(180deg, var(--edge-a), var(--edge-b)) 1;
+}
+.flagbar {
+	border-radius: 8px;
+	box-shadow: 0 0 16px var(--warn-soft);
+}
+#tip {
+	border-radius: 8px;
+	border-color: var(--edge-a);
+	box-shadow: var(--glow-md);
+}
+.pill,
+.chip,
+.tag,
+.src .sx {
+	border-radius: 8px;
+}
+.pill {
+	border: 1px solid var(--hair-2);
+}
+
+/* Now bar: a dusk band with a pink → purple → cyan horizon; held = sunset band with a yellow horizon */
+.now {
+	background: var(--now-bg);
+	border-bottom: 2px solid transparent;
+	border-image: var(--grad) 1;
+	box-shadow:
+		0 6px 24px rgba(255, 113, 206, 0.16),
+		0 2px 12px rgba(1, 205, 254, 0.1);
+}
+.now.waiting {
+	background: var(--now-bg);
+	border-image: linear-gradient(90deg, var(--warn), var(--pink), var(--warn)) 1;
+	box-shadow:
+		0 0 26px var(--warn-soft),
+		0 6px 24px rgba(255, 113, 206, 0.2);
+}
+.ib .dot {
+	box-shadow:
+		0 0 0 2px var(--bg-2),
+		0 0 8px var(--act);
+}
+.now.waiting .ib .dot {
+	box-shadow:
+		0 0 0 2px var(--warn-surface),
+		0 0 8px var(--act);
+}
+.s {
+	border-radius: 3px;
+}
+.s.verified {
+	box-shadow: 0 0 8px var(--ok-soft);
+}
+.s.working {
+	box-shadow: 0 0 8px var(--act-soft);
+}
+
+/* Buttons: secondary = cyan tint; primary = flowing pink → purple → cyan with a light sweep */
+.btn {
+	/* the bold face is wider than the mockup's, and the primary clips its sweep: never squeeze a label */
+	flex-shrink: 0;
+	border-radius: 8px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	background: var(--primary);
+	color: var(--btn2-fg);
+	border-color: var(--btn2-border);
+	transition: var(--float);
+}
+.btn:hover {
+	background: var(--primary-h);
+	translate: 0 -2px;
+	rotate: -0.6deg;
+	box-shadow: var(--glow-hover);
+}
+.btn.primary {
+	position: relative;
+	overflow: hidden;
+	isolation: isolate;
+	background: var(--grad-flow) 0% 50% / 200% auto;
+	color: var(--btn-fg);
+	border-color: transparent;
+	box-shadow: 0 0 20px var(--glow-pink);
+}
+.btn.primary:hover {
+	background: var(--grad-flow) 100% 50% / 200% auto;
+	border-color: transparent;
+	box-shadow: var(--glow-hover);
+}
+.btn.primary::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+	translate: -100% 0;
+	transition: translate 700ms var(--ease);
+	pointer-events: none;
+}
+.btn.primary:hover::after {
+	translate: 100% 0;
+}
+.btn.warn {
+	box-shadow: 0 0 18px var(--warn-soft);
+}
+.btn.warn:hover {
+	background: var(--warn-solid-h);
+	box-shadow:
+		0 0 30px rgba(255, 251, 150, 0.55),
+		0 0 32px rgba(255, 113, 206, 0.35);
+}
+.btn.danger:hover {
+	opacity: 1;
+	background: var(--bad-solid-h);
+	border-color: var(--bad-solid-h);
+	box-shadow:
+		0 0 30px rgba(255, 94, 94, 0.6),
+		0 0 32px rgba(255, 113, 206, 0.4);
+}
+.btn.dghost {
+	background: transparent;
+	color: var(--bad-fg);
+	border-color: var(--bad);
+}
+.btn.dghost:hover {
+	background: var(--bad-soft);
+	box-shadow:
+		0 0 26px rgba(255, 94, 94, 0.45),
+		0 0 28px rgba(255, 113, 206, 0.3);
+}
+.btn.ghost {
+	background: transparent;
+	border-color: transparent;
+	color: var(--fg-2);
+}
+.btn.ghost:hover {
+	background: var(--muted);
+	color: var(--fg);
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+	opacity: 0.45;
+	cursor: not-allowed;
+	translate: none;
+	rotate: none;
+	box-shadow: none;
+}
+.ib {
+	border-radius: 8px;
+	transition: var(--float);
+}
+.ib:hover {
+	color: var(--accent-fg);
+	translate: 0 -2px;
+	rotate: -4deg;
+	box-shadow: var(--glow-md);
+}
+.ib[aria-disabled="true"]:hover {
+	color: var(--fg-2);
+	translate: none;
+	rotate: none;
+	box-shadow: none;
+}
+.ib[aria-pressed="true"] {
+	box-shadow: 0 0 14px var(--warn-soft);
+}
+/* small interactive pieces drift too */
+.chip.lnk,
+.vchip,
+.pill.flag,
+.tab,
+.fc,
+.hb {
+	transition: var(--float);
+}
+.chip.lnk:hover,
+.vchip:hover,
+.pill.flag:hover {
+	translate: 0 -2px;
+	rotate: -1deg;
+	box-shadow: var(--glow-md);
+}
+.vchip[aria-disabled="true"]:hover,
+.chip.lnk[aria-disabled="true"]:hover {
+	translate: none;
+	rotate: none;
+	box-shadow: none;
+}
+.vchip.you {
+	box-shadow: 0 0 10px var(--act-soft);
+}
+.tab:hover,
+.fc:hover {
+	translate: 0 -1px;
+}
+.tab[aria-selected="true"],
+.fc[aria-pressed="true"],
+.fc[aria-checked="true"] {
+	background: var(--muted);
+	box-shadow:
+		inset 0 0 0 1px var(--edge-a),
+		0 0 14px rgba(255, 113, 206, 0.22);
+}
+/* rows drift right on hover and the current row glows all round (no one-sided stripe) */
+.step,
+.rlb,
+.lrb,
+button.frow {
+	transition: var(--float);
+}
+.step:hover,
+.rlb:hover,
+.lrb:hover,
+button.frow:hover {
+	translate: 3px 0;
+}
+button.frow[aria-disabled="true"]:hover {
+	translate: none;
+}
+.step[aria-expanded="true"] {
+	box-shadow: inset 0 0 0 1px var(--hair-2);
+}
+.lr.cur .lrb {
+	box-shadow:
+		inset 0 0 0 1px var(--act),
+		inset 0 0 18px var(--act-soft);
+}
+/* glitch snap: a click jumps down-right with no easing, the glow drops and the label splits pink/cyan */
+.btn:not(:disabled):not([aria-disabled="true"]):active,
+.ib:not([aria-disabled="true"]):active,
+.chip.lnk:not([aria-disabled="true"]):active,
+.vchip:not([aria-disabled="true"]):active,
+.pill.flag:active,
+.tab:active,
+.fc:active,
+.hb:not([aria-disabled="true"]):active {
+	translate: 4px 4px;
+	rotate: 0deg;
+	box-shadow: none;
+	text-shadow:
+		-2px 0 var(--pink),
+		2px 0 var(--cyan);
+	transition-duration: 0s;
+}
+.btn.sm:not(:disabled):not([aria-disabled="true"]):active,
+.ib.sm:not([aria-disabled="true"]):active {
+	translate: 3px 3px;
+}
+
+/* Fields: dark wells with a pink edge; focus turns the edge pink and glows */
+.field,
+.search {
+	border-radius: 8px;
+	border-color: var(--field-border);
+	background: var(--field-bg);
+	transition: var(--float);
+}
+.field:focus,
+.search:focus-within {
+	outline: none;
+	border-color: var(--pink);
+	box-shadow:
+		0 0 0 1px var(--pink),
+		0 0 15px rgba(255, 113, 206, 0.4);
+}
+select.field option {
+	background: var(--card);
+	color: var(--fg);
+}
+.check input {
+	accent-color: var(--pink);
+}
+
+/* Metro line (level 1): stations on a grid, neon track with a double glow */
+.metro {
+	background-color: var(--bg-2);
+	background-image:
+		linear-gradient(var(--grid-a) 1px, transparent 1px), linear-gradient(90deg, var(--grid-b) 1px, transparent 1px);
+	background-size: 25px 25px;
+	background-position: -1px -1px;
+	border-bottom: 1px solid var(--hair-2);
+}
+.metro-svg {
+	filter: drop-shadow(-1px 0 3px var(--glow-pink)) drop-shadow(1px 0 4px var(--glow-cyan));
+}
+.ln.done,
+.ln.term {
+	stroke: var(--line-done);
+}
+.ln.hl {
+	stroke: var(--line-hl);
+}
+.arw {
+	stroke: var(--line-hl);
+}
+.st-dot,
+.cutmk {
+	background: var(--bg-2);
+}
+.st,
+.st-dot {
+	transition:
+		background-color 500ms var(--ease),
+		box-shadow 500ms var(--ease);
+}
+.st:hover .st-dot {
+	box-shadow:
+		0 0 14px var(--glow-pink),
+		0 0 20px var(--glow-cyan);
+}
+.st[aria-current="true"] .st-dot {
+	box-shadow:
+		0 0 0 2px var(--bg-2),
+		0 0 0 3.5px var(--pink),
+		0 0 16px var(--glow-pink),
+		0 0 22px var(--glow-cyan);
+}
+.st:hover .st-lab {
+	color: var(--fg);
+}
+.train i {
+	box-shadow:
+		0 0 10px var(--glow-cyan),
+		-2px 0 8px var(--glow-pink);
+}
+.train i::before,
+.train i::after {
+	background: var(--bg-2);
+}
+/* a marker that just left (a copy fading out where it was, see Metro's ghost()) */
+.stations .mk.ghost {
+	pointer-events: none;
+	animation: none;
+}
+
+/* Harness bar (researcher chrome): a dark cassette deck with a cyan dashed edge */
+.harness {
+	border-color: var(--harness-fg);
+	box-shadow:
+		0 0 20px var(--glow-cyan),
+		0 0 30px rgba(255, 113, 206, 0.25);
+}
+.harness-tag {
+	font-family: var(--font-mono);
+	font-weight: 700;
+}
+.hb:hover {
+	translate: 0 -1px;
+}
+.hb[aria-pressed="true"] {
+	box-shadow: 0 0 12px var(--glow-cyan);
+}
+.hb[aria-disabled="true"]:hover {
+	translate: none;
+}
+.scrub input[type="range"] {
+	accent-color: var(--pink);
+}
+
+/* Home hero: synthwave sunset — striped sun on a moving perspective grid, glitching title */
+.hero {
+	position: relative;
+	overflow: hidden;
+	isolation: isolate;
+	--horizon: 76px;
+	--sun: 150px;
+	min-height: 200px;
+	padding: 28px 28px calc(var(--horizon) + 24px);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	background: var(--hero-sky);
+}
+.hero-art {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+/* the horizon sits --horizon above the bottom: the glow behind the sun, then the line itself */
+.hero-art::before {
+	content: "";
+	position: absolute;
+	right: calc(5% - var(--sun) / 2);
+	bottom: calc(var(--horizon) - var(--sun));
+	width: calc(var(--sun) * 2);
+	height: calc(var(--sun) * 2);
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(255, 113, 206, 0.55) 0%, rgba(255, 113, 206, 0) 65%);
+}
+.hero-art::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: calc(var(--horizon) - 1px);
+	height: 2px;
+	background: var(--grad);
+	box-shadow:
+		0 0 12px var(--glow-pink),
+		0 0 18px var(--glow-cyan);
+}
+/* the sun's centre is on the horizon (the floor hides its lower half); the stripes widen downwards */
+.sun {
+	position: absolute;
+	right: 5%;
+	bottom: calc(var(--horizon) - var(--sun) / 2);
+	width: var(--sun);
+	height: var(--sun);
+	border-radius: 50%;
+	background: linear-gradient(180deg, #fffb96 0%, #ffb86b 22%, #ff71ce 46%, #b967ff 60%);
+	mask: linear-gradient(
+		180deg,
+		#000 0 22%,
+		transparent 22% 24%,
+		#000 24% 31%,
+		transparent 31% 34%,
+		#000 34% 39%,
+		transparent 39% 43%,
+		#000 43% 46%,
+		transparent 46% 51%,
+		#000 51%
+	);
+}
+.floor {
+	position: absolute;
+	left: -50%;
+	right: -50%;
+	top: calc(100% - var(--horizon));
+	height: 220px;
+	background-color: var(--hero-floor);
+	background-image:
+		linear-gradient(var(--hero-line-a) 2px, transparent 2px),
+		linear-gradient(90deg, var(--hero-line-b) 2px, transparent 2px);
+	background-size: 48px 48px;
+	transform: perspective(260px) rotateX(62deg);
+	transform-origin: 50% 0;
+	animation: floor 5s linear infinite;
+}
+@keyframes floor {
+	to {
+		background-position: 0 48px;
+	}
+}
+.home .hero h1 {
+	font-size: 44px;
+	line-height: 1.05;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	gap: 14px;
+	flex-wrap: wrap;
+	text-shadow: var(--text-glow);
+	animation: glitch 7s steps(1, end) infinite;
+}
+.hero h1 .i {
+	color: var(--act);
+	filter: drop-shadow(0 0 6px var(--glow-cyan));
+}
+@keyframes glitch {
+	0%,
+	90%,
+	96%,
+	100% {
+		text-shadow: var(--text-glow);
+		translate: 0 0;
+	}
+	92% {
+		text-shadow:
+			-3px 0 var(--pink),
+			3px 0 var(--cyan);
+		translate: 2px 0;
+	}
+	94% {
+		text-shadow:
+			3px 0 var(--pink),
+			-3px 0 var(--cyan);
+		translate: -2px 0;
+	}
+}
+.home h2 {
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	text-shadow: var(--text-glow-sm);
+}
+.home h2 .i {
+	color: var(--accent-fg);
+}
+.rlb:hover .nm {
+	color: var(--fg);
+}
+.rawt {
+	border-color: var(--hair-2);
+}
+@media (max-width: 1000px) {
+	.hero {
+		--sun: 110px;
+	}
+	.home .hero h1 {
+		font-size: 36px;
+	}
+}
+/* ---------- Vaporwave motion: entrances, neon breathing, flowing tracks, glitches ---------- */
+/*
+ * Decoration over the states above; prefers-reduced-motion turns all of it off (Motion + responsive).
+ * Entrances fill backwards only, so a hover's translate takes over once they end. Nothing here moves a
+ * metro station's box (drawMetro() measures it): the station halo is a pseudo-element.
+ */
+@keyframes float-in {
+	from {
+		opacity: 0;
+		translate: 0 14px;
+	}
+}
+@keyframes drift-in {
+	from {
+		opacity: 0;
+		translate: -12px 0;
+	}
+}
+/* an old-system dialog: jolts sideways once, then settles */
+@keyframes pop-in {
+	0% {
+		opacity: 0;
+		translate: 0 -8px;
+		scale: 0.96;
+	}
+	45% {
+		opacity: 1;
+		translate: 4px -2px;
+	}
+	60% {
+		translate: -3px 0;
+	}
+	100% {
+		opacity: 1;
+		translate: 0 0;
+		scale: 1;
+	}
+}
+@keyframes tip-in {
+	from {
+		opacity: 0;
+		translate: 0 4px;
+	}
+}
+@keyframes breathe {
+	0%,
+	100% {
+		opacity: 0.35;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+@keyframes jolt {
+	0%,
+	100% {
+		translate: 0 0;
+	}
+	20% {
+		translate: 5px 0;
+	}
+	40% {
+		translate: -4px 1px;
+	}
+	60% {
+		translate: 3px -1px;
+	}
+	80% {
+		translate: -1px 0;
+	}
+}
+@keyframes scan {
+	from {
+		translate: -220px 0;
+	}
+	to {
+		translate: 100vw 0;
+	}
+}
+@keyframes flow {
+	to {
+		background-position: 100% 50%;
+	}
+}
+@keyframes march {
+	to {
+		stroke-dashoffset: -18;
+	}
+}
+@keyframes halo {
+	from {
+		opacity: 0.9;
+		scale: 1;
+	}
+	to {
+		opacity: 0;
+		scale: 1.8;
+	}
+}
+@keyframes pulse-cyan {
+	50% {
+		box-shadow:
+			0 0 14px var(--glow-cyan),
+			-2px 0 10px var(--glow-pink);
+	}
+}
+@keyframes pulse-warn {
+	50% {
+		box-shadow:
+			0 0 26px rgba(255, 251, 150, 0.55),
+			0 0 30px rgba(255, 113, 206, 0.35);
+	}
+}
+
+/* Entrances: surfaces float up out of the grid, rows drift in from the left in a short cascade */
+.hero,
+.hcard,
+.metro,
+.card,
+.ll,
+.toast,
+.ed,
+.redo {
+	animation: float-in 700ms var(--ease) backwards;
+}
+.home > :nth-child(2) {
+	animation-delay: 120ms;
+}
+.home > :nth-child(3) {
+	animation-delay: 240ms;
+}
+.work > .card {
+	animation-delay: 120ms;
+}
+.steps > li,
+.ll > .lr,
+.rl > li,
+.crit > li,
+.vers > li {
+	animation: drift-in 500ms var(--ease) backwards;
+}
+.steps > li:nth-child(2),
+.ll > .lr:nth-child(2),
+.rl > li:nth-child(2),
+.crit > li:nth-child(2) {
+	animation-delay: 50ms;
+}
+.steps > li:nth-child(3),
+.ll > .lr:nth-child(3),
+.rl > li:nth-child(3),
+.crit > li:nth-child(3) {
+	animation-delay: 100ms;
+}
+.steps > li:nth-child(4),
+.ll > .lr:nth-child(4),
+.rl > li:nth-child(4),
+.crit > li:nth-child(4) {
+	animation-delay: 150ms;
+}
+.steps > li:nth-child(5),
+.ll > .lr:nth-child(5),
+.rl > li:nth-child(5) {
+	animation-delay: 200ms;
+}
+.steps > li:nth-child(6),
+.ll > .lr:nth-child(6),
+.rl > li:nth-child(6) {
+	animation-delay: 250ms;
+}
+.steps > li:nth-child(n + 7),
+.ll > .lr:nth-child(n + 7),
+.rl > li:nth-child(n + 7) {
+	animation-delay: 300ms;
+}
+.pop {
+	animation: pop-in 420ms var(--ease) backwards;
+}
+#tip {
+	animation: tip-in 260ms var(--ease) backwards;
+}
+
+/* Surfaces float a little while the pointer is on them; a Home card's heading spreads its letters */
+.card,
+.hcard {
+	transition:
+		box-shadow 700ms var(--ease),
+		translate 600ms var(--ease);
+}
+.card:hover,
+.hcard:hover {
+	translate: 0 -3px;
+}
+.hcard h2 {
+	transition: letter-spacing 500ms var(--ease);
+}
+.hcard:hover h2 {
+	letter-spacing: 0.14em;
+}
+
+/* Now bar: a light runs along the horizon; held = one glitch jolt, then a slow yellow-pink breath */
+.now::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	bottom: -2px;
+	width: 220px;
+	height: 2px;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+	box-shadow:
+		0 0 10px var(--glow-pink),
+		0 0 14px var(--glow-cyan);
+	animation: scan 6s linear infinite;
+	pointer-events: none;
+}
+/* the held (sunset) band fades in over the dusk band and out again; its row of choices floats up */
+.now::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--warn-grad);
+	opacity: 0;
+	transition: opacity 650ms var(--ease);
+	pointer-events: none;
+}
+.now.waiting::before {
+	opacity: 1;
+}
+@keyframes now-breathe {
+	0%,
+	100% {
+		box-shadow:
+			0 0 18px var(--warn-soft),
+			0 6px 24px rgba(255, 113, 206, 0.16);
+	}
+	50% {
+		box-shadow:
+			0 0 38px rgba(255, 251, 150, 0.4),
+			0 8px 34px rgba(255, 113, 206, 0.35);
+	}
+}
+.now.waiting {
+	animation:
+		jolt 450ms steps(1, end) 1,
+		now-breathe 2.8s ease-in-out 450ms infinite;
+}
+.now.waiting .dc-acts {
+	animation: float-in 560ms var(--ease) 140ms backwards;
+}
+.now.waiting .dc-acts .btn.warn {
+	animation: pulse-warn 2.8s ease-in-out infinite;
+}
+.s.working {
+	animation: pulse-cyan 2s ease-in-out infinite;
+}
+
+/* Buttons: the primary gradient keeps flowing (hover adds the lift, glow and sweep) */
+.btn.primary {
+	animation: flow 6s ease-in-out infinite alternate;
+}
+.btn.primary:disabled {
+	animation: none;
+}
+
+/* Metro: while the run is live the dotted future marches on; the current station sends out a neon ring */
+.metro.live .ln.future {
+	animation:
+		st-in 700ms var(--ease) 120ms backwards,
+		march 1.6s linear infinite;
+}
+/* a segment the redo preview greys out keeps its arrival fade (finished), so it does not fade in again
+   when it turns back into the dotted future; it just stops marching */
+.metro .ln.gone {
+	animation: st-in 700ms var(--ease) 120ms backwards;
+}
+.st[aria-current="true"] .st-dot::after {
+	content: "";
+	position: absolute;
+	inset: -3px;
+	border-radius: 50%;
+	border: 1.5px solid var(--pink);
+	box-shadow: 0 0 10px var(--glow-cyan);
+	animation: halo 2.4s var(--ease) infinite;
+	pointer-events: none;
+}
+.train i {
+	animation:
+		train 2.4s ease-in-out infinite alternate,
+		pulse-cyan 2.4s ease-in-out infinite;
+}
+
+/* Module changes (ui/motion.ts runs the parts CSS cannot see change: train, track, glyph, card, Now bar) */
+@keyframes seg-fill {
+	from {
+		width: 0;
+	}
+}
+@keyframes seg-dot {
+	from {
+		scale: 0;
+	}
+}
+@keyframes seg-flash {
+	from {
+		box-shadow:
+			0 0 18px var(--bad),
+			0 0 26px var(--glow-pink);
+	}
+}
+@keyframes mk-in {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(0.3);
+	}
+}
+@keyframes cut-in {
+	from {
+		opacity: 0;
+		scale: 1 0;
+	}
+}
+@keyframes pip-in {
+	from {
+		opacity: 0;
+		scale: 0;
+	}
+}
+/* a new plan's stations arrive one after another (opacity only on the button and a scale on the glyph:
+   drawMetro() measures the dots), and the track fades in under them */
+@keyframes st-in {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes glyph-in {
+	from {
+		opacity: 0;
+		scale: 0.3;
+	}
+}
+.st {
+	animation: st-in 520ms var(--ease) backwards;
+	animation-delay: calc(var(--i, 0) * 110ms);
+}
+.st-dot > .g {
+	animation: glyph-in 560ms var(--ease) backwards;
+	animation-delay: calc(var(--i, 0) * 110ms + 60ms);
+}
+.ln {
+	animation: st-in 700ms var(--ease) 120ms backwards;
+}
+/* a progress segment fills when its module ends, the working dot grows in, a failure flashes */
+.s.verified::after,
+.s.unverified::after {
+	animation: seg-fill 800ms var(--ease) backwards;
+}
+.s.working::after,
+.s.stopped::after {
+	animation: seg-dot 500ms var(--ease) backwards;
+}
+.s.failed {
+	animation: seg-flash 900ms ease-out;
+}
+/* markers pop onto the line: held diamond, armed pause, the redo cut */
+.mk.held,
+.mk.on,
+.cutmk {
+	animation: mk-in 480ms var(--ease) backwards;
+}
+.cutline {
+	animation: cut-in 520ms var(--ease) backwards;
+}
+.pp,
+.pf,
+.pl {
+	animation: pip-in 420ms var(--ease) backwards;
+}
+.ln.term {
+	transform-box: fill-box;
+	transform-origin: center;
+}
+/* (as specific as the live march rule, so the copy shows at once instead of fading in) */
+.metro .ln.future.draw-under,
+.metro.live .ln.future.draw-under {
+	animation: none;
+}
+/* the ring a station sends out when its status changes, in the colour of the new status */
+.st-dot::before {
+	content: "";
+	position: absolute;
+	inset: -2px;
+	border-radius: 50%;
+	border: 2px solid var(--burst, var(--pink));
+	box-shadow:
+		0 0 12px var(--burst, var(--pink)),
+		0 0 18px var(--glow-cyan);
+	opacity: 0;
+	pointer-events: none;
+}
+.st-dot[data-s="working"] {
+	--burst: var(--act);
+}
+.st-dot[data-s="verified"] {
+	--burst: var(--ok);
+}
+.st-dot[data-s="unverified"],
+.st-dot[data-s="waiting"] {
+	--burst: var(--warn);
+}
+.st-dot[data-s="failed"],
+.st-dot[data-s="stopped"],
+.st-dot[data-s="replaced"] {
+	--burst: var(--bad);
+}
+/* the light that sweeps across a card arriving from another station; the card it replaces fades out
+   underneath (a copy, .card-ghost, added by Work) */
+.work {
+	position: relative;
+}
+.card {
+	position: relative;
+}
+.work > .card {
+	z-index: 1;
+}
+.work > .card-ghost {
+	position: absolute;
+	z-index: 0;
+	margin: 0;
+	animation: none;
+	pointer-events: none;
+}
+.card::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		100deg,
+		transparent 20%,
+		rgba(255, 113, 206, 0.2) 44%,
+		rgba(1, 205, 254, 0.2) 56%,
+		transparent 80%
+	);
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Home hero: the sun's glow breathes */
+.hero-art::before {
+	animation: breathe 5s ease-in-out infinite;
+}
+
 /* ---------- Motion + responsive ---------- */
 @media (prefers-reduced-motion: reduce) {
-	.train i,
-	.spin {
+	/* no animation, drift, tilt or snap: hover and press keep only their colour and glow */
+	*,
+	*::before,
+	*::after {
 		animation: none !important;
-	}
-	* {
 		transition: none !important;
+		translate: none !important;
+		rotate: none !important;
 	}
+	/* the moving lights and the station halo have no still form */
+	body::after,
+	.btn.primary::after,
+	.now::after,
+	.st[aria-current="true"] .st-dot::after {
+		display: none;
+	}
+}
+/* the harness's Motion switch, off: the same as prefers-reduced-motion */
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+	animation: none !important;
+	transition: none !important;
+	translate: none !important;
+	rotate: none !important;
+}
+:root[data-motion="off"] body::after,
+:root[data-motion="off"] .btn.primary::after,
+:root[data-motion="off"] .now::after,
+:root[data-motion="off"] .st[aria-current="true"] .st-dot::after {
+	display: none;
 }
 @media (max-width: 1100px) {
 	.card.noev .cbody {

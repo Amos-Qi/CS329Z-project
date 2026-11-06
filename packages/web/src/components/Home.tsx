@@ -1,7 +1,8 @@
 /**
  * Home (no run selected): start a run (task, variant, agent, "Pause after plan") and the list of
  * runs (live first) to open for replay. Loads its own data through `api`. Few words, same visual
- * system (`.home`, `.hcard`, `.hrow`, `.rl`/`.rlb` in styles.css).
+ * system (`.home`, `.hero`, `.hcard`, `.hrow`, `.rl`/`.rlb` in styles.css); the hero's sunset is
+ * decoration, hidden from assistive tech.
  */
 
 import type { AgentKind, RunSummary, ServerInfo, TaskSummary } from "@vcm/protocol";
@@ -128,10 +129,17 @@ export function Home({ onOpen }: HomeProps) {
 
 	return (
 		<main id="main" className="home">
-			<h1>
-				<Icon name="activity" size={20} />
-				Module Oversight
-			</h1>
+			<header className="hero">
+				{/* decoration only: the sunset and the moving grid floor */}
+				<div className="hero-art" aria-hidden="true">
+					<span className="sun" />
+					<span className="floor" />
+				</div>
+				<h1>
+					<Icon name="activity" size={28} />
+					Module Oversight
+				</h1>
+			</header>
 			<section className="hcard" aria-labelledby="hStart">
 				<h2 id="hStart">
 					<Icon name="playc" size={16} />
