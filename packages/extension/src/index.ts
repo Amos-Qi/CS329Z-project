@@ -47,6 +47,8 @@ const GATE_REASON =
 	"[modules] Blocked: no module is active. Call plan_modules (if you have no plan yet) and start_module first; then retry this change.";
 const PAUSED_TEXT =
 	"[modules] The overseer stopped the run at this boundary. Do not call any more tools; wait for further instructions.";
+const HALTED_REASON =
+	"[modules] Not run: the overseer stopped the run at a module boundary earlier in this step. Wait for further instructions.";
 
 const ModuleInput = Type.Object({
 	id: Type.Optional(
@@ -136,6 +138,16 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 	const remind = options.remindUnassigned ?? true;
 	const gateEdits = options.gateEdits ?? false;
 	let boundaryCounter = 0;
+	// pi ends a run after a tool batch only if every call in it terminates, and keeps going for queued
+	// messages, so a boundary that stops the run aborts it (as the server does) and blocks whatever is
+	// left of the batch; cleared when the next run starts
+	let halted = false;
+
+	function halt(ctx: ExtensionContext) {
+		halted = true;
+		ctx.abort();
+		return { content: text(PAUSED_TEXT), details: undefined, terminate: true };
+	}
 
 	async function gate(
 		boundary: BoundaryKind,
@@ -154,6 +166,7 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 
 	const factory: ExtensionFactory = (pi: ExtensionAPI) => {
 		pi.on("before_agent_start", (event) => {
+			halted = false;
 			event.systemPromptOptions.sections.module_protocol = MODULE_PROTOCOL;
 		});
 
@@ -165,11 +178,11 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 			promptSnippet: "plan_modules: declare or revise the ordered list of modules (subgoals)",
 			parameters: PlanParams,
 			executionMode: "sequential",
-			async execute(_toolCallId, params, signal) {
+			async execute(_toolCallId, params, signal, _onUpdate, ctx) {
 				const plan = store.plan(params.modules, params.rationale, "agent");
 				await checkpoint("after_plan", undefined);
 				const decision = await gate("after_plan", undefined, signal);
-				if (decision.action !== "continue") return { content: text(PAUSED_TEXT), details: undefined, terminate: true };
+				if (decision.action !== "continue") return halt(ctx);
 				const edited = store.applyEdits(decision.edits ?? []);
 				const listing = plan.moduleOrder
 					.map((id) => {
@@ -209,7 +222,7 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 					);
 				}
 				const decision = await gate("before_start", params.id, signal);
-				if (decision.action !== "continue") return { content: text(PAUSED_TEXT), details: undefined, terminate: true };
+				if (decision.action !== "continue") return halt(ctx);
 				store.applyEdits(decision.edits ?? []);
 
 				const startEntryId = entryBeforeToolCall(ctx, toolCallId);
@@ -240,7 +253,7 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 			promptSnippet: "finish_module: end the active module with status, summary and validation results",
 			parameters: FinishParams,
 			executionMode: "sequential",
-			async execute(_toolCallId, params, signal) {
+			async execute(_toolCallId, params, signal, _onUpdate, ctx) {
 				const attempt = store.activeAttempt;
 				if (!attempt) throw new Error("No module is active. Call start_module first.");
 				if (attempt.moduleId !== params.id) {
@@ -266,7 +279,7 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 				});
 
 				const decision = await gate("after_finish", params.id, signal);
-				if (decision.action !== "continue") return { content: text(PAUSED_TEXT), details: undefined, terminate: true };
+				if (decision.action !== "continue") return halt(ctx);
 				const edited = store.applyEdits(decision.edits ?? []);
 				const next = store.nextUnfinishedModule();
 				const hint = next ? ` Next in the plan: ${next}.` : " All planned modules are finished.";
@@ -280,6 +293,7 @@ export function createModulesExtension(host: ModulesHost, options: ModulesExtens
 		});
 
 		pi.on("tool_call", (event) => {
+			if (halted) return { block: true, reason: HALTED_REASON, terminate: true };
 			if (MODULE_TOOLS.has(event.toolName) || event.parentToolCallId) return;
 			const input = event.input as Record<string, unknown>;
 			if (gateEdits && !store.activeAttemptId && EDIT_TOOLS.has(event.toolName)) {

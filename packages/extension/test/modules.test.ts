@@ -195,4 +195,140 @@ describe("modules extension", () => {
 		expect(JSON.stringify(result)).toContain("Blocked: no module is active");
 		expect(existsSync(join(ctx.dir, "early.txt"))).toBe(false);
 	});
+
+	describe("a boundary that stops the run", () => {
+		// what the model would do next if the run went on after the stop
+		const AFTER = call("write", { path: "after.txt", content: "x" });
+
+		function batch(...calls: ReturnType<typeof fauxToolCall>[]) {
+			return fauxAssistantMessage(calls, { stopReason: "toolUse" });
+		}
+
+		/** A host that does not abort the session itself on stop (the stock CLI, or one embedded in the TUI). */
+		function stoppingHost(stopAt: (request: BoundaryRequest) => boolean, onHold?: () => Promise<void>) {
+			const events: TraceEvent[] = [];
+			const boundaries: BoundaryRequest[] = [];
+			const { factory } = createModulesExtension({
+				emit: (body) => events.push({ ...body, seq: events.length, t: Date.now() } as TraceEvent),
+				async boundary(request) {
+					boundaries.push(request);
+					if (!stopAt(request)) return { action: "continue" };
+					await onHold?.();
+					return { action: "stop" };
+				},
+			});
+			return { factory, events, boundaries };
+		}
+
+		/** Text or tool calls from the model after its first `n` messages. */
+		function actedAfter(session: FauxSession["session"], n: number) {
+			return session.messages
+				.filter((m) => m.role === "assistant")
+				.slice(n)
+				.flatMap((m) => (m as { content?: { type: string }[] }).content ?? [])
+				.filter((block) => block.type === "text" || block.type === "toolCall");
+		}
+
+		it("blocks the rest of the batch and asks the model nothing more", async () => {
+			const host = stoppingHost((r) => r.boundary === "before_start");
+			ctx = await createFauxSession(host.factory, [
+				call("plan_modules", PLAN),
+				batch(fauxToolCall("start_module", { id: "M1" }), fauxToolCall("write", { path: "late.txt", content: "x" })),
+				AFTER,
+			]);
+			await ctx.session.prompt("Go.");
+
+			expect(existsSync(join(ctx.dir, "late.txt"))).toBe(false);
+			expect(existsSync(join(ctx.dir, "after.txt"))).toBe(false);
+			expect(actedAfter(ctx.session, 2)).toEqual([]);
+			expect(reduceTrace(host.events).actionOrder).toHaveLength(0);
+		});
+
+		it("ends the run when a call before the boundary already ran", async () => {
+			const host = stoppingHost((r) => r.boundary === "after_finish");
+			ctx = await createFauxSession(host.factory, [
+				call("plan_modules", PLAN),
+				call("start_module", { id: "M1" }),
+				batch(
+					fauxToolCall("write", { path: "early.txt", content: "x" }),
+					fauxToolCall("finish_module", { id: "M1", status: "completed", summary: "x" }),
+				),
+				AFTER,
+			]);
+			await ctx.session.prompt("Go.");
+
+			expect(existsSync(join(ctx.dir, "early.txt"))).toBe(true);
+			expect(existsSync(join(ctx.dir, "after.txt"))).toBe(false);
+			expect(actedAfter(ctx.session, 3)).toEqual([]);
+		});
+
+		it("ends the run when pi rejects a call in the batch", async () => {
+			const host = stoppingHost((r) => r.boundary === "before_start");
+			ctx = await createFauxSession(host.factory, [
+				call("plan_modules", PLAN),
+				batch(fauxToolCall("start_module", { id: "M1" }), fauxToolCall("write", { path: "no-content.txt" })),
+				AFTER,
+			]);
+			await ctx.session.prompt("Go.");
+
+			expect(existsSync(join(ctx.dir, "after.txt"))).toBe(false);
+			expect(actedAfter(ctx.session, 2)).toEqual([]);
+		});
+
+		it("does not start the next module in the same batch", async () => {
+			const host = stoppingHost((r) => r.boundary === "after_finish");
+			ctx = await createFauxSession(host.factory, [
+				call("plan_modules", PLAN),
+				call("start_module", { id: "M1" }),
+				batch(
+					fauxToolCall("finish_module", { id: "M1", status: "completed", summary: "x" }),
+					fauxToolCall("start_module", { id: "M2" }),
+				),
+				AFTER,
+			]);
+			await ctx.session.prompt("Go.");
+
+			expect(host.boundaries.map((b) => `${b.boundary}:${b.moduleId ?? ""}`)).toEqual([
+				"after_plan:",
+				"before_start:M1",
+				"after_finish:M1",
+			]);
+			expect(reduceTrace(host.events).attemptOrder).toEqual(["M1.1"]);
+		});
+
+		it("ends the run when a message was queued while the boundary was held", async () => {
+			const host = stoppingHost(
+				(r) => r.boundary === "before_start",
+				async () => {
+					await ctx?.session.steer("[Overseer] Note: also check the docs");
+				},
+			);
+			ctx = await createFauxSession(host.factory, [
+				call("plan_modules", PLAN),
+				call("start_module", { id: "M1" }),
+				AFTER,
+			]);
+			await ctx.session.prompt("Go.");
+
+			expect(existsSync(join(ctx.dir, "after.txt"))).toBe(false);
+			expect(actedAfter(ctx.session, 2)).toEqual([]);
+		});
+
+		it("runs again normally after the stop", async () => {
+			let stops = 1;
+			const host = stoppingHost((r) => r.boundary === "before_start" && stops-- > 0);
+			ctx = await createFauxSession(host.factory, [
+				call("plan_modules", PLAN),
+				batch(fauxToolCall("start_module", { id: "M1" }), fauxToolCall("write", { path: "late.txt", content: "x" })),
+				call("start_module", { id: "M1" }),
+				call("write", { path: "again.txt", content: "y" }),
+				fauxAssistantMessage(fauxText("Done.")),
+			]);
+			await ctx.session.prompt("Go.");
+			await ctx.session.prompt("Continue.");
+
+			expect(existsSync(join(ctx.dir, "late.txt"))).toBe(false);
+			expect(readFileSync(join(ctx.dir, "again.txt"), "utf8")).toBe("y");
+		});
+	});
 });

@@ -10,10 +10,12 @@ import { Run } from "../src/run.ts";
 import type { SessionFactory } from "../src/session.ts";
 import { loadTask } from "../src/tasks.ts";
 
+function toolCall(name: string, args: object) {
+	return fauxToolCall(name, args as Parameters<typeof fauxToolCall>[1]);
+}
+
 function call(name: string, args: object) {
-	return fauxAssistantMessage(fauxToolCall(name, args as Parameters<typeof fauxToolCall>[1]), {
-		stopReason: "toolUse",
-	});
+	return fauxAssistantMessage(toolCall(name, args), { stopReason: "toolUse" });
 }
 
 const PLAN = {
@@ -161,6 +163,34 @@ describe("Run", () => {
 		const state = reduceTrace(run.trace.events);
 		expect(state.status).toBe("aborted");
 		expect(state.interventions.map((i) => i.kind)).toEqual(["stop"]);
+	});
+
+	// stop() aborts the session itself, so this guards the server path; the extension's own handling of
+	// a stopped batch (for hosts that do not abort) is tested in packages/extension/test/modules.test.ts
+	it("does not run the other tool calls of a batch stopped at a boundary", async () => {
+		const root = makeTask();
+		const run = await Run.create({
+			runId: "stop-batch",
+			runDir: join(root, "runs", "stop-batch"),
+			task: loadTask(join(root, "tasks", "toy")),
+			createSession: fauxFactory(
+				[
+					fauxAssistantMessage(
+						[toolCall("plan_modules", PLAN), toolCall("write", { path: "late.txt", content: "x" })],
+						{ stopReason: "toolUse" },
+					),
+					fauxAssistantMessage(fauxText("never")),
+				],
+				cleanups,
+			),
+			pauseAfterPlan: true,
+		});
+		run.onControl((state) => {
+			if (state.pending) setTimeout(() => void run.stop(), 0);
+		});
+		run.start();
+		await waitFor(run.trace.events, run, (e) => e.type === "run_ended");
+		expect(existsSync(join(run.workspace, "late.txt"))).toBe(false);
 	});
 });
 
