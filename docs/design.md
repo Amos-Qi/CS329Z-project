@@ -262,7 +262,7 @@ The visual system follows UI-UX-Pro-Max "Minimalism & Swiss Style":
 - `j`/`k` move along the line. Enter opens the evidence. Esc goes back up one level (expanded step → evidence → station) and returns focus to whatever opened the level.
 - The card shows the active or waiting module by default. When the run has finished and nothing is selected, it shows a run summary: run time, the flags, and the whole-run files with the modules that changed them.
 - The card's primary button depends on the module's state: **Change Mk…** (not started), **Correct Mk…** (running, delivered with `steer`), **Redo from Mk…** (finished).
-- While the plan can still be shaped before its work starts (the hold after the plan, and until its first module starts; also the hold after a re-plan), a **plan overview** sits between the line and the card: the agent's rationale as one lead line, then one row per module with its status on a vertical rail, id, title, purpose, what it needs first and how many done-when criteria check it (named in the row's tooltip). A row selects that module's card, like its station; its **Change Mk…** opens the card's editor. It folds away once a module starts.
+- Once there is a plan, a **plan overview** sits between the line and the card: the agent's rationale as one lead line, then one row per module with its status on a vertical rail, id, title, purpose, what it needs first and how many done-when criteria check it (named in the row's tooltip). A row selects that module's card, like its station; while a module has not started, its **Change Mk…** opens the card's editor. The overview is open while the plan can still be shaped before its work starts (the hold after the plan, and until its first module starts; also the hold after a re-plan). Continue folds it to its header line, and a toggle at its top right opens it again at any time.
 
 **Redo from a module** opens beside the card. It has three parts:
 - the module's instructions, ready to edit (the result becomes the next version);
@@ -276,8 +276,9 @@ Replaced attempts stay visible afterwards as slashed stations or chips, so the h
 The same Now bar and controls (minus segmented progress and "next"). Under it is one chronological
 list of every trace event: time, module tag, event icon, a one-line summary, and expandable details
 (args, diff, test output). It has filter chips (module, event type, flagged) and search, as in a good
-log viewer. Module plan, `start_module` and `finish_module` events are ordinary rows. The same
-interventions are reachable from rows:
+log viewer. Module plan, `start_module` and `finish_module` events are ordinary rows; a plan row's
+details hold the agent's reason for the plan and each module as planned. The same interventions are
+reachable from rows:
 - **Change Mk** on plan rows;
 - **Correct** on the active module's rows;
 - **Redo from Mk…** on a module's start and finish rows, with the same consequence preview.

@@ -36,6 +36,7 @@ import {
 	type ModuleVersion,
 	nextModule,
 	normalizePath,
+	type PlanVersion,
 	pauseSlot,
 	planModules,
 	queuedNotes,
@@ -428,7 +429,7 @@ export interface PlanItem {
 /** What a log row expands into. */
 export type LogDetail =
 	| { kind: "act"; act: ActView }
-	| { kind: "plan"; version: number; rationale?: string; modules: PlanItem[] }
+	| { kind: "plan"; version: number /** planReason */; rationale?: string; modules: PlanItem[] }
 	| { kind: "start"; moduleId: ModuleId; version: VersionView }
 	| {
 			kind: "finish";
@@ -497,7 +498,13 @@ export interface OverviewRow {
 /** The whole plan at a glance (Panel.overview). */
 export interface PlanOverview {
 	version: number;
-	/** The agent's reason for this plan (the overview's one lead line), if it gave one. */
+	/**
+	 * Open (rows shown) unless you fold it: while the agent is live and the plan can still be shaped
+	 * before its work starts (until one of its modules starts, and at the hold right after a re-plan).
+	 * Otherwise it starts folded to its header line.
+	 */
+	expand: boolean;
+	/** The agent's reason for this plan (the overview's one lead line), if it gave one (planReason). */
 	rationale?: string;
 	/** Plan modules in plan order. */
 	rows: OverviewRow[];
@@ -580,10 +587,7 @@ export interface Panel {
 	between?: { after: ModuleId | null; next?: ModuleId };
 	/** Latest plan version and module count, if a plan exists. */
 	plan?: { version: number; count: number };
-	/**
-	 * The plan at a glance while it can still be shaped before its work starts: from the plan until one
-	 * of its modules starts, and at the hold right after a re-plan. Unset otherwise and once the run ended.
-	 */
+	/** The plan at a glance, whenever there is one (open or folded by default: PlanOverview.expand). */
 	overview?: PlanOverview;
 }
 
@@ -1234,13 +1238,14 @@ class Builder {
 
 	private overview(modules: ModView[], now: NowView): PlanOverview | undefined {
 		const plan = this.state.plans.at(-1);
-		if (!plan || !modules.length || !this.liveRun) return undefined;
-		// a re-plan mid-run gets the overview only while you are asked to look at it
-		const fresh = modules.every((m) => !m.attemptId);
-		if (!fresh && now.decision?.boundary !== "after_plan") return undefined;
+		if (!plan || !modules.length) return undefined;
+		// before any work has started; a re-plan mid-run (even one that drops every module that ran) opens
+		// only while you are asked to look at it
+		const fresh = this.state.attemptOrder.length === 0;
 		return {
 			version: plan.version,
-			rationale: plan.rationale?.trim() || undefined,
+			expand: this.liveRun && (fresh || now.decision?.boundary === "after_plan"),
+			rationale: planReason(plan),
 			rows: modules.map((m): OverviewRow => {
 				const checks = m.criteria.map((c) => c.text);
 				const yours = m.cur.by === "you" ? m.cur.v : undefined;
@@ -1488,7 +1493,7 @@ class Builder {
 						type: "plan",
 						icon: "plan",
 						text: `Plan v${event.plan.version} · ${plural(n, "module")}`,
-						detail: { kind: "plan", version: event.plan.version, rationale: event.plan.rationale, modules: items },
+						detail: { kind: "plan", version: event.plan.version, rationale: planReason(event.plan), modules: items },
 						kind: "plan",
 						current: event.plan.version === latestPlan,
 					});
@@ -1871,6 +1876,14 @@ export function evidenceText(m: Pick<ModView, "tests" | "files" | "status" | "ac
 		return `running ${m.dur ?? "0:00"} · ${read} read, ${edit} edit, ${d} · ${t} so far, still running`;
 	}
 	return `${d} · ${t}`;
+}
+
+/**
+ * The agent's reason for a plan version, for both views (the overview's lead line, the log's plan row).
+ * A plan a redo restored is authored by the user and carries the panel's own note: no reason.
+ */
+export function planReason(plan: Pick<PlanVersion, "author" | "rationale">): string | undefined {
+	return plan.author === "agent" ? plan.rationale?.trim() || undefined : undefined;
 }
 
 /** `needs M1 and M2 · needed by M4` (the mockup's `depsText`). */

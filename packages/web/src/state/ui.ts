@@ -19,7 +19,16 @@ import type { ModuleId } from "@vcm/protocol";
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { Controls } from "../controls.ts";
 import { cssKey } from "../model/format.ts";
-import { type Flag, type LogEvent, type LogType, type Panel, PRE, redoPreview, type SelId } from "../model/panel.ts";
+import {
+	type Flag,
+	type LogEvent,
+	type LogType,
+	type Panel,
+	type PlanOverview,
+	PRE,
+	redoPreview,
+	type SelId,
+} from "../model/panel.ts";
 import { toast } from "../ui/announce.tsx";
 import { reducedMotion } from "../ui/motion.ts";
 import { ensureVisible, focusTipShown, focusVisible, hideTip, setBarVars, showTip, syncTip } from "../ui/tooltip.ts";
@@ -94,6 +103,12 @@ export interface UiState {
 	scrollEd: boolean;
 	/** Scroll to the end of the page after the next render (the log opens at its live end). */
 	tail: boolean;
+	/**
+	 * Your choice for the plan overview (true = open), over its default (PlanOverview.expand). Continue
+	 * folds it; it holds while modules run, and goes when the overview opens by default again (a plan to
+	 * look at, a re-plan hold), so a new plan is never hidden by an old fold.
+	 */
+	ovFold: boolean | null;
 }
 
 /** Log type chips: key, icon, short text, tooltip (the mockup's TYPES, plus Agent for the agent's narration). */
@@ -137,6 +152,12 @@ export function redoTarget(s: Pick<UiState, "editor">): ModuleId | null {
 export function editorOn(s: Pick<UiState, "editor" | "view">, kind: EditorKind, id: ModuleId | undefined): boolean {
 	const ed = s.editor;
 	return !!ed && !!id && ed.kind === kind && ed.id === id && s.view !== "raw";
+}
+
+/** Whether the plan overview shows its rows: your choice if you made one, else its default. */
+export function overviewOpen(s: Pick<UiState, "ovFold">, ov: Pick<PlanOverview, "expand"> | undefined): boolean {
+	if (!ov) return false;
+	return s.ovFold ?? ov.expand;
 }
 
 /** A trigger outside the card (the decision card `dc-…`, the plan overview `ov-…`): focus returns to it after a save. */
@@ -215,6 +236,7 @@ export function initialUi(init: Partial<UiState> = {}): UiState {
 		focus: null,
 		scrollEd: false,
 		tail: false,
+		ovFold: null,
 		...init,
 	};
 }
@@ -268,8 +290,10 @@ export interface UiActions {
 	sendNote(): void;
 	/** Stop now (from the Stop confirmation). */
 	stopAgent(): void;
-	/** Continue from the decision card (`resume`). */
+	/** Continue from the decision card (`resume`); the plan overview folds (the work it previewed goes on). */
 	continueRun(): void;
+	/** Opens or folds the plan overview's rows (its header toggle; focus stays there). */
+	toggleOverview(): void;
 	/** A flag in the flags popover: Modules selects its station; Log turns on the Flagged filter. */
 	flagGo(flag: Flag): void;
 	/** The card's show/hide evidence toggle. */
@@ -303,7 +327,7 @@ export interface UiActions {
 	/**
 	 * After the panel changed: an editor whose module can no longer take it (a Change for a module that
 	 * started, a Correct for one that stopped running, a Redo that is no longer possible) closes, its text
-	 * kept as a draft, and says so.
+	 * kept as a draft, and says so. When the plan overview opens by default again, your fold of it goes.
 	 */
 	reconcile(): void;
 }
@@ -334,6 +358,8 @@ export class UiStore implements UiActions {
 	private listeners = new Set<Listener>();
 	/** A keyboard-focus tooltip was showing when set() hid it: show it again for the focused control after the render. */
 	refocusTip = false;
+	/** The plan overview's default the last time the panel changed (followOverview). */
+	private lastExpand: boolean | undefined;
 
 	constructor(init: Partial<UiState> = {}) {
 		this.state = initialUi(init);
@@ -655,10 +681,25 @@ export class UiStore implements UiActions {
 			exp: null,
 			lexp: null,
 			lcur: null,
+			ovFold: false,
 			focus: this.state.view === "modules" && next ? [`st-${next}`] : ["__fallback"],
 		});
 		toast(next ? `Continued to ${next}` : "Continued");
 	};
+
+	toggleOverview = (): void => {
+		const ov = this.panel?.overview;
+		if (!ov) return;
+		this.set({ ovFold: !overviewOpen(this.state, ov), focus: ["ovtoggle"] });
+	};
+
+	/** A new look at the plan (the overview opens by default again: a plan came, a re-plan holds the agent) drops your fold. */
+	private followOverview(): void {
+		const expand = this.panel?.overview?.expand;
+		const opens = expand === true && this.lastExpand !== true;
+		this.lastExpand = expand;
+		if (opens && this.state.ovFold !== null) this.set({ ovFold: null });
+	}
 
 	flagGo = (flag: Flag): void => {
 		const s = this.state;
@@ -782,16 +823,18 @@ export class UiStore implements UiActions {
 		const panel = this.panel;
 		if (!panel) return;
 		if (s.view === "modules") {
-			// in the plan overview j/k walk its rows (plan modules only) and focus stays on them
+			// in the open plan overview (a row or its header) j/k walk its rows (plan modules only) and focus
+			// stays on them
 			const row = target?.closest?.(".ovr") as HTMLElement | null;
-			const ids: SelId[] = row ? panel.ids : [PRE, ...panel.ids];
+			const inOv = !!row || (!!target?.closest?.("#planOv") && overviewOpen(s, panel.overview));
+			const ids: SelId[] = inOv ? panel.ids : [PRE, ...panel.ids];
 			const st = target?.closest?.(".st") as HTMLElement | null;
 			const base = row?.dataset.id ?? (st?.dataset.k?.startsWith("st-") ? st.dataset.k.slice(3) : this.sel());
 			let i = base ? ids.indexOf(base) + dir : dir > 0 ? 1 : ids.length - 1;
 			i = Math.max(0, Math.min(ids.length - 1, i));
 			const id = ids[i];
 			if (!id) return;
-			this.set({ ...this.selectPatch(id), focus: [row ? `ov-${id}` : `st-${id}`] });
+			this.set({ ...this.selectPatch(id), focus: [inOv ? `ov-${id}` : `st-${id}`] });
 			return;
 		}
 		const rows = visibleEvents(panel, s);
@@ -893,6 +936,7 @@ export class UiStore implements UiActions {
 	};
 
 	reconcile = (): void => {
+		this.followOverview();
 		const s = this.state;
 		const ed = s.editor;
 		const panel = this.panel;
@@ -1036,6 +1080,7 @@ const ACTION_NAMES: Record<keyof UiActions, true> = {
 	sendNote: true,
 	stopAgent: true,
 	continueRun: true,
+	toggleOverview: true,
 	flagGo: true,
 	toggleEv: true,
 	openEv: true,

@@ -337,7 +337,7 @@ function RowDetail({ panel, detail: d }: { panel: Panel; detail: LogDetail }) {
 			return m ? <VersionList mod={m} /> : null;
 		}
 		case "plan":
-			return <PlanDetail modules={d.modules} />;
+			return <PlanDetail modules={d.modules} rationale={d.rationale} />;
 		case "start":
 			// the instructions this attempt started with
 			return (
@@ -370,44 +370,48 @@ function RowDetail({ panel, detail: d }: { panel: Panel; detail: LogDetail }) {
 }
 
 /**
- * The plan as proposed (id, title, deps, goal, done-when, instructions of that version): no live
- * status, which would be a treatment-only overview.
+ * The plan as proposed (the agent's reason, then id, title, deps, goal, done-when, instructions of that
+ * version): the same plan text as the Modules view's overview, with no live status, which would be a
+ * treatment-only overview.
  */
-function PlanDetail({ modules }: { modules: PlanItem[] }) {
+function PlanDetail({ modules, rationale }: { modules: PlanItem[]; rationale?: string }) {
 	return (
-		<ol className="plan">
-			{modules.map((m) => (
-				<li key={m.id}>
-					<div className="ph">
-						<i className="pb" aria-hidden="true" />
-						<span className="cid" style={{ fontSize: 12 }}>
-							{m.id}
-						</span>
-						<span>{m.title}</span>
-						{m.deps.length ? (
-							<span className="pill" style={{ height: 22 }} {...tipImg(`Depends on ${joinAnd(m.deps)}`)}>
-								<Icon name="link" size={12} />
-								<span className="mono">{m.deps.join(" ")}</span>
+		<>
+			{rationale ? <TextDetail icon="say" head="agent’s reason" text={rationale} /> : null}
+			<ol className="plan">
+				{modules.map((m) => (
+					<li key={m.id}>
+						<div className="ph">
+							<i className="pb" aria-hidden="true" />
+							<span className="cid" style={{ fontSize: 12 }}>
+								{m.id}
 							</span>
-						) : null}
-					</div>
-					<div className="pg">
-						<span>
-							<Icon name="target" size={12} />
-							{m.goal}
-						</span>
-						{m.criteria.map((c, i) => (
-							// biome-ignore lint/suspicious/noArrayIndexKey: criteria are positional and may repeat
-							<span key={i}>
-								<i className="pb" aria-hidden="true" />
-								Done when: {c}
+							<span>{m.title}</span>
+							{m.deps.length ? (
+								<span className="pill" style={{ height: 22 }} {...tipImg(`Depends on ${joinAnd(m.deps)}`)}>
+									<Icon name="link" size={12} />
+									<span className="mono">{m.deps.join(" ")}</span>
+								</span>
+							) : null}
+						</div>
+						<div className="pg">
+							<span>
+								<Icon name="target" size={12} />
+								{m.goal}
 							</span>
-						))}
-					</div>
-					<div className="pi">{m.text}</div>
-				</li>
-			))}
-		</ol>
+							{m.criteria.map((c, i) => (
+								// biome-ignore lint/suspicious/noArrayIndexKey: criteria are positional and may repeat
+								<span key={i}>
+									<i className="pb" aria-hidden="true" />
+									Done when: {c}
+								</span>
+							))}
+						</div>
+						<div className="pi">{m.text}</div>
+					</li>
+				))}
+			</ol>
+		</>
 	);
 }
 

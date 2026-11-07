@@ -1279,13 +1279,15 @@ textarea.field {
 	}
 }
 /* ---------- Plan overview (Modules view, between the line and the card) ---------- */
-/* a flow root, so the overview's margin stays inside the slot whose height glides as it comes and goes */
-.ov-slot {
+/* flow roots, so the overview's and the rows' margins stay inside the boxes whose height glides as they
+   come and go (the overview with the plan, its rows when it opens or folds) */
+.ov-slot,
+.ov-body {
 	display: flow-root;
 }
 .ov {
 	margin: 16px 20px 0;
-	padding: 12px 16px;
+	padding: 10px 12px 10px 16px;
 	background: var(--card);
 	border: 1px solid var(--hair-2);
 	border-radius: 12px;
@@ -1295,7 +1297,17 @@ textarea.field {
 	align-items: center;
 	gap: 8px 16px;
 	min-width: 0;
-	margin-bottom: 8px;
+}
+/* the fold toggle, top right: its chevron points where the rows go (transform, which reduced motion keeps) */
+.ov-tg {
+	flex: none;
+	margin-left: auto;
+}
+.ov-tg .i {
+	transition: transform 300ms var(--ease);
+}
+.ov-tg[aria-expanded="true"] .i {
+	transform: scaleY(-1);
 }
 .ov-h .lab {
 	margin: 0;
@@ -1326,7 +1338,7 @@ textarea.field {
    follow the longest purpose (a free column before Change), so they stay next to what they describe */
 .ov-l {
 	list-style: none;
-	margin: 0;
+	margin: 6px 0 0;
 	padding: 0;
 	display: grid;
 	grid-template-columns: 34px auto minmax(0, max-content) minmax(0, max-content) auto auto auto minmax(0, 1fr) 32px;
@@ -1357,9 +1369,11 @@ textarea.field {
 .ovb:hover {
 	background: var(--hair);
 }
+/* the module the card shows: an --act edge, as the log marks its current row (3:1 or more in both themes) */
 .ovb[aria-current="true"] {
 	background: var(--muted);
-	border-color: var(--hair-2);
+	border-color: var(--act);
+	box-shadow: inset 0 0 18px var(--act-soft);
 }
 .ov-node {
 	justify-self: center;
@@ -3093,7 +3107,8 @@ select.field option {
 	animation-delay: calc(var(--i, 0) * 70ms + 120ms);
 }
 .ov-ghost,
-.ov-ghost * {
+.ov-ghost *,
+.ov-ghost .ovr {
 	animation: none;
 }
 .home > :nth-child(2) {
