@@ -268,6 +268,48 @@ describe("Run interventions", () => {
 		expect(state.modules.M2?.latest.author).toBe("user");
 		expect(run.controlState().pauseAtBoundary).toBe(false);
 	});
+
+	it("an edit at the hold after the plan reaches a later module when it starts", async () => {
+		const { root, task } = toyTask();
+		const run = await Run.create({
+			runId: "plan-hold-run",
+			runDir: join(root, "runs", "plan-hold-run"),
+			task,
+			pauseAfterPlan: true,
+			createSession: fauxFactory(
+				[
+					call("plan_modules", PLAN),
+					call("start_module", { id: "M1" }),
+					call("finish_module", { id: "M1", status: "completed", summary: "x" }),
+					call("start_module", { id: "M2" }),
+					call("finish_module", { id: "M2", status: "completed", summary: "y" }),
+					fauxAssistantMessage(fauxText("Done.")),
+				],
+				cleanups,
+			),
+		});
+		run.trace.subscribe((event) => {
+			if (event.type !== "boundary_paused") return;
+			// the plan overview's Change M2 (not the next module): the same `edit` as Change M1 first
+			setTimeout(() => {
+				void run.handle({
+					type: "edit",
+					runId: run.runId,
+					edits: [{ moduleId: "M2", changes: { instructions: "Write b.txt in capitals" } }],
+				});
+				void run.handle({ type: "resume", runId: run.runId, boundaryId: event.boundaryId });
+			}, 0);
+		});
+		run.start();
+		await waitFor(run.trace.events, run, (e) => e.type === "run_ended");
+
+		const paused = run.trace.events.filter((e) => e.type === "boundary_paused");
+		expect(paused.map((e) => e.type === "boundary_paused" && e.boundary)).toEqual(["after_plan"]);
+		const state = reduceTrace(run.trace.events);
+		expect(state.attempts["M1.1"]?.moduleVersion).toBe(1);
+		expect(state.attempts["M2.1"]?.moduleVersion).toBe(2);
+		expect(state.modules.M2?.latest).toMatchObject({ author: "user", instructions: "Write b.txt in capitals" });
+	});
 });
 
 describe("scripted demo agent", () => {

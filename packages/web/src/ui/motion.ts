@@ -62,6 +62,22 @@ export function useMotionOff(): boolean {
 }
 
 /**
+ * A copy of `el` that only animates out (what React is about to replace or remove): no ids, no tab
+ * stops, no tooltips, hidden from assistive tech. The caller places it and removes it when its
+ * animation ends.
+ */
+export function ghostOf(el: Element): HTMLElement {
+	const g = el.cloneNode(true) as HTMLElement;
+	for (const n of [g, ...g.querySelectorAll<HTMLElement>("*")]) {
+		for (const a of ["id", "data-k", "data-tip", "tabindex", "aria-labelledby", "aria-describedby"])
+			n.removeAttribute(a);
+	}
+	g.setAttribute("aria-hidden", "true");
+	g.inert = true;
+	return g;
+}
+
+/**
  * `el.animate(keyframes, options)`, or nothing when there is no element, motion is reduced or the
  * engine lacks Web Animations (or the pseudo-element target). Callers never fill forwards, so once
  * an animation ends the element is back to its styles.

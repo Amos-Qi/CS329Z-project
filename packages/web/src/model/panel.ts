@@ -473,6 +473,36 @@ export interface LogEvent {
 	queued?: boolean;
 }
 
+/** One module of the plan overview: what it does, what it needs first, how its result is checked. */
+export interface OverviewRow {
+	id: ModuleId;
+	title: string;
+	/** One line: the module's purpose. */
+	goal: string;
+	status: StationStatus;
+	/** Declared prerequisites on the plan. */
+	deps: ModuleId[];
+	/** Done-when criteria: how its result will be checked. */
+	checks: string[];
+	/** The instruction version, when you wrote it (a Change made before it started). */
+	yours?: number;
+	/** "Change Mk…" is possible now (the module's canChange). */
+	canChange: boolean;
+	/** Accessible name: `M1 Discount model and registry, Not started`. */
+	label: string;
+	/** Plain-text twin of the row's graphics (its tooltip): `needs M1 · done when: …`. */
+	desc: string;
+}
+
+/** The whole plan at a glance (Panel.overview). */
+export interface PlanOverview {
+	version: number;
+	/** The agent's reason for this plan (the overview's one lead line), if it gave one. */
+	rationale?: string;
+	/** Plan modules in plan order. */
+	rows: OverviewRow[];
+}
+
 /** The run summary (finished, nothing selected). */
 export interface SummaryView {
 	status: RunStatus;
@@ -550,6 +580,11 @@ export interface Panel {
 	between?: { after: ModuleId | null; next?: ModuleId };
 	/** Latest plan version and module count, if a plan exists. */
 	plan?: { version: number; count: number };
+	/**
+	 * The plan at a glance while it can still be shaped before its work starts: from the plan until one
+	 * of its modules starts, and at the hold right after a re-plan. Unset otherwise and once the run ended.
+	 */
+	overview?: PlanOverview;
 }
 
 // ---- helpers ---------------------------------------------------------------------------------
@@ -1192,8 +1227,44 @@ class Builder {
 			summary: this.liveRun || state.status === "idle" ? undefined : this.summary(byId, now.runClock),
 			defaultSel: this.defaultSel(now),
 			between: this.between(),
+			overview: this.overview(modules, now),
 		};
 		return panel;
+	}
+
+	private overview(modules: ModView[], now: NowView): PlanOverview | undefined {
+		const plan = this.state.plans.at(-1);
+		if (!plan || !modules.length || !this.liveRun) return undefined;
+		// a re-plan mid-run gets the overview only while you are asked to look at it
+		const fresh = modules.every((m) => !m.attemptId);
+		if (!fresh && now.decision?.boundary !== "after_plan") return undefined;
+		return {
+			version: plan.version,
+			rationale: plan.rationale?.trim() || undefined,
+			rows: modules.map((m): OverviewRow => {
+				const checks = m.criteria.map((c) => c.text);
+				const yours = m.cur.by === "you" ? m.cur.v : undefined;
+				const desc = [
+					m.deps.length ? `needs ${joinAnd(m.deps)}` : "",
+					checks.length ? `done when: ${checks.join("; ")}` : "",
+					yours ? `instructions v${yours} by you` : "",
+				]
+					.filter(Boolean)
+					.join(" · ");
+				return {
+					id: m.id,
+					title: m.title,
+					goal: m.goal,
+					status: m.status,
+					deps: m.deps,
+					checks,
+					yours,
+					canChange: m.canChange,
+					label: `${m.id} ${m.title}, ${STATUS_LABEL[m.status]}`,
+					desc: desc.charAt(0).toUpperCase() + desc.slice(1),
+				};
+			}),
+		};
 	}
 
 	private between(): Panel["between"] {

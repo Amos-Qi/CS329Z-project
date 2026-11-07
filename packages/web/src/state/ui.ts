@@ -130,6 +130,20 @@ export function redoTarget(s: Pick<UiState, "editor">): ModuleId | null {
 	return s.editor?.kind === "redo" ? s.editor.id : null;
 }
 
+/**
+ * Whether the open editor is `kind` for `id` and on screen (the Raw view renders none): the
+ * aria-expanded of a trigger outside the card (the decision card, the plan overview).
+ */
+export function editorOn(s: Pick<UiState, "editor" | "view">, kind: EditorKind, id: ModuleId | undefined): boolean {
+	const ed = s.editor;
+	return !!ed && !!id && ed.kind === kind && ed.id === id && s.view !== "raw";
+}
+
+/** A trigger outside the card (the decision card `dc-…`, the plan overview `ov-…`): focus returns to it after a save. */
+function outsideCard(k: string | undefined): string | null {
+	return k?.startsWith("dc-") || k?.startsWith("ov-") ? k : null;
+}
+
 /** The redo panel holds the evidence column of the selected card: evidence triggers are inert (aria-disabled). */
 export function redoHoldsColumn(s: Pick<UiState, "editor" | "view" | "sel">): boolean {
 	const k = redoTarget(s);
@@ -223,8 +237,11 @@ export interface UiActions {
 	focus(...keys: (string | null | undefined)[]): void;
 	setView(view: View, focusKey?: string): void;
 	toggleTheme(): void;
-	/** Selects a station; selecting the selected one opens its evidence (focus to the tab). */
-	selectMod(id: SelId): void;
+	/**
+	 * Selects a station; selecting the selected one opens its evidence (focus to the tab). `from` is the
+	 * trigger's data-k when it is not the station (a plan overview row): focus stays there.
+	 */
+	selectMod(id: SelId, from?: string): void;
 	/** Shows the run summary (finished runs): nothing selected. */
 	clearSel(): void;
 	openEditor(kind: EditorKind, id: ModuleId, opts?: OpenEditorOptions): void;
@@ -408,15 +425,16 @@ export class UiStore implements UiActions {
 		this.set({ theme });
 	};
 
-	selectMod = (id: SelId): void => {
+	selectMod = (id: SelId, from?: string): void => {
 		const s = this.state;
 		if (s.view !== "modules") return;
+		const own = from ?? `st-${id}`;
 		if (this.sel() === id) {
 			if (redoTarget(s) === id) return;
-			this.set({ sel: id, pinned: true, evOpen: true, evOpener: `st-${id}`, focus: [`tab-${s.evTab}`] });
+			this.set({ sel: id, pinned: true, evOpen: true, evOpener: own, focus: [`tab-${s.evTab}`] });
 			return;
 		}
-		this.set({ ...this.selectPatch(id), focus: [`st-${id}`] });
+		this.set({ ...this.selectPatch(id), focus: [own] });
 	};
 
 	clearSel = (): void => {
@@ -506,7 +524,7 @@ export class UiStore implements UiActions {
 		if (ed.kind === "change") {
 			const focusBack =
 				s.view === "modules"
-					? this.keys(back?.startsWith("dc-") ? back : null, "vchip")
+					? this.keys(outsideCard(back), "vchip")
 					: this.keys(back, `lr-${defaultRow(panel, "change", ed.id)}`);
 			// unchanged text creates no version: nothing is sent, and the toast says so
 			if (ed.text === m?.cur.text) {
@@ -516,14 +534,7 @@ export class UiStore implements UiActions {
 			}
 			const nv = (m?.cur.v ?? 0) + 1;
 			if (!this.controls?.change(ed.id, ed.text)) return;
-			const planRow = defaultRow(panel, "change", ed.id);
-			this.set({
-				...base,
-				focus:
-					s.view === "modules"
-						? this.keys(back?.startsWith("dc-") ? back : null, "vchip")
-						: this.keys(back, `lr-${planRow}`),
-			});
+			this.set({ ...base, focus: focusBack });
 			toast(`${ed.id} instructions saved as v${nv} · by you`);
 		} else {
 			// not sent (not connected): the editor stays open with your text
@@ -771,14 +782,16 @@ export class UiStore implements UiActions {
 		const panel = this.panel;
 		if (!panel) return;
 		if (s.view === "modules") {
-			const ids: SelId[] = [PRE, ...panel.ids];
+			// in the plan overview j/k walk its rows (plan modules only) and focus stays on them
+			const row = target?.closest?.(".ovr") as HTMLElement | null;
+			const ids: SelId[] = row ? panel.ids : [PRE, ...panel.ids];
 			const st = target?.closest?.(".st") as HTMLElement | null;
-			const base = st?.dataset.k?.startsWith("st-") ? st.dataset.k.slice(3) : this.sel();
+			const base = row?.dataset.id ?? (st?.dataset.k?.startsWith("st-") ? st.dataset.k.slice(3) : this.sel());
 			let i = base ? ids.indexOf(base) + dir : dir > 0 ? 1 : ids.length - 1;
 			i = Math.max(0, Math.min(ids.length - 1, i));
 			const id = ids[i];
 			if (!id) return;
-			this.set({ ...this.selectPatch(id), focus: [`st-${id}`] });
+			this.set({ ...this.selectPatch(id), focus: [row ? `ov-${id}` : `st-${id}`] });
 			return;
 		}
 		const rows = visibleEvents(panel, s);
@@ -861,7 +874,7 @@ export class UiStore implements UiActions {
 		}
 		if (t.closest(".pop")) return;
 		/* product shortcuts j/k/Enter only act while the plan, the card or the log list has focus (WCAG 2.1.4) */
-		const scoped = !t.closest("#now, #harness, .redo, .ed") && !!t.closest("#stations, .card, #logList");
+		const scoped = !t.closest("#now, #harness, .redo, .ed") && !!t.closest("#stations, #planOv, .card, #logList");
 		if (!scoped) return;
 		if (e.key === "j" || e.key === "J") {
 			e.preventDefault();

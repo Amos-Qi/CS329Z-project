@@ -21,7 +21,7 @@ import {
 	shownLabel,
 	shownStatus,
 } from "../model/panel.ts";
-import { type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
+import { editorOn, type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
 import { announce } from "../ui/announce.tsx";
 import { Icon, type IconName } from "../ui/icons.tsx";
 import { EASE, play } from "../ui/motion.ts";
@@ -67,12 +67,9 @@ export function NowBar({ panel, ui }: NowBarProps) {
 	if (waiting && now.decision) {
 		const d = now.decision;
 		const what = d.what;
-		const ed = ui.s.editor;
 		/* the Raw view renders no editor, so no button there says it controls one */
-		const edOn = (kind: "change" | "redo", id: string | undefined) =>
-			!!ed && !!id && ed.kind === kind && ed.id === id && ui.s.view !== "raw";
-		const changeOn = edOn("change", d.next);
-		const redoOn = edOn("redo", d.redo?.moduleId);
+		const changeOn = editorOn(ui.s, "change", d.next);
+		const redoOn = editorOn(ui.s, "redo", d.redo?.moduleId);
 		body = (
 			<>
 				{/* row 1: state, what happened + its flag, progress, then the persistent controls in the same corner as in Working */}

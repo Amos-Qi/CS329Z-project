@@ -22,7 +22,7 @@ import {
 	seconds,
 } from "../src/model/format.ts";
 import { buildPanel, type Panel, PRE, redoPreview, shownStatus, slotLabel } from "../src/model/panel.ts";
-import { defaultRow, initialUi, UiStore, visibleEvents } from "../src/state/ui.ts";
+import { defaultRow, editorOn, initialUi, UiStore, visibleEvents } from "../src/state/ui.ts";
 
 const T0 = 1_000_000;
 const WS = "/ws";
@@ -63,10 +63,10 @@ function trace() {
 			});
 			return b;
 		},
-		plan(order: string[], deps: Record<string, string[]> = {}, v = 1) {
+		plan(order: string[], deps: Record<string, string[]> = {}, v = 1, rationale?: string) {
 			push({
 				type: "plan_version",
-				plan: { version: v, moduleOrder: order, author: "agent", createdAt: time() },
+				plan: { version: v, moduleOrder: order, author: "agent", rationale, createdAt: time() },
 				modules: order.map((id) => version(id, { dependsOn: deps[id] ?? [] })),
 			});
 			return b;
@@ -735,6 +735,74 @@ describe("buildPanel: between modules (where the train waits)", () => {
 	});
 });
 
+describe("buildPanel: the plan overview", () => {
+	const WHY = "M1 first; M2 needs it; M3 builds on M2.";
+	const held = () =>
+		trace()
+			.start()
+			.read("README.md")
+			.plan(["M1", "M2", "M3"], { M2: ["M1"], M3: ["M1", "M2"] }, 1, `  ${WHY}  `)
+			.hold("after_plan");
+
+	it("at the hold after the plan: every module in order with its purpose, prerequisites and checks", () => {
+		const ov = panelOf(held().events, { control: LIVE }).overview;
+		expect(ov?.version).toBe(1);
+		expect(ov?.rationale).toBe(WHY);
+		expect(ov?.rows.map((r) => r.id)).toEqual(["M1", "M2", "M3"]);
+		expect(ov?.rows[2]).toMatchObject({
+			title: "Module M3",
+			goal: "Purpose of M3",
+			status: "pending",
+			deps: ["M1", "M2"],
+			checks: ["M3 works"],
+			canChange: true,
+			label: "M3 Module M3, Not started",
+			desc: "Needs M1 and M2 · done when: M3 works",
+		});
+		expect(ov?.rows[0]?.desc).toBe("Done when: M1 works");
+		expect(ov?.rows.every((r) => r.yours === undefined)).toBe(true);
+	});
+
+	it("shows a Change you made before the module started on its row", () => {
+		const b = held().userVersion("M3", 2, "Round half up");
+		const rows = panelOf(b.events, { control: LIVE }).overview?.rows;
+		expect(rows?.map((r) => r.yours)).toEqual([undefined, undefined, 2]);
+		// (the helper's user version declares no prerequisites)
+		expect(rows?.[2]?.desc).toBe("Done when: M3 works · instructions v2 by you");
+	});
+
+	it("stays after Continue until a module starts; never once the run ended", () => {
+		const b = held().resume();
+		expect(panelOf(b.events, { control: LIVE }).overview?.rows).toHaveLength(3);
+		b.begin("M1");
+		expect(panelOf(b.events, { control: LIVE }).overview).toBeUndefined();
+		const stopped = held().end("aborted");
+		expect(panelOf(stopped.events, { control: LIVE }).overview).toBeUndefined();
+		expect(panelOf(trace().start().read("a.py").events, { control: LIVE }).overview).toBeUndefined();
+	});
+
+	it("a re-plan mid-run gets it only while held after it, with only the modules not started changeable", () => {
+		const b = trace().start().plan(["M1", "M2"]).begin("M1").edit("a.py").test(1).finish("M1");
+		b.plan(["M1", "M2", "M3"], {}, 2);
+		expect(panelOf(b.events, { control: LIVE }).overview).toBeUndefined();
+		b.hold("after_plan");
+		const ov = panelOf(b.events, { control: LIVE }).overview;
+		expect(ov?.version).toBe(2);
+		expect(ov?.rationale).toBeUndefined();
+		expect(ov?.rows.map((r) => [r.id, r.status, r.canChange])).toEqual([
+			["M1", "verified", false],
+			["M2", "pending", true],
+			["M3", "pending", true],
+		]);
+	});
+
+	it("replaying back to the hold: the same overview with nothing to change", () => {
+		const ov = panelOf(held().events, { control: LIVE, replaying: true }).overview;
+		expect(ov?.rows).toHaveLength(3);
+		expect(ov?.rows.some((r) => r.canChange)).toBe(false);
+	});
+});
+
 describe("buildPanel: review fixes", () => {
 	it("the run summary counts files changed outside modules and by modules a re-plan dropped", () => {
 		const b = trace().start().plan(["M1", "M2"]);
@@ -969,5 +1037,34 @@ describe("UiStore: editors stay true to the run", () => {
 		store.redoGo();
 		expect(sent).toEqual([]);
 		expect(store.state.editor).toBeNull();
+	});
+
+	it("Change from a plan overview row: any module, the card's editor, focus back to the row", () => {
+		sent.length = 0;
+		const b = trace().start().plan(["M1", "M2", "M3"]).hold("after_plan");
+		const store = ui(panelOf(b.events, { control: LIVE }));
+		store.openEditor("change", "M3", { opener: "ov-chg-M3" });
+		expect(store.state).toMatchObject({ sel: "M3", pinned: true, editor: { kind: "change", id: "M3", text: "Do M3" } });
+		expect(editorOn(store.state, "change", "M3")).toBe(true);
+		expect(editorOn({ ...store.state, view: "raw" }, "change", "M3")).toBe(false);
+		store.setEditorField("text", "Round half up");
+		store.saveEditor();
+		expect(sent).toEqual(["change M3 Round half up"]);
+		expect(store.state.editor).toBeNull();
+		expect(store.state.focus).toEqual(["ov-chg-M3", "vchip"]);
+	});
+
+	it("a plan overview row selects its module's card and keeps focus; j/k walk the rows", () => {
+		const b = trace().start().plan(["M1", "M2", "M3"]).hold("after_plan");
+		const store = ui(panelOf(b.events, { control: LIVE }));
+		store.selectMod("M2", "ov-M2");
+		expect(store.state).toMatchObject({ sel: "M2", pinned: true, focus: ["ov-M2"] });
+		const row = (id: string) => ({ closest: (q: string) => (q === ".ovr" ? { dataset: { id } } : null) });
+		store.move(1, row("M2") as unknown as Element);
+		expect(store.state).toMatchObject({ sel: "M3", focus: ["ov-M3"] });
+		store.move(1, row("M3") as unknown as Element);
+		expect(store.state.sel).toBe("M3");
+		store.move(-1, row("M1") as unknown as Element);
+		expect(store.state).toMatchObject({ sel: "M1", focus: ["ov-M1"] });
 	});
 });

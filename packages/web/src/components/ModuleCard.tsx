@@ -30,7 +30,7 @@ import {
 } from "../model/panel.ts";
 import { type EvTab, type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
 import { Icon, type IconName } from "../ui/icons.tsx";
-import { EASE, EASE_TRAIN, play, reducedMotion } from "../ui/motion.ts";
+import { EASE, EASE_TRAIN, ghostOf, play, reducedMotion } from "../ui/motion.ts";
 import { CodeBlock, DiffBar, Glyph, Pips, Strip, tipImg } from "../ui/primitives.tsx";
 import { Editor, RedoPanel } from "./Editors.tsx";
 
@@ -49,16 +49,10 @@ interface Snapshot {
 	width: number;
 }
 
-/** A copy of a card that only fades out: no ids, no tab stops, hidden from assistive tech. */
+/** The copy of a card that only fades out (ghostOf), placed where the card sat. */
 function ghostCard(s: Snapshot): HTMLElement {
 	const g = s.node;
-	for (const el of [g, ...g.querySelectorAll<HTMLElement>("*")]) {
-		for (const a of ["id", "data-k", "data-tip", "tabindex", "aria-labelledby", "aria-describedby"])
-			el.removeAttribute(a);
-	}
 	g.classList.add("card-ghost");
-	g.setAttribute("aria-hidden", "true");
-	g.inert = true;
 	g.style.top = `${s.top}px`;
 	g.style.left = `${s.left}px`;
 	g.style.width = `${s.width}px`;
@@ -91,7 +85,7 @@ export function Work({ panel, ui }: WorkProps) {
 	if (last.current.key !== shown && !snap.current && !reducedMotion()) {
 		const old = workRef.current?.firstElementChild;
 		if (old instanceof HTMLElement) {
-			const node = old.cloneNode(true) as HTMLElement;
+			const node = ghostOf(old);
 			snap.current = { key: last.current.key, node, top: old.offsetTop, left: old.offsetLeft, width: old.offsetWidth };
 		}
 	}

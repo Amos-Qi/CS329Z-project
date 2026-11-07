@@ -24,6 +24,7 @@ import { LogView } from "./components/LogView.tsx";
 import { Metro } from "./components/Metro.tsx";
 import { Work } from "./components/ModuleCard.tsx";
 import { NowBar } from "./components/NowBar.tsx";
+import { PlanOverview } from "./components/PlanOverview.tsx";
 import { RawView } from "./components/RawView.tsx";
 import { useControls } from "./controls.ts";
 import { clock } from "./model/format.ts";
@@ -324,6 +325,7 @@ function RunPanel({ runId, initialView, initialT, study, onBack }: RunPanelProps
 				{view === "modules" ? (
 					<>
 						<Metro panel={panel} ui={ui} />
+						<PlanOverview panel={panel} ui={ui} />
 						<Work panel={panel} ui={ui} />
 					</>
 				) : view === "log" ? (

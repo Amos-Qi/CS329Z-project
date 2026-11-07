@@ -1278,6 +1278,125 @@ textarea.field {
 		pointer-events: auto;
 	}
 }
+/* ---------- Plan overview (Modules view, between the line and the card) ---------- */
+/* a flow root, so the overview's margin stays inside the slot whose height glides as it comes and goes */
+.ov-slot {
+	display: flow-root;
+}
+.ov {
+	margin: 16px 20px 0;
+	padding: 12px 16px;
+	background: var(--card);
+	border: 1px solid var(--hair-2);
+	border-radius: 12px;
+}
+.ov-h {
+	display: flex;
+	align-items: center;
+	gap: 8px 16px;
+	min-width: 0;
+	margin-bottom: 8px;
+}
+.ov-h .lab {
+	margin: 0;
+	flex: none;
+}
+.ov-why {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	color: var(--muted-fg);
+	font-size: 13px;
+	border-radius: 4px;
+}
+.ov-why .i {
+	flex: none;
+}
+.ov-wt,
+.ov-t,
+.ov-g {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+/* rows share columns (subgrid), so ids, titles, purposes and facts line up down the plan; the facts
+   follow the longest purpose (a free column before Change), so they stay next to what they describe */
+.ov-l {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: 34px auto minmax(0, max-content) minmax(0, max-content) auto auto auto minmax(0, 1fr) 32px;
+	column-gap: 12px;
+	row-gap: 2px;
+}
+.ovr {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: subgrid;
+	align-items: center;
+	position: relative;
+}
+.ovb {
+	grid-column: 1 / 9;
+	display: grid;
+	grid-template-columns: subgrid;
+	align-items: center;
+	min-height: 36px;
+	padding-right: 10px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	text-align: left;
+	transition:
+		background-color 0.15s,
+		border-color 0.15s;
+}
+.ovb:hover {
+	background: var(--hair);
+}
+.ovb[aria-current="true"] {
+	background: var(--muted);
+	border-color: var(--hair-2);
+}
+.ov-node {
+	justify-self: center;
+	display: grid;
+	place-items: center;
+}
+.ovr .cid {
+	font-size: 13px;
+}
+.ov-t {
+	font-weight: 600;
+}
+.ov-g {
+	color: var(--muted-fg);
+	font-size: 13px;
+}
+.ov-f {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--muted-fg);
+	font-size: 12px;
+}
+/* the rail: the line's dotted future turned down the plan, solid into a module once it has started */
+.ovr + .ovr::before {
+	content: "";
+	position: absolute;
+	left: 16px;
+	bottom: calc(50% + 10px);
+	height: calc(100% - 18px);
+	border-left: 2px dotted var(--pend-line);
+	pointer-events: none;
+}
+.ovr.ran::before {
+	border-left-style: solid;
+	border-color: var(--line-done);
+}
 /* ---------- Module card (level 2) + evidence (level 3) ---------- */
 .work {
 	padding: 16px 20px calc(var(--harness-h, 56px) + 48px);
@@ -2960,12 +3079,22 @@ select.field option {
 .hero,
 .hcard,
 .metro,
+.ov,
 .card,
 .ll,
 .toast,
 .ed,
 .redo {
 	animation: float-in 700ms var(--ease) backwards;
+}
+/* the plan overview's rows drift in down the rail, one after another; the copy that folds away replays nothing */
+.ov-l > li {
+	animation: drift-in 500ms var(--ease) backwards;
+	animation-delay: calc(var(--i, 0) * 70ms + 120ms);
+}
+.ov-ghost,
+.ov-ghost * {
+	animation: none;
 }
 .home > :nth-child(2) {
 	animation-delay: 120ms;

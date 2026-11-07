@@ -262,6 +262,7 @@ The visual system follows UI-UX-Pro-Max "Minimalism & Swiss Style":
 - `j`/`k` move along the line. Enter opens the evidence. Esc goes back up one level (expanded step → evidence → station) and returns focus to whatever opened the level.
 - The card shows the active or waiting module by default. When the run has finished and nothing is selected, it shows a run summary: run time, the flags, and the whole-run files with the modules that changed them.
 - The card's primary button depends on the module's state: **Change Mk…** (not started), **Correct Mk…** (running, delivered with `steer`), **Redo from Mk…** (finished).
+- While the plan can still be shaped before its work starts (the hold after the plan, and until its first module starts; also the hold after a re-plan), a **plan overview** sits between the line and the card: the agent's rationale as one lead line, then one row per module with its status on a vertical rail, id, title, purpose, what it needs first and how many done-when criteria check it (named in the row's tooltip). A row selects that module's card, like its station; its **Change Mk…** opens the card's editor. It folds away once a module starts.
 
 **Redo from a module** opens beside the card. It has three parts:
 - the module's instructions, ready to edit (the result becomes the next version);
@@ -288,21 +289,21 @@ The log adds no per-module aggregates (no plan overview, no status summary) beyo
 
 ### 6.3 Equivalence contract (both conditions)
 
-|                                                              | Modular                                           | Log                            |
-| ------------------------------------------------------------ | ------------------------------------------------- | ------------------------------ |
-| Agent, prompt, module protocol, model, budget                | same                                              | same                           |
-| Events, diffs, test results, plan & instruction text         | same (same reducer)                               | same                           |
-| Now bar: state, active module, current action, flags         | ✓                                                 | ✓                              |
-| Decision card when waiting (Continue / Change / Redo / Stop) | ✓                                                 | ✓                              |
-| Pause at next boundary, note to agent, Stop                  | ✓                                                 | ✓                              |
-| What you sent (notes, corrections), reviewable later         | note popover + the Steps of the module it reached | note popover + its rows        |
-| Module tag on every action                                   | station + card                                    | column                         |
-| Dependencies (declared/recorded)                             | arcs on the line                                  | fields on plan and module rows |
-| Change a future module's instructions                        | its card                                          | its plan row                   |
-| Correct the running module                                   | its card                                          | its rows                       |
-| Redo from a module (rewind), with consequence preview        | its card                                          | its start/finish row           |
-| Segmented progress, "next", Metro line, module card, summary | ✓                                                 | — (this is the manipulation)   |
-| Replay scrubber (trace study)                                | ✓                                                 | ✓                              |
+|                                                                             | Modular                                           | Log                            |
+| --------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------ |
+| Agent, prompt, module protocol, model, budget                               | same                                              | same                           |
+| Events, diffs, test results, plan & instruction text                        | same (same reducer)                               | same                           |
+| Now bar: state, active module, current action, flags                        | ✓                                                 | ✓                              |
+| Decision card when waiting (Continue / Change / Redo / Stop)                | ✓                                                 | ✓                              |
+| Pause at next boundary, note to agent, Stop                                 | ✓                                                 | ✓                              |
+| What you sent (notes, corrections), reviewable later                        | note popover + the Steps of the module it reached | note popover + its rows        |
+| Module tag on every action                                                  | station + card                                    | column                         |
+| Dependencies (declared/recorded)                                            | arcs on the line                                  | fields on plan and module rows |
+| Change a future module's instructions                                       | its card (also from its plan overview row)        | its plan row                   |
+| Correct the running module                                                  | its card                                          | its rows                       |
+| Redo from a module (rewind), with consequence preview                       | its card                                          | its start/finish row           |
+| Segmented progress, "next", Metro line, module card, plan overview, summary | ✓                                                 | — (this is the manipulation)   |
+| Replay scrubber (trace study)                                               | ✓                                                 | ✓                              |
 
 The _only_ manipulated factor is organization and navigation: the Metro line and module-card
 hierarchy versus a flat log.
