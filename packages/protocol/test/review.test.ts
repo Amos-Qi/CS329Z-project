@@ -241,7 +241,24 @@ describe("files and commands", () => {
 	});
 
 	it("finds test runs and file-writing commands by their command words", () => {
-		for (const cmd of ["pytest -q", "python -m pytest -q", "cd x && .venv/bin/python -m pytest tests/"]) {
+		for (const cmd of [
+			"pytest -q",
+			"python -m pytest -q",
+			"cd x && .venv/bin/python -m pytest tests/",
+			"npm test",
+			"npm run test",
+			"npm t",
+			"CI=1 npm test -- --test-reporter=spec",
+			"node --test",
+			"node --test test/",
+			"node --experimental-test-coverage --test",
+			"pnpm test",
+			"yarn test",
+			"npm -s test",
+			"npm --silent run test",
+			"node test/game.test.js",
+			"npm test 2>&1 | tail -20",
+		]) {
 			expect(isTestCommand(cmd), cmd).toBe(true);
 		}
 		for (const cmd of [
@@ -252,6 +269,13 @@ describe("files and commands", () => {
 			"cat pytest.ini",
 			"grep -rn pytest .",
 			"cat > tests/test_x.py <<'EOF'\nimport pytest\nEOF",
+			"node server.js",
+			"node test/helpers.js",
+			"node server.js --test",
+			"npm run test:watch",
+			"npm start",
+			"npm test --help",
+			"grep -rn 'npm test' README.md",
 		]) {
 			expect(isTestCommand(cmd), cmd).toBe(false);
 		}
@@ -266,6 +290,8 @@ describe("files and commands", () => {
 			'grep x <<< "$v"',
 			"grep -rn 'rm -rf' scripts",
 			"git checkout --help",
+			"npm test",
+			"node -e \"console.log(require('./package.json').scripts)\"",
 		]) {
 			expect(writesFiles(cmd), cmd).toBe(false);
 		}
@@ -282,6 +308,9 @@ describe("files and commands", () => {
 			"black .",
 			"python -c \"open('x', 'w').write('1')\"",
 			"cat > f <<'EOF'\nx\nEOF",
+			"npm init -y",
+			"npm pkg set scripts.test='node --test'",
+			"node -e \"require('fs').writeFileSync('x.json', '{}')\"",
 		]) {
 			expect(writesFiles(cmd), cmd).toBe(true);
 		}

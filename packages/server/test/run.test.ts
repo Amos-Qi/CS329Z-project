@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { type FauxResponseStep, fauxAssistantMessage, fauxText, fauxToolCall } from "@earendil-works/pi-ai/compat";
 import { createFauxSession } from "@vcm/extension/testing";
 import { computeFlags, displayStatus, queuedNotes, reduceTrace, type TraceEvent } from "@vcm/protocol";
@@ -542,5 +543,69 @@ describe("capture", () => {
 		const edit = Object.values(state.actions).find((a) => a.tool === "edit");
 		expect(edit).toMatchObject({ source: "host", isError: true, attemptId: "M1.1", args: { path: "a.txt" } });
 		expect(state.audit?.missingActions).toEqual([]);
+	});
+});
+
+describe("the Snake demo task", () => {
+	const cleanups: (() => void)[] = [];
+	afterEach(() => {
+		while (cleanups.length) cleanups.pop()?.();
+	});
+
+	it("starts from a stub package.json, keeps the prompt as written and recognizes npm test", async () => {
+		const root = mkdtempSync(join(tmpdir(), "vcm-run-"));
+		cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+		const task = loadTask(fileURLToPath(new URL("../../../tasks/snake-game", import.meta.url)));
+		let prompt = "";
+		let listing: string[] = [];
+		const run = await Run.create({
+			runId: "snake",
+			runDir: join(root, "runs", "snake"),
+			task,
+			createSession: fauxFactory(
+				[
+					(context) => {
+						prompt = JSON.stringify(context.messages);
+						listing = readdirSync(run.workspace);
+						return call("plan_modules", {
+							rationale: "Tests first, then the docs.",
+							modules: [
+								{
+									title: "Tests",
+									purpose: "Test the game",
+									instructions: "Write a test",
+									validation: ["npm test passes"],
+								},
+								{ title: "Docs", purpose: "Explain how to run it", instructions: "Write README.md" },
+							],
+						});
+					},
+					call("start_module", { id: "M1" }),
+					call("write", {
+						path: "package.json",
+						content: JSON.stringify({ name: "snake", version: "1.0.0", scripts: { test: "node --test" } }),
+					}),
+					call("write", {
+						path: "test/game.test.js",
+						content: "const test = require('node:test');\ntest('moves', () => {});\n",
+					}),
+					call("bash", { command: "npm test" }),
+					call("finish_module", { id: "M1", status: "completed", summary: "Tests pass." }),
+					fauxAssistantMessage(fauxText("Done.")),
+				],
+				cleanups,
+			),
+		});
+		run.start();
+		await waitFor(run.trace.events, run, (e) => e.type === "run_ended");
+
+		expect(listing).toEqual(["package.json"]);
+		expect(prompt).toContain("Build a browser-based Snake game using HTML, CSS, JavaScript");
+		expect(prompt).toContain("Run the tests with `npm test`.");
+		const state = reduceTrace(run.trace.events);
+		const test = Object.values(state.actions).find((a) => a.tool === "bash");
+		expect(test).toMatchObject({ isTest: true, test: { passed: 1, failed: 0, ok: true } });
+		expect(displayStatus(state, "M1")).toBe("verified");
+		expect(computeFlags(state).filter((f) => f.moduleId === "M1")).toEqual([]);
 	});
 });

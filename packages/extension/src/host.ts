@@ -38,7 +38,8 @@ export interface ModulesHost {
 export interface ModulesExtensionOptions {
 	/**
 	 * A bash command is recorded as a test run when one of its simple commands (quoted strings and heredoc
-	 * bodies removed) matches this. Default: PYTEST_COMMAND (pytest or `python -m pytest` as the command).
+	 * bodies removed) matches this. Default: TEST_COMMAND (pytest or `python -m pytest`, `node --test`, or a
+	 * package's test script such as `npm test`).
 	 */
 	testCommandPattern?: RegExp;
 	/** Append a reminder to mutating tool results when no module is active. Default: true. */

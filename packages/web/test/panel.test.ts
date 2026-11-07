@@ -279,6 +279,20 @@ describe("format helpers", () => {
 			["o", "....   [100%]"],
 			["o", "4 passed in 0.01s"],
 		]);
+		expect(
+			outputLines(
+				"> snake@1.0.0 test\n> node --test\n✔ moves (1ms)\n✖ eats food (2ms)\nℹ tests 2\nℹ pass 1\nℹ fail 1\nℹ cancelled 0\n",
+			),
+		).toEqual([
+			["c", "> snake@1.0.0 test"],
+			["c", "> node --test"],
+			["c", "✔ moves (1ms)"],
+			["f", "✖ eats food (2ms)"],
+			["c", "ℹ tests 2"],
+			["o", "ℹ pass 1"],
+			["f", "ℹ fail 1"],
+			["c", "ℹ cancelled 0"],
+		]);
 	});
 
 	it("names commands, joins ids, folds reads and caps long blocks", () => {

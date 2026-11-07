@@ -51,25 +51,48 @@ export function fileChangesFor(toolName: string, input: Record<string, unknown>,
 }
 
 /**
- * Parses a pytest summary line such as "3 failed, 12 passed, 1 error in 0.52s". Undefined when a
- * command that succeeded printed no test counts at all: it was not a test run (e.g. `pytest --fixtures`).
+ * Failing tests named in Node's output. Node lists each one after its summary as `test at <file>` then
+ * `✖ <name>`, so a failing run piped through `tail` (which also hides the exit code) can keep only these;
+ * without that list, top-level `✖ <name>` (which may be a suite) or TAP's `not ok N - <name>`.
+ */
+function nodeFailures(output: string): number | undefined {
+	const lines = output.split("\n");
+	const listed = lines.filter((line, i) => line.startsWith("✖ ") && lines[i - 1]?.startsWith("test at "));
+	const named = listed.length ? listed : lines.filter((line) => /^(?:✖ (?!failing tests:)|not ok \d+ - )/.test(line));
+	const names = new Set(
+		named.map((line) => line.replace(/^(?:✖ |not ok \d+ - )/, "").replace(/\s*\([\d.]+m?s\)\s*$/, "")),
+	);
+	return names.size || undefined;
+}
+
+/** A failed assertion (Node's assert, or a Python traceback cut off before pytest's summary). */
+const ASSERTION = /\b(?:AssertionError|ERR_ASSERTION)\b/;
+
+/**
+ * Parses a pytest summary line such as "3 failed, 12 passed, 1 error in 0.52s", or the summary of Node's
+ * test runner ("ℹ pass 3" / "ℹ fail 1" / "ℹ cancelled 0", "#" instead of "ℹ" with the TAP reporter).
+ * Undefined when a command that succeeded printed no test counts at all: it was not a test run (e.g.
+ * `pytest --fixtures`).
  */
 export function parseTestRun(command: string, output: string, isError: boolean): TestRun | undefined {
-	const count = (word: string) => {
-		const matches = [...output.matchAll(new RegExp(`(\\d+) ${word}`, "g"))];
-		const last = matches.at(-1);
-		return last ? Number(last[1]) : undefined;
+	const last = (pattern: RegExp) => {
+		const match = [...output.matchAll(pattern)].at(-1);
+		return match ? Number(match[1]) : undefined;
 	};
-	const passed = count("passed");
-	const failed = count("failed");
-	const errors = count("errors?");
+	const count = (word: string) => last(new RegExp(`(\\d+) ${word}`, "g"));
+	// Node's summary lines are anchored, so they win over "3 passed" in a test name or a log line
+	const node = (word: string) => last(new RegExp(`^(?:ℹ|#) ${word} (\\d+)\\s*$`, "gm"));
+	const passed = node("pass") ?? count("passed");
+	const failed = node("fail") ?? count("failed") ?? nodeFailures(output);
+	const errors = node("cancelled") ?? count("errors?");
 	const exit = /exit code[:\s]+(\d+)/i.exec(output);
 	if (
 		!isError &&
 		passed === undefined &&
 		failed === undefined &&
 		errors === undefined &&
-		!/no tests ran/.test(output)
+		!/no tests ran/.test(output) &&
+		!ASSERTION.test(output)
 	) {
 		return undefined;
 	}

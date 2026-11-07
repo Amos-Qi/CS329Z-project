@@ -36,8 +36,19 @@ export function commandSegments(command: string): string[] {
 export const PYTEST_COMMAND =
 	/^(?:\S+=\S*\s+)*(?:timeout\s+\S+\s+)?(?:\S*\/)?(?:(?:python[\d.]*|uv\s+run|poetry\s+run)\s+(?:-m\s+)?)?(?:\S*\/)?py\.?test\b(?!.*\s--?(?:version|help|h|collect-only|co)\b)/;
 
+/**
+ * Node's test runner (`node --test`, flags allowed before it), a test file run directly
+ * (`node test/game.test.js`), or a package's test script (`npm test`, `npm -s run test`, `npm t`, pnpm,
+ * yarn), not `test:watch`.
+ */
+export const NODE_TEST_COMMAND =
+	/^(?:\S+=\S*\s+)*(?:timeout\s+\S+\s+)?(?:(?:\S*\/)?node\s+(?:(?:-\S+\s+)*?--test(?=\s|$)|(?:-\S+\s+)*\S*\.test\.[cm]?js(?=\s|$))|(?:npm|pnpm|yarn)(?:\s+-{1,2}[a-z][\w-]*)*\s+(?:run\s+)?(?:test|t)(?=\s|$))(?!.*\s--?(?:version|help|h)\b)/;
+
+/** The test runners the tasks use: pytest (Python tasks) and Node's test runner or package test scripts. */
+export const TEST_COMMAND = new RegExp(`${PYTEST_COMMAND.source}|${NODE_TEST_COMMAND.source}`);
+
 /** Whether one segment of `command` runs the tests (`pattern` is matched against each simple command). */
-export function isTestCommand(command: string, pattern: RegExp = PYTEST_COMMAND): boolean {
+export function isTestCommand(command: string, pattern: RegExp = TEST_COMMAND): boolean {
 	return commandSegments(command).some((segment) => pattern.test(segment));
 }
 
@@ -51,14 +62,20 @@ const WRITING_SEGMENT = [
 	/\b(?:black|isort|autopep8)\b(?!.*\s--(?:check|diff)\b)/,
 	/\b(?:ruff|eslint|biome)\b.*\s--(?:fix|write)\b/,
 	/\bprettier\b.*\s--write\b/,
+	/\b(?:npm|pnpm|yarn)\s+(?:init|install|i|add|remove|uninstall|update|pkg\s+set)\b/,
 ];
+
+const NODE_EVAL_WRITE =
+	/\bnode\s+(?:-e|--eval|-p|--print)\b[\s\S]*\b(?:writeFile|appendFile|rm|unlink|rename|mkdir)(?:Sync)?\(/;
 
 /**
  * Bash commands that probably change files: redirection to a file (not /dev/null), heredocs, in-place
- * edits, moves and deletes, git commands that rewrite the work tree, formatters, `python -c "open(.., 'w')"`.
+ * edits, moves and deletes, git commands that rewrite the work tree, formatters, package managers,
+ * `python -c "open(.., 'w')"`, `node -e "fs.writeFileSync(..)"`.
  */
 export function writesFiles(command: string): boolean {
 	if (/\bpython[\d.]*\s+-c\b[\s\S]*\bopen\([^)]*['"][wax]\+?b?['"]/.test(command)) return true;
+	if (NODE_EVAL_WRITE.test(command)) return true;
 	const words = shellWords(command);
 	if (/(?<!<)<<(?!<)/.test(words)) return true;
 	return commandSegments(command).some(

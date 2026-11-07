@@ -82,6 +82,10 @@ for a live demo. It is a small policy over the conversation, so it reacts to the
 harness bar at the bottom (researcher chrome, not part of either condition) switches Modules / Log / Raw,
 the theme, and scrubs any run for replay. `?view=log&study=1` fixes the condition for a participant.
 
+For a live run with a real model, pick `snake-game` (a browser Snake game with a small Node.js server,
+built from a near-empty repo) and the configured OpenRouter model; it needs `OPENROUTER_API_KEY` in `.env`.
+With a key set, it is the default task on the Home page.
+
 ## What is done, and what is next
 
 Done (docs/milestone.md items 1–6): the module protocol with reminders and a 2–7 module plan, capture of

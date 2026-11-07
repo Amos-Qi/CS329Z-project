@@ -9,8 +9,9 @@ hidden_tests/    behavioral tests the agent never sees; used by grade.py
 ```
 
 `task.yaml` fields: `id`, `title`, `split` (`dev` | `pilot` | `eval`), `source`, `prompt` (human-written
-requirements), `test_command`, `hidden_tests`, `setup` (optional shell commands run in the workspace), `notes`
-(task source and selection criteria), and `variants` (seeded failures).
+requirements), `test_command` (`python -m pytest -q`, or e.g. `npm test` for a JavaScript task; the agent is
+told to run the tests with it), `hidden_tests` (optional), `setup` (optional shell commands run in the
+workspace), `notes` (task source and selection criteria), and `variants` (seeded failures).
 
 Seeded-failure variant kinds (docs/design.md §8):
 
@@ -25,6 +26,12 @@ Each variant records its `origin` and `expected_affected` changes for analysis.
 `toy-shop-discounts` is a self-contained **dev** task for building the system. It is never used in a study.
 Pilot and eval tasks come from small, pinned public Python repos (milestone day 3).
 
+`snake-game` is a **dev** task for live demos with an OpenRouter model: a browser Snake game with a small
+Node.js server, built from a repository that holds only a stub `package.json` (so npm stops at the workspace instead of
+the harness's own `package.json`), with no external dependencies. It has no variants and no
+hidden tests (its requirements fix no API), and the scripted agent does not know it. The panel records
+`node --test` and package test scripts (`npm test`) as test runs, the same as pytest.
+
 ## Python environment and grading
 
 `uv sync --project tasks` creates `tasks/.venv` with pytest. The server prepends it to the agent's `PATH`.
@@ -34,5 +41,7 @@ npm run grade -- tasks/toy-shop-discounts runs/<run-id>/workspace
 ```
 
 `grade.py` copies the workspace to a temp directory, runs the visible tests (regressions) and the hidden
-tests, and prints a summary (`--json` for the full result). Before using a task, check that the untouched
+tests, and prints a summary (`--json` for the full result). For a task whose `test_command` is not pytest
+(e.g. `npm test`), it runs that command and reads Node's test-runner summary; a task without hidden tests
+passes only if its own tests pass and at least one ran. Before using a task, check that the untouched
 repo fails the hidden tests and that a reference solution passes them.

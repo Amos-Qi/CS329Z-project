@@ -56,7 +56,8 @@ const beforePlan = (state.actionsByAttempt[UNASSIGNED] ?? []).filter(
 const actions = state.actionOrder.length;
 const attempts = state.attemptOrder.length;
 
-let grade: { ok: boolean; hidden?: { passed: number; failed: number; errors: number } } | undefined;
+type Counts = { passed: number; failed: number; errors: number };
+let grade: { ok: boolean; visible?: Counts; hidden?: Counts | null } | undefined;
 const python = join(config.pythonBin ?? "", "python");
 const task = manager.tasks().find((t) => t.id === values.task);
 if (task && existsSync(python)) {
@@ -102,7 +103,7 @@ const record = {
 	tokens: stats.tokens?.total,
 	cost: stats.cost,
 	minutes: state.endedAt && state.startedAt ? (state.endedAt - state.startedAt) / 60000 : undefined,
-	grade: grade ? { ok: grade.ok, hidden: grade.hidden } : undefined,
+	grade: grade ? { ok: grade.ok, visible: grade.visible, hidden: grade.hidden } : undefined,
 };
 
 if (values.json) {
@@ -121,10 +122,11 @@ if (values.json) {
 	console.log(
 		`  cost:      ${record.tokens ?? "?"} tokens, $${typeof record.cost === "number" ? record.cost.toFixed(3) : "?"}, ${record.minutes?.toFixed(1) ?? "?"} min`,
 	);
-	if (grade?.hidden) {
-		const h = grade.hidden;
+	// a task without hidden tests (e.g. snake-game) is graded on its own tests
+	const counts = grade?.hidden ?? grade?.visible;
+	if (grade && counts) {
 		console.log(
-			`  grade:     ${grade.ok ? "PASS" : "FAIL"} (hidden ${h.passed} passed, ${h.failed + h.errors} failed)`,
+			`  grade:     ${grade.ok ? "PASS" : "FAIL"} (${grade.hidden ? "hidden" : "own tests"} ${counts.passed} passed, ${counts.failed + counts.errors} failed)`,
 		);
 	}
 	console.log(`  replay:    open the panel and pick runs/${run.runId}`);

@@ -78,4 +78,50 @@ describe("parseTestRun", () => {
 		expect(parseTestRun("pytest", "ImportError while loading conftest", true)).toMatchObject({ ok: false });
 		expect(parseTestRun("pytest -q", "3 passed in 0.1s", false)).toMatchObject({ passed: 3, ok: true });
 	});
+
+	it("reads the summary of Node's test runner", () => {
+		const summary = (pass: number, fail: number, mark = "ℹ") =>
+			[`${mark} tests ${pass + fail}`, `${mark} pass ${pass}`, `${mark} fail ${fail}`, `${mark} cancelled 0`].join(
+				"\n",
+			);
+		expect(parseTestRun("npm test", `> snake@1.0.0 test\n> node --test\n\n✔ moves\n${summary(4, 0)}\n`, false)).toEqual(
+			{
+				command: "npm test",
+				passed: 4,
+				failed: 0,
+				errors: 0,
+				exitCode: undefined,
+				ok: true,
+			},
+		);
+		expect(parseTestRun("node --test", `✖ eats food\n${summary(3, 1)}\n`, true)).toMatchObject({
+			passed: 3,
+			failed: 1,
+			ok: false,
+		});
+		expect(parseTestRun("node --test --test-reporter=tap", `${summary(2, 0, "#")}\n`, false)).toMatchObject({
+			passed: 2,
+			ok: true,
+		});
+		expect(parseTestRun("npm test", 'npm error Missing script: "test"', true)).toMatchObject({ ok: false });
+		// "3 passed" in a test name does not override Node's own summary
+		expect(
+			parseTestRun("npm test", `✔ shows 3 passed levels\n✔ ends after 2 failed moves\n${summary(2, 0)}\n`, false),
+		).toMatchObject({ passed: 2, failed: 0, ok: true });
+		// `| tail` keeps the failing tests Node lists after its summary, and hides the exit code
+		const tail =
+			"test at test/game.test.js:4:1\n✖ grows when eating food (1.2ms)\n  AssertionError [ERR_ASSERTION]: 3 !== 4\n";
+		expect(parseTestRun("npm test 2>&1 | tail -20", tail, false)).toMatchObject({ failed: 1, ok: false });
+		// Node's failing-tests list names leaf tests only, not the suite around them
+		const listed =
+			"▶ snake\n  ✖ grows (0.5ms)\n✖ snake (7ms)\n✖ failing tests:\n\ntest at a.test.js:2:50\n✖ grows (0.5ms)\n";
+		expect(parseTestRun("npm test | tail -30", listed, false)).toMatchObject({ failed: 1, ok: false });
+		// `| tail` that kept only the error properties of the last failure
+		const props = "      at Test.run (node:internal/test_runner/test:1258:12) {\n    code: 'ERR_ASSERTION',\n  }\n";
+		expect(parseTestRun("npm test | tail", props, false)).toMatchObject({ ok: false });
+		expect(parseTestRun("node --test --test-reporter=tap | tail", "not ok 2 - grows\n  ---\n", false)).toMatchObject({
+			failed: 1,
+			ok: false,
+		});
+	});
 });

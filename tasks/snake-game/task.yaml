@@ -1,0 +1,23 @@
+id: snake-game
+title: Build a browser Snake game with a Node.js server
+split: dev # dev = for building the system; never used in a study
+source:
+  path: repo # only a stub package.json: the agent builds the project from scratch
+test_command: npm test
+notes: >
+  Demo task for live runs with an OpenRouter model (no scripted agent, no variants). A greenfield
+  JavaScript project with no external dependencies, so it decomposes naturally into many modules
+  (server, game logic, rendering and controls, difficulty, leaderboard persistence, tests, docs).
+  No hidden tests: the requirements fix no API, so grade.py runs the agent's own `npm test`, which
+  must report at least one passing test. Node's built-in test runner (`node --test`) is expected.
+  The repo holds only a stub package.json (no scripts, no dependencies) so that npm stops at the
+  workspace: run workspaces live under runs/ inside this npm project, and without it an early
+  `npm test` would run the harness's own test suite. Node's require() can still reach the harness's
+  node_modules from the workspace, so "no external dependencies" is checked by reading package.json.
+  The game's server is long-running: started in the foreground without a timeout, it blocks the
+  agent's bash call until the overseer stops the run.
+
+prompt: |
+  Build a browser-based Snake game using HTML, CSS, JavaScript, and a small Node.js server, without external dependencies.
+
+  Include movement, food, scoring, collision detection, difficulty settings, start/pause/restart/quit controls, and a persistent top-five leaderboard. Add automated tests and instructions for running it.

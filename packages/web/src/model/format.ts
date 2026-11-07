@@ -114,12 +114,16 @@ export function capLines(lines: CodeLine[], max = 400): CodeLine[] {
 
 const SUMMARY = /^=*\s*(\d+ (passed|failed|error|errors|skipped|deselected|xfailed|xpassed|warnings?)\b.*?)\s*=*$/;
 const PROGRESS = /^[.FEsxX]+\s*(\[\s*\d+%\])?$/;
-const FAILURE = /^(FAILED|ERROR)\b|^E\s|^>\s|Error\b|Traceback \(most recent call last\)|exited with code [1-9]/;
+const FAILURE =
+	/^(FAILED|ERROR)\b|^E\s|^>\s{2,}|Error\b|Traceback \(most recent call last\)|exited with code [1-9]|^✖|^not ok\b/;
+/** Node's test runner summary (`ℹ pass 3`, or `# pass 3` with the TAP reporter). */
+const NODE_SUMMARY = /^(?:ℹ|#) (tests|suites|pass|fail|cancelled|skipped|todo) \d+$/;
 
 /**
  * Command or test output as code lines: `$ command` first (when given), then each output line.
- * Failure lines are `f` (pytest `FAILED …`, `E …`, `> …`, tracebacks, a failing summary);
- * a passing pytest summary and an all-dots progress line are `o`; the rest is `c`.
+ * Failure lines are `f` (pytest `FAILED …`, `E …`, `> …`, tracebacks, a failing summary; Node's
+ * `✖ …`, `not ok …`, a non-zero `fail` or `cancelled` count); a passing pytest summary, an all-dots
+ * progress line and Node's `pass` count are `o`; the rest is `c`.
  */
 export function outputLines(text: string | undefined, command?: string): CodeLine[] {
 	const out: CodeLine[] = command ? [["c", `$ ${command}`]] : [];
@@ -127,7 +131,9 @@ export function outputLines(text: string | undefined, command?: string): CodeLin
 	for (const raw of text.replace(/\n+$/, "").split("\n")) {
 		const line = raw.trimEnd();
 		const trimmed = line.trim();
-		if (SUMMARY.test(trimmed)) out.push([/\b(failed|error|errors)\b/.test(trimmed) ? "f" : "o", line]);
+		if (NODE_SUMMARY.test(trimmed))
+			out.push([/ (fail|cancelled) [1-9]/.test(trimmed) ? "f" : / pass [1-9]/.test(trimmed) ? "o" : "c", line]);
+		else if (SUMMARY.test(trimmed)) out.push([/\b(failed|error|errors)\b/.test(trimmed) ? "f" : "o", line]);
 		else if (PROGRESS.test(trimmed) && trimmed.length > 0) out.push([/[FE]/.test(trimmed) ? "c" : "o", line]);
 		else if (FAILURE.test(trimmed)) out.push(["f", line]);
 		else out.push(["c", line]);
