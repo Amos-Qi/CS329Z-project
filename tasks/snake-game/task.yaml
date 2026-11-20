@@ -18,6 +18,6 @@ notes: >
   agent's bash call until the overseer stops the run.
 
 prompt: |
-  Build a browser-based Snake game using HTML, CSS, JavaScript, and a small Node.js server, without external dependencies.
+  Build a browser-based Snake game using HTML, CSS, JavaScript, and a small Node.js server, without external dependencies. Plan several steps before implementation.
 
   Include movement, food, scoring, collision detection, difficulty settings, start/pause/restart/quit controls, and a persistent top-five leaderboard. Add automated tests and instructions for running it.
