@@ -1,0 +1,998 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: a skin layers over styles/base.css in its order; reordering changes the cascade */
+/* biome-ignore-all lint/complexity/noImportantStyles: reduced motion has to beat the skin's own hover grow */
+/*
+ * Ghibli: a hand-painted afternoon (light) or a moonlit summer night (dark). The page is the sky, with
+ * a few soft clouds and a paper grain; surfaces are cream paper with big round corners and soft
+ * strokes; text is warm brown, never black; motion is slow (500–700 ms, ease-in-out), and what you
+ * can press tilts a little when the pointer is on it, as if someone picked it up to look.
+ * Loaded after styles/base.css, before styles/motion.css and styles/final.css.
+ */
+/* ---------- Tokens: dark (default) — "summer night" ---------- */
+/*
+ * Night keeps the same paper-and-sky idea: an ink-blue sky, moonlit clouds, slate-blue paper and cream
+ * text, with lantern warmth for what needs you. State colours keep their meaning (working teal,
+ * verified sage, held coral, failed rose) and every text colour passes WCAG AA on --card and --bg.
+ */
+:root {
+	--bg: #1a2636;
+	--card: #24303e;
+	--card-grad: linear-gradient(135deg, rgba(41, 53, 68, 0.96) 0%, rgba(34, 45, 59, 0.96) 100%);
+	--dot: #1e2a3a;
+	--dot-h: #2b3a4c;
+	--sky: linear-gradient(180deg, #13213a 0%, #1a2b44 40%, #21333f 75%, #263a3c 100%);
+	--clouds-c: rgba(190, 206, 232, 0.05);
+	--clouds-d: rgba(190, 206, 232, 0.04);
+	--sky-light:
+		radial-gradient(circle at 86% 7%, rgba(243, 231, 205, 0.1) 0, rgba(243, 231, 205, 0.035) 9%, transparent 24%),
+		radial-gradient(1.5px 1.5px at 7% 14%, rgba(255, 248, 222, 0.75), transparent),
+		radial-gradient(1px 1px at 16% 31%, rgba(255, 248, 222, 0.55), transparent),
+		radial-gradient(1.5px 1.5px at 29% 9%, rgba(255, 248, 222, 0.6), transparent),
+		radial-gradient(1px 1px at 41% 23%, rgba(255, 248, 222, 0.5), transparent),
+		radial-gradient(1.5px 1.5px at 55% 6%, rgba(255, 248, 222, 0.7), transparent),
+		radial-gradient(1px 1px at 63% 29%, rgba(255, 248, 222, 0.5), transparent),
+		radial-gradient(1.5px 1.5px at 72% 16%, rgba(255, 248, 222, 0.6), transparent),
+		radial-gradient(1px 1px at 94% 26%, rgba(255, 248, 222, 0.55), transparent);
+	--edge: rgba(243, 231, 205, 0.13);
+	--edge-2: rgba(243, 231, 205, 0.22);
+	--lift: 0 10px 30px rgba(4, 10, 22, 0.32);
+	--lift-h: 0 16px 40px rgba(124, 196, 192, 0.14), 0 6px 18px rgba(4, 10, 22, 0.3);
+	--muted: rgba(133, 205, 202, 0.14);
+	--control-border: #a8a28e;
+	--ctl-on-warn: #c9a27a;
+	--hair: rgba(243, 231, 205, 0.12);
+	--hair-2: rgba(243, 231, 205, 0.22);
+	--fg: #f3e7cd;
+	--fg-2: #dfd2b6;
+	--muted-fg: #cbc0a8;
+	--accent-fg: #f0b896;
+	/* --primary: the fill of ordinary buttons; --btn-bg is the main action ("journey" button) */
+	--primary: rgba(243, 231, 205, 0.06);
+	--primary-h: rgba(133, 205, 202, 0.14);
+	--btn-bg: linear-gradient(180deg, #8fd0c4 0%, #7cb9a8 100%);
+	--btn-bg-h: linear-gradient(180deg, #9ad8cc 0%, #86c3b1 100%);
+	--btn-fg: #1c2a26;
+	--btn-glow: 0 8px 20px rgba(124, 185, 168, 0.22);
+	--btn-glow-h: 0 12px 28px rgba(124, 185, 168, 0.32);
+	--field-bg: rgba(243, 231, 205, 0.05);
+	--field-bg-f: rgba(243, 231, 205, 0.09);
+	--ok: #8cc296;
+	--ok-fg: #a8d8a8;
+	--ok-soft: rgba(140, 194, 150, 0.16);
+	--on-ok: #1a2636;
+	--warn: #e0a066;
+	--warn-fg: #f2c08e;
+	--warn-soft: rgba(232, 168, 124, 0.16);
+	--warn-surface: #3a3026;
+	--now-held: linear-gradient(180deg, rgba(62, 50, 38, 0.97) 0%, rgba(55, 44, 34, 0.97) 100%);
+	--warn-solid: #e8a87c;
+	--warn-solid-h: #f0b88f;
+	--on-warn: #2a1d12;
+	--bad: #e0868b;
+	--bad-fg: #f2a6a6;
+	--bad-soft: rgba(224, 134, 139, 0.16);
+	--bad-solid: #e38a8f;
+	--bad-solid-h: #eca0a4;
+	--on-bad: #2a1416;
+	--act: #7cc4c0;
+	--act-fg: #93d6d2;
+	--act-soft: rgba(124, 196, 192, 0.2);
+	--pend: #95a2b4;
+	--pend-line: #7a889b;
+	--run: #ab9fd6;
+	--line-done: #8fc2ae;
+	--add-bg: rgba(140, 194, 150, 0.16);
+	--add-fg: #a9dcb0;
+	--del-bg: rgba(224, 134, 139, 0.16);
+	--del-fg: #f4b0b0;
+	--focus: #93d6d2;
+	--tip-bg: #2b3747;
+	--now-bg: linear-gradient(180deg, rgba(36, 48, 62, 0.9) 0%, rgba(31, 42, 56, 0.9) 100%);
+	--now-edge: rgba(243, 231, 205, 0.14);
+	--select: rgba(232, 168, 124, 0.3);
+	--shadow: 0 12px 32px rgba(4, 10, 22, 0.45), 0 2px 8px rgba(4, 10, 22, 0.3);
+	--harness-bg: #3a2f26;
+	--harness-fg: #f3e7cd;
+	--harness-sub: rgba(243, 231, 205, 0.12);
+	/* Home's painting: night sky, a moon, three hills and a few fireflies */
+	--hero-sky: linear-gradient(180deg, #0f1b30 0%, #1a2c46 55%, #2a4049 100%);
+	--hero-orb: radial-gradient(circle farthest-side at 42% 40%, #fbf3dc 0 45%, #efe2c2 100%);
+	--hero-orb-glow: 0 0 46px 14px rgba(243, 231, 205, 0.16);
+	--hill-1: #1c3434;
+	--hill-2: #213c3a;
+	--hill-3: #2a4646;
+	--hero-cloud: rgba(200, 214, 238, 0.12);
+	--firefly: rgba(236, 230, 150, 0.9);
+	--badge: linear-gradient(135deg, #85cdca 0%, #7cb9a8 100%);
+	--on-badge: #1c2a26;
+	--tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5l2.3 2.3 4.7-5' fill='none' stroke='%231a2636' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	/* slow and soft: ease-in-out, never a bounce or a linear slide */
+	--ease: cubic-bezier(0.45, 0.05, 0.3, 1);
+	--font-ui: "Quicksand", "Hiragino Maru Gothic ProN", "Segoe UI", system-ui, sans-serif;
+	--font-mono: "M PLUS 1 Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--focus-radius: 12px;
+	/* motion tokens (styles/motion.css): a station's ring, its glow, a failure's flash, the card's sweep */
+	--ring: var(--act);
+	--ring-glow: rgba(124, 196, 192, 0.4);
+	--flash-glow: rgba(224, 134, 139, 0.5);
+	--sweep: linear-gradient(
+		100deg,
+		transparent 20%,
+		rgba(243, 231, 205, 0.08) 42%,
+		rgba(243, 231, 205, 0.14) 52%,
+		transparent 78%
+	);
+	color-scheme: dark;
+}
+/* ---------- Tokens: light — "afternoon" ---------- */
+[data-theme="light"] {
+	--bg: #f2e5c4;
+	--card: #faf1da;
+	--card-grad: linear-gradient(135deg, rgba(253, 248, 235, 0.95) 0%, rgba(248, 237, 209, 0.94) 100%);
+	--dot: #fdf7e6;
+	--dot-h: #f1ecd3;
+	--sky: linear-gradient(180deg, #c9e5ee 0%, #dbede9 30%, #eeeddb 62%, #f4e6c4 100%);
+	--clouds-c: rgba(255, 255, 255, 0.6);
+	--clouds-d: rgba(255, 255, 255, 0.45);
+	--sky-light: radial-gradient(
+		circle at 86% 3%,
+		rgba(255, 244, 212, 0.75) 0,
+		rgba(255, 240, 200, 0.3) 12%,
+		transparent 30%
+	);
+	--edge: rgba(196, 172, 124, 0.42);
+	--edge-2: rgba(176, 150, 102, 0.55);
+	--lift: 0 8px 30px rgba(90, 74, 58, 0.07);
+	--lift-h: 0 16px 40px rgba(124, 185, 168, 0.2), 0 6px 16px rgba(90, 74, 58, 0.06);
+	--muted: rgba(124, 185, 168, 0.2);
+	--control-border: #957f5c;
+	--ctl-on-warn: #9a6a3e;
+	--hair: rgba(120, 96, 64, 0.14);
+	--hair-2: rgba(120, 96, 64, 0.26);
+	--fg: #5a4a3a;
+	--fg-2: #66543f;
+	--muted-fg: #6c5944;
+	--accent-fg: #93502f;
+	--primary: rgba(255, 251, 240, 0.72);
+	--primary-h: rgba(255, 253, 246, 0.95);
+	--btn-bg: linear-gradient(180deg, #3e7c76 0%, #3a7464 100%);
+	--btn-bg-h: linear-gradient(180deg, #336c66 0%, #2f6557 100%);
+	--btn-fg: #fffdf6;
+	--btn-glow: 0 8px 20px rgba(124, 185, 168, 0.3);
+	--btn-glow-h: 0 12px 30px rgba(124, 185, 168, 0.4);
+	--field-bg: rgba(255, 251, 240, 0.6);
+	--field-bg-f: rgba(255, 251, 240, 0.85);
+	--ok: #4e8a5d;
+	--ok-fg: #356846;
+	--ok-soft: rgba(124, 185, 168, 0.24);
+	--on-ok: #fffdf6;
+	--warn: #b46f37;
+	--warn-fg: #8a4e1e;
+	--warn-soft: rgba(232, 168, 124, 0.28);
+	--warn-surface: #f9e0c6;
+	--now-held: linear-gradient(180deg, rgba(251, 230, 208, 0.97) 0%, rgba(248, 220, 192, 0.97) 100%);
+	--warn-solid: #eaa877;
+	--warn-solid-h: #e39a64;
+	--on-warn: #4a3220;
+	--bad: #b5545b;
+	--bad-fg: #963b43;
+	--bad-soft: rgba(195, 141, 148, 0.24);
+	--bad-solid: #ad4f58;
+	--bad-solid-h: #9a3f48;
+	--on-bad: #fff8ee;
+	--act: #3a8590;
+	--act-fg: #2c6b73;
+	--act-soft: rgba(133, 205, 202, 0.3);
+	--pend: #8a7862;
+	--pend-line: #8f7c65;
+	--run: #8576aa;
+	--line-done: #4c8872;
+	--add-bg: rgba(124, 185, 168, 0.24);
+	--add-fg: #2b6346;
+	--del-bg: rgba(195, 141, 148, 0.24);
+	--del-fg: #913841;
+	--focus: #3a7d74;
+	--tip-bg: #fffaf0;
+	--now-bg: linear-gradient(180deg, rgba(252, 247, 232, 0.9) 0%, rgba(248, 239, 215, 0.9) 100%);
+	--now-edge: rgba(196, 172, 124, 0.5);
+	--select: rgba(232, 168, 124, 0.35);
+	--shadow: 0 12px 32px rgba(90, 74, 58, 0.13), 0 2px 8px rgba(90, 74, 58, 0.07);
+	--harness-bg: #5a4a3a;
+	--harness-fg: #f6ead0;
+	--harness-sub: rgba(246, 234, 208, 0.14);
+	--hero-sky: linear-gradient(180deg, #92d0e6 0%, #b6e0ee 40%, #e4efe0 74%, #f4e4bc 100%);
+	--hero-orb: radial-gradient(circle closest-side, #fffaf0 0 40%, #fff0c8 78%, #ffecb8 100%);
+	--hero-orb-glow: 0 0 70px 26px rgba(255, 238, 190, 0.55);
+	--hill-1: #8cbf9b;
+	--hill-2: #9fcaa4;
+	--hill-3: #b7d6ad;
+	--hero-cloud: rgba(255, 255, 255, 0.62);
+	--firefly: transparent;
+	--badge: linear-gradient(135deg, #4f9a96 0%, #3f7d70 100%);
+	--on-badge: #fffdf6;
+	--tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5l2.3 2.3 4.7-5' fill='none' stroke='%23fffdf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	--ring-glow: rgba(124, 185, 168, 0.45);
+	--flash-glow: rgba(195, 141, 148, 0.55);
+	--sweep: linear-gradient(
+		100deg,
+		transparent 20%,
+		rgba(255, 238, 196, 0.45) 44%,
+		rgba(255, 249, 230, 0.55) 54%,
+		transparent 80%
+	);
+	color-scheme: light;
+}
+
+/* ---------- Ground: the sky, its clouds and light, and a paper grain over all of it ---------- */
+body {
+	background-image: url(./grain.svg), var(--sky);
+	background-size:
+		240px 240px,
+		100% 100%;
+	background-attachment: fixed;
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.6;
+	scrollbar-color: var(--hair-2) transparent;
+}
+::selection {
+	background: var(--select);
+}
+/* clouds: a few soft blurred ovals (2:1) in the top third, apart, drifting over minutes */
+body::before,
+body::after {
+	content: "";
+	position: fixed;
+	pointer-events: none;
+	z-index: -1;
+}
+body::before {
+	top: 0;
+	left: -8%;
+	width: 116%;
+	height: 42vh;
+	background:
+		radial-gradient(ellipse 150px 58px at 9% 34%, var(--clouds-c) 0 42%, transparent 72%),
+		radial-gradient(ellipse 96px 40px at 15% 26%, var(--clouds-d) 0 42%, transparent 72%),
+		radial-gradient(ellipse 190px 66px at 47% 15%, var(--clouds-d) 0 42%, transparent 72%),
+		radial-gradient(ellipse 128px 52px at 74% 42%, var(--clouds-c) 0 42%, transparent 72%),
+		radial-gradient(ellipse 84px 36px at 92% 13%, var(--clouds-d) 0 42%, transparent 72%);
+	filter: blur(4px);
+	animation: ghibli-drift 150s ease-in-out infinite alternate;
+}
+/* the sun's warmth in a corner (afternoon) or the moon and a few stars (night) */
+body::after {
+	inset: 0;
+	background: var(--sky-light);
+}
+@keyframes ghibli-drift {
+	from {
+		translate: -3vw 0;
+	}
+	to {
+		translate: 3vw 0;
+	}
+}
+
+/* ---------- Type: Quicksand everywhere, rounder and a little larger; brown, never black ---------- */
+.now-title,
+.dc-title {
+	font-size: 17px;
+	font-weight: 600;
+}
+.ch h2 {
+	font-size: 21px;
+	font-weight: 600;
+	letter-spacing: -0.005em;
+}
+.pop h3,
+.redo-h h3 {
+	font-weight: 700;
+}
+.home h2 {
+	font-size: 16px;
+	font-weight: 700;
+}
+.cid {
+	color: var(--accent-fg);
+	font-weight: 600;
+}
+.ov-t {
+	font-weight: 700;
+}
+.lab {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+/* Quicksand runs small: the 12px UI text goes to 13px (monospace stays 12px) */
+.chip,
+.next,
+.st-lab,
+.tab,
+.fc,
+.hint,
+.empty,
+.when,
+.ov-f,
+.vers .vh2,
+#tip {
+	font-size: 13px;
+}
+.mono,
+.tag,
+.dn,
+.tn,
+.code {
+	font-variant-ligatures: none;
+}
+
+/* ---------- Surfaces: cream paper, 24px corners, a soft 2px stroke, a whisper of shadow ---------- */
+.card,
+.hcard,
+.ov,
+.ll {
+	background-color: var(--card);
+	background-image: url(./grain.svg), var(--card-grad);
+	background-size:
+		240px 240px,
+		100% 100%;
+	border: 2px solid var(--edge);
+	border-radius: 24px;
+	box-shadow: var(--lift);
+	transition:
+		box-shadow 700ms var(--ease),
+		border-color 700ms var(--ease),
+		translate 700ms var(--ease);
+}
+/* the work surfaces never tilt (you read and type in them): their shadow turns green. Home's cards are
+   picked up like the brief's story cards: a lift, a 0.8° tilt the other way and a 1% grow */
+.card:hover,
+.hcard:hover,
+.ov:hover,
+.ll:hover {
+	box-shadow: var(--lift-h);
+}
+.hcard {
+	transition:
+		box-shadow 700ms var(--ease),
+		border-color 700ms var(--ease),
+		translate 700ms var(--ease),
+		rotate 700ms var(--ease),
+		scale 700ms var(--ease);
+}
+/* a transparent margin that moves with the card, so a pointer resting near its edge stays on it */
+.hcard {
+	position: relative;
+	isolation: isolate;
+}
+.hcard::before {
+	content: "";
+	position: absolute;
+	inset: -12px;
+	z-index: -1;
+}
+/* only with a mouse (a tap would leave it lifted), never while you type in it, and not the Runs card,
+   whose rows would slide under the pointer */
+@media (hover: hover) and (pointer: fine) {
+	.hcard:not(:has(.rl)):hover:not(:focus-within) {
+		translate: 0 -6px;
+		rotate: -0.8deg;
+		scale: 1.01;
+	}
+}
+.ce {
+	border-left: 2px solid var(--hair);
+}
+.pop,
+.toast {
+	border: 2px solid var(--edge);
+	border-radius: 20px;
+	box-shadow: var(--shadow);
+}
+.pop {
+	padding: 16px;
+}
+#tip {
+	border: 1.5px solid var(--edge-2);
+	border-radius: 12px;
+	padding: 7px 11px;
+}
+/* boxes inside a card are wells, not cards: one hairline and the deeper cream */
+.ed,
+.det,
+.cq,
+.lred .redo,
+.rl {
+	border: 1.5px solid var(--hair);
+	border-radius: 16px;
+}
+.vers li {
+	border-radius: 14px;
+}
+.nq li {
+	border-radius: 12px;
+}
+.flagbar {
+	border-radius: 14px;
+}
+.step,
+.ovb,
+.frow,
+.st {
+	border-radius: 12px;
+}
+.pill,
+.chip,
+.tag,
+.src .sx,
+.vchip,
+.fgrp,
+.tab,
+.fc,
+.fh {
+	border-radius: 999px;
+}
+.tag {
+	padding: 1px 8px;
+}
+/* the Raw table: separate borders, so it can take the round corners */
+.rawt {
+	border-collapse: separate;
+	border-spacing: 0;
+	border-width: 2px;
+	border-color: var(--edge);
+	border-radius: 24px;
+	overflow: clip;
+	background-image: url(./grain.svg), var(--card-grad);
+	background-size:
+		240px 240px,
+		100% 100%;
+	box-shadow: var(--lift);
+}
+.rawt thead th {
+	border-top: 0;
+}
+
+/* ---------- Now bar: a band of cream paper over the sky; held turns it to a warm sunset ---------- */
+/* the bar is opaque (it sits over scrolled content); the held sunset is an overlay, so it can fade in.
+   .now is sticky with a z-index (a stacking context): the overlay paints over its fill, under its content */
+.now,
+.now.waiting {
+	background: var(--now-bg) var(--card);
+	border-bottom: 2px solid var(--now-edge);
+	transition: border-color 600ms var(--ease);
+}
+.now.waiting {
+	border-bottom-color: var(--warn);
+}
+.now::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--now-held);
+	opacity: 0;
+	transition: opacity 600ms var(--ease);
+	pointer-events: none;
+}
+.now.waiting::before {
+	opacity: 1;
+}
+.s {
+	border-radius: 5px;
+}
+
+/* ---------- Buttons: pill-shaped; the main one is a meadow-green "journey" button ---------- */
+.btn,
+.ib,
+.chip.lnk,
+.vchip,
+.pill.flag,
+.tab,
+.fc,
+.hb {
+	transition:
+		translate 500ms var(--ease),
+		rotate 500ms var(--ease),
+		scale 500ms var(--ease),
+		box-shadow 500ms var(--ease),
+		background-color 300ms var(--ease),
+		border-color 300ms var(--ease),
+		color 300ms var(--ease),
+		opacity 300ms var(--ease);
+}
+.btn {
+	/* a rounder face is wider than the base's: never squeeze a label */
+	flex-shrink: 0;
+	padding: 0 14px;
+	border-radius: 999px;
+	border-width: 1.5px;
+	font-weight: 600;
+	background: var(--primary);
+}
+.btn.sm {
+	padding: 0 12px;
+}
+.btn:hover {
+	background: var(--primary-h);
+}
+.btn.primary {
+	background: var(--btn-bg);
+	border-color: rgba(124, 185, 168, 0.25);
+	box-shadow: var(--btn-glow);
+}
+.btn.primary:hover {
+	background: var(--btn-bg-h);
+	border-color: rgba(124, 185, 168, 0.25);
+	box-shadow: var(--btn-glow-h);
+}
+.btn.warn {
+	box-shadow: 0 6px 16px var(--warn-soft);
+}
+.btn.ghost,
+.btn.dghost {
+	background: transparent;
+}
+.btn.ghost:hover {
+	background: var(--muted);
+}
+.btn.dghost:hover {
+	background: var(--bad-soft);
+}
+/* (.btn:hover above would otherwise replace the red fill under the light label) */
+.btn.danger:hover {
+	opacity: 1;
+	background: var(--bad-solid-h);
+	border-color: var(--bad-solid-h);
+}
+/* picked up to look at: a small lift, a 0.8° tilt and a 1% grow; pressed sets it straight and a little smaller */
+.btn:not(:disabled):not([aria-disabled="true"]):hover,
+.chip.lnk:not([aria-disabled="true"]):hover,
+button.vchip:not([aria-disabled="true"]):hover,
+.pill.flag:hover {
+	translate: 0 -2px;
+	rotate: 0.8deg;
+	scale: 1.01;
+}
+.ib {
+	border-radius: 999px;
+}
+.ib:not([aria-disabled="true"]):hover {
+	rotate: 6deg;
+	scale: 1.05;
+}
+.btn:not(:disabled):not([aria-disabled="true"]):active,
+.ib:not([aria-disabled="true"]):active,
+.chip.lnk:not([aria-disabled="true"]):active,
+button.vchip:not([aria-disabled="true"]):active,
+.pill.flag:active,
+.tab:active,
+.fc:active,
+.hb:not([aria-disabled="true"]):active {
+	translate: none;
+	rotate: none;
+	scale: 0.98;
+	transition-duration: 150ms;
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+.btn:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--primary);
+	box-shadow: none;
+}
+.btn.primary:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--btn-bg);
+	border-color: rgba(124, 185, 168, 0.25);
+}
+.btn.warn:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--warn-solid);
+	border-color: var(--warn-solid);
+}
+.btn.danger:is(:disabled, [aria-disabled="true"]):hover {
+	opacity: 0.5;
+	background: var(--bad-solid);
+	border-color: var(--bad-solid);
+}
+.btn.ghost:is(:disabled, [aria-disabled="true"]):hover,
+.btn.dghost:is(:disabled, [aria-disabled="true"]):hover {
+	background: transparent;
+}
+.tab[aria-selected="true"],
+.fc[aria-pressed="true"],
+.fc[aria-checked="true"] {
+	background: var(--primary-h);
+	box-shadow: inset 0 0 0 1.5px var(--act);
+}
+.vchip.you {
+	box-shadow: 0 0 0 3px var(--act-soft);
+}
+.ib .dot {
+	box-shadow: 0 0 0 2px var(--card);
+}
+
+/* ---------- Fields: cream wells with a soft round edge; focus turns the edge sage ---------- */
+.field,
+.search {
+	border-width: 1.5px;
+	border-radius: 16px;
+	background: var(--field-bg);
+	transition:
+		border-color 300ms var(--ease),
+		background-color 300ms var(--ease),
+		box-shadow 300ms var(--ease);
+}
+.field,
+.search {
+	padding: 0 14px;
+}
+textarea.field {
+	padding: 10px 14px;
+	line-height: 1.6;
+}
+.field:focus,
+.search:focus-within {
+	border-color: var(--focus);
+	background: var(--field-bg-f);
+	box-shadow: 0 0 0 4px var(--act-soft);
+}
+select.field option {
+	background: var(--card);
+	color: var(--fg);
+}
+select.field {
+	font: inherit;
+}
+.check input {
+	appearance: none;
+	flex-shrink: 0;
+	border: 1.5px solid var(--control-border);
+	border-radius: 6px;
+	background: var(--field-bg) center / 12px no-repeat;
+	cursor: pointer;
+	transition:
+		background-color 300ms var(--ease),
+		border-color 300ms var(--ease);
+}
+.check input:checked {
+	border-color: var(--line-done);
+	background-color: var(--line-done);
+	background-image: var(--tick);
+}
+@media (forced-colors: active) {
+	.check input {
+		appearance: auto;
+	}
+}
+
+/* ---------- Metro line: stations are paper stones on a path across the sky ---------- */
+.metro {
+	border-bottom: 0;
+}
+.ln.done,
+.ln.term {
+	stroke: var(--line-done);
+}
+.ln.done.hl,
+.ln.term.hl {
+	stroke: var(--fg);
+}
+.st-dot,
+.cutmk,
+.train i::before,
+.train i::after {
+	background: var(--dot);
+}
+.st-dot {
+	box-shadow: 0 2px 6px rgba(90, 74, 58, 0.1);
+	transition:
+		background-color 500ms var(--ease),
+		box-shadow 500ms var(--ease);
+}
+.st:hover .st-dot {
+	background: var(--dot-h);
+	box-shadow: 0 4px 12px var(--act-soft);
+}
+.st[aria-current="true"] .st-dot {
+	box-shadow:
+		0 0 0 2px var(--dot),
+		0 0 0 4px var(--act),
+		0 4px 14px var(--act-soft);
+}
+
+/* ---------- Plan overview, Log and Home lists ---------- */
+.rlb,
+.lrb,
+.step,
+button.frow,
+.st {
+	transition: background-color 300ms var(--ease);
+}
+.ovb {
+	transition:
+		background-color 300ms var(--ease),
+		border-color 300ms var(--ease);
+}
+.ovb[aria-current="true"] {
+	box-shadow: 0 0 0 3px var(--act-soft);
+}
+.lr.cur .lrb {
+	box-shadow: inset 4px 0 0 var(--act);
+}
+
+/* ---------- Harness bar (researcher chrome): a brown wooden pill with stitched edges ---------- */
+.harness {
+	box-shadow: var(--shadow);
+}
+
+/* ---------- Home: a painted landscape — sky, sun or moon, clouds and three rolling hills ---------- */
+.hero {
+	position: relative;
+	overflow: hidden;
+	isolation: isolate;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	min-height: 260px;
+	padding: 52px 28px 120px;
+	background: var(--hero-sky);
+	border: 2px solid var(--edge);
+	border-radius: 24px;
+	box-shadow: var(--lift);
+}
+.hero-art {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+/* clouds */
+.hero-art::before {
+	content: "";
+	position: absolute;
+	inset: 0 -10% 40% -10%;
+	background:
+		radial-gradient(ellipse 120px 44px at 14% 30%, var(--hero-cloud) 0 44%, transparent 72%),
+		radial-gradient(ellipse 80px 32px at 20% 22%, var(--hero-cloud) 0 40%, transparent 72%),
+		radial-gradient(ellipse 150px 52px at 58% 18%, var(--hero-cloud) 0 44%, transparent 72%),
+		radial-gradient(ellipse 96px 38px at 86% 46%, var(--hero-cloud) 0 44%, transparent 72%);
+	filter: blur(3px);
+	animation: ghibli-drift 90s ease-in-out infinite alternate;
+}
+/* the far meadow: two long humps behind the near hills */
+.hero-art::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 140px;
+	background:
+		radial-gradient(ellipse 42% 104px at 34% 100%, var(--hill-3) 0 97%, transparent 100%),
+		radial-gradient(ellipse 46% 122px at 74% 100%, var(--hill-3) 0 97%, transparent 100%);
+}
+/* the sun (afternoon) or the moon (night) */
+.sun {
+	position: absolute;
+	top: 30px;
+	right: 11%;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: var(--hero-orb);
+	box-shadow: var(--hero-orb-glow);
+}
+/* the two near hills, and the fireflies over them at night */
+.floor {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 110px;
+	background:
+		radial-gradient(ellipse 40% 84px at 12% 100%, var(--hill-1) 0 97%, transparent 100%),
+		radial-gradient(ellipse 34% 58px at 50% 100%, var(--hill-2) 0 97%, transparent 100%),
+		radial-gradient(ellipse 38% 74px at 92% 100%, var(--hill-1) 0 97%, transparent 100%);
+}
+.floor::before {
+	content: "";
+	position: absolute;
+	inset: -40px 0 0;
+	background:
+		radial-gradient(2px 2px at 22% 38%, var(--firefly), transparent),
+		radial-gradient(2px 2px at 34% 62%, var(--firefly), transparent),
+		radial-gradient(1.5px 1.5px at 61% 30%, var(--firefly), transparent),
+		radial-gradient(2px 2px at 73% 55%, var(--firefly), transparent),
+		radial-gradient(1.5px 1.5px at 88% 34%, var(--firefly), transparent);
+	animation: ghibli-glow 4.2s ease-in-out infinite alternate;
+}
+.home .hero h1 {
+	justify-content: center;
+	text-align: center;
+	font-size: 40px;
+	line-height: 1.15;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	flex-wrap: wrap;
+	gap: 14px;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+/* the paper the painting is on */
+.hero::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	background: url(./grain.svg) 0 0 / 240px 240px;
+	pointer-events: none;
+}
+.hero h1 .i {
+	color: var(--act-fg);
+}
+/* a Home card's icon sits in a round sky-to-meadow badge, and turns a little when the card lifts */
+.home h2 > .i {
+	box-sizing: content-box;
+	padding: 6px;
+	border-radius: 50%;
+	background: var(--badge);
+	color: var(--on-badge);
+	box-shadow: inset 0 -2px 4px rgba(58, 116, 100, 0.25);
+	transition:
+		rotate 700ms var(--ease),
+		scale 700ms var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+	.hcard:hover:not(:focus-within) h2 > .i {
+		rotate: 6deg;
+		scale: 1.05;
+	}
+}
+/* narrow: the sun or moon moves up and in, above the title, so it never sits behind the words */
+@media (max-width: 768px) {
+	.hero {
+		min-height: 236px;
+		padding: 64px 20px 110px;
+	}
+	.home .hero h1 {
+		font-size: 32px;
+	}
+	.sun {
+		top: 14px;
+		right: 16px;
+		width: 40px;
+		height: 40px;
+	}
+	.ch h2 {
+		font-size: 18px;
+	}
+}
+
+/* ---------- Ghibli motion: things settle in like picture cards laid on a table ---------- */
+/*
+ * Decoration over the states above; final.css stops all of it under reduced motion or with Motion off.
+ * Entrances fill backwards only, so a hover's lift takes over once they end. Nothing here moves a
+ * metro station's box (drawMetro() measures it): the station's halo is a pseudo-element.
+ */
+@keyframes ghibli-settle {
+	from {
+		opacity: 0;
+		translate: 0 10px;
+		rotate: -0.6deg;
+	}
+}
+@keyframes ghibli-pop {
+	from {
+		opacity: 0;
+		translate: 0 -6px;
+		scale: 0.97;
+	}
+}
+@keyframes ghibli-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes ghibli-glow {
+	from {
+		opacity: 0.25;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes ghibli-halo {
+	from {
+		opacity: 0.7;
+		scale: 1;
+	}
+	to {
+		opacity: 0;
+		scale: 1.7;
+	}
+}
+@keyframes ghibli-warm {
+	0%,
+	100% {
+		box-shadow: 0 6px 18px var(--warn-soft);
+	}
+	50% {
+		box-shadow: 0 8px 30px rgba(232, 168, 124, 0.45);
+	}
+}
+.hero,
+.hcard,
+.ov,
+.card,
+.ll,
+.ed,
+.redo {
+	animation: ghibli-settle 700ms var(--ease) backwards;
+}
+.home > :nth-child(2) {
+	animation-delay: 120ms;
+}
+.home > :nth-child(3) {
+	animation-delay: 240ms;
+}
+.work > .card {
+	animation-delay: 100ms;
+}
+/* the copies that leave replay nothing inside them: the plan overview folding away, and the card being
+   replaced (motion.css stops that copy itself; this also stops the pips inside it) */
+.ov-ghost,
+.ov-ghost *,
+.work > .card-ghost * {
+	animation: none;
+}
+.pop {
+	animation: ghibli-pop 500ms var(--ease) backwards;
+}
+#tip,
+.toast {
+	animation: ghibli-fade 400ms var(--ease) backwards;
+}
+/* held: the sunset band and its main choice glow warm, slowly */
+.now.waiting .dc-acts .btn.warn {
+	animation: ghibli-warm 4s ease-in-out infinite;
+}
+/* the station on screen breathes out a soft ring */
+.st[aria-current="true"] .st-dot::after {
+	content: "";
+	position: absolute;
+	inset: -4px;
+	border-radius: 50%;
+	border: 1.5px solid var(--act);
+	animation: ghibli-halo 3.2s var(--ease) infinite;
+	pointer-events: none;
+}
+
+/* reduced motion (final.css stops every animation, transition, translate and rotate): no grow either,
+   and the station's halo has no still form */
+@media (prefers-reduced-motion: reduce) {
+	.btn,
+	.ib,
+	.chip.lnk,
+	.vchip,
+	.pill.flag,
+	.tab,
+	.fc,
+	.hb,
+	.hcard,
+	.home h2 > .i {
+		scale: none !important;
+	}
+	.st[aria-current="true"] .st-dot::after {
+		display: none;
+	}
+}
+:root[data-motion="off"] :is(.btn, .ib, .chip.lnk, .vchip, .pill.flag, .tab, .fc, .hb, .hcard, .home h2 > .i) {
+	scale: none !important;
+}
+:root[data-motion="off"] .st[aria-current="true"] .st-dot::after {
+	display: none;
+}
