@@ -1,8 +1,8 @@
 /**
- * Transitions the CSS motion layer cannot express (styles.css "Vaporwave motion"): an element React
- * keeps while what it shows changes (the card moving to another module, a station changing status,
- * the Now bar's title), or a new element that should continue from where an old one was (the train
- * moving station). They run through the Web Animations API, so they never touch React state or the
+ * Transitions the CSS motion layers cannot express (styles/motion.css, the skin's own motion): an
+ * element React keeps while what it shows changes (the card moving to another module, a station
+ * changing status, the Now bar's title), or a new element that should continue from where an old one
+ * was (the train moving station). They run through the Web Animations API, so they never touch React state or the
  * box sizes drawMetro() measures, and every call does nothing under prefers-reduced-motion or while
  * the harness's Motion switch is off (WCAG 2.2.2: the looping decoration can be stopped in the page).
  */
@@ -22,7 +22,7 @@ export function reducedMotion(): boolean {
 /** localStorage key of the Motion switch. */
 export const MOTION_KEY = "vcm-motion";
 
-/** Whether motion is switched off on this page (`data-motion="off"` on <html>, which styles.css follows). */
+/** Whether motion is switched off on this page (`data-motion="off"` on <html>, which styles/final.css follows). */
 export function motionOff(): boolean {
 	return typeof document !== "undefined" && document.documentElement.dataset.motion === "off";
 }

@@ -1,5 +1,5 @@
 /**
- * Level 4 (researchers): the raw event table — seq, type, JSON (`.raw`, `.rawt` in styles.css).
+ * Level 4 (researchers): the raw event table — seq, type, JSON (`.raw`, `.rawt` in styles/base.css).
  * Every event exactly as the server recorded it, oldest first, up to the replay position.
  */
 

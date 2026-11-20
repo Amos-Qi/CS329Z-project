@@ -39,6 +39,7 @@ import {
 	shownStatus,
 	slotLabel,
 } from "../model/panel.ts";
+import { useSkinEpoch } from "../skins/index.ts";
 import { type PanelProps, redoTarget } from "../state/ui.ts";
 import { Icon } from "../ui/icons.tsx";
 import { EASE, EASE_TRAIN, play, reducedMotion } from "../ui/motion.ts";
@@ -55,7 +56,7 @@ const EMPTY_COLS = 4;
 const ARC = 38;
 /** Offset of the held diamond (left) and the pause boundary (right) when both sit in one gap, px. */
 const SHARED_GAP = 15;
-/** Half widths of the held diamond, the pause boundary button and the train, px (styles.css `.mk.held`, `.bnd`, `.train`). */
+/** Half widths of the held diamond, the pause boundary button and the train, px (styles/base.css `.mk.held`, `.bnd`, `.train`). */
 const HELD_HALF = 14;
 const BND_HALF = 15;
 const TRAIN_HALF = 17;
@@ -123,13 +124,16 @@ function measure(metro: HTMLElement, stations: HTMLElement, cols: number): Geome
 
 /**
  * Measures the stations after every render (any panel or UI change can add, drop or move one), when
- * the section resizes and once the web fonts are in. Re-renders only when something moved.
+ * the section resizes, once the web fonts are in and whenever the skin changes (its styles and fonts
+ * can move a station without resizing the section). Re-renders only when something moved.
  */
 function useGeometry(cols: number) {
 	const metroRef = useRef<HTMLElement>(null);
 	const stationsRef = useRef<HTMLDivElement>(null);
 	const [geo, setGeo] = useState<Geometry | null>(null);
 	const lastKey = useRef("null");
+	// a skin change (its styles, then its fonts) re-renders, so the layout effect below measures again
+	useSkinEpoch();
 	const remeasure = useCallback(() => {
 		const metro = metroRef.current;
 		const stations = stationsRef.current;

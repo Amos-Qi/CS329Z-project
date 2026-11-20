@@ -12,7 +12,7 @@
  * its station) selects that module's card, which stays the detail (instructions, criteria in full) and
  * holds the editor, so the whole plan stays in view while you change one module after another.
  *
- * It floats in with the plan, its rows drifting in one after another (styles.css). Opening eases the
+ * It floats in with the plan, its rows drifting in one after another (the skin's entrances). Opening eases the
  * box open; folding collapses a copy of the rows while the card below glides up (ui/motion.ts; nothing
  * moves under reduced motion or with Motion off).
  */

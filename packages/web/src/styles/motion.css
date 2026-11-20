@@ -1,0 +1,163 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: rule order is the reviewed mockup's; reordering changes the cascade */
+/*
+ * Module changes, for every skin: what arrives, fills, pops or sweeps when a module changes. ui/motion.ts
+ * runs the parts CSS cannot see change (train, track, glyph, card, Now bar) through the Web Animations
+ * API on the hooks below (.st-dot::before, .card::after, the ghost copies). Loaded after the skin, so
+ * these rules win over its decoration (a ghost copy never floats in with the skin's entrances); a skin
+ * colours them through its motion tokens (--ring, --ring-glow, --flash-glow, --sweep). Nothing here
+ * moves a metro station's box (drawMetro() measures it), and final.css stops all of it under reduced
+ * motion.
+ */
+/* a marker that just left (a copy fading out where it was, see Metro's ghost()) */
+.stations .mk.ghost {
+	pointer-events: none;
+	animation: none;
+}
+@keyframes seg-fill {
+	from {
+		width: 0;
+	}
+}
+@keyframes seg-dot {
+	from {
+		scale: 0;
+	}
+}
+@keyframes seg-flash {
+	from {
+		box-shadow:
+			0 0 18px var(--bad),
+			0 0 26px var(--flash-glow);
+	}
+}
+@keyframes mk-in {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(0.3);
+	}
+}
+@keyframes cut-in {
+	from {
+		opacity: 0;
+		scale: 1 0;
+	}
+}
+@keyframes pip-in {
+	from {
+		opacity: 0;
+		scale: 0;
+	}
+}
+/* a new plan's stations arrive one after another (opacity only on the button and a scale on the glyph:
+   drawMetro() measures the dots), and the track fades in under them */
+@keyframes st-in {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes glyph-in {
+	from {
+		opacity: 0;
+		scale: 0.3;
+	}
+}
+.st {
+	animation: st-in 520ms var(--ease) backwards;
+	animation-delay: calc(var(--i, 0) * 110ms);
+}
+.st-dot > .g {
+	animation: glyph-in 560ms var(--ease) backwards;
+	animation-delay: calc(var(--i, 0) * 110ms + 60ms);
+}
+.ln {
+	animation: st-in 700ms var(--ease) 120ms backwards;
+}
+/* a progress segment fills when its module ends, the working dot grows in, a failure flashes */
+.s.verified::after,
+.s.unverified::after {
+	animation: seg-fill 800ms var(--ease) backwards;
+}
+.s.working::after,
+.s.stopped::after {
+	animation: seg-dot 500ms var(--ease) backwards;
+}
+.s.failed {
+	animation: seg-flash 900ms ease-out;
+}
+/* markers pop onto the line: held diamond, armed pause, the redo cut */
+.mk.held,
+.mk.on,
+.cutmk {
+	animation: mk-in 480ms var(--ease) backwards;
+}
+.cutline {
+	animation: cut-in 520ms var(--ease) backwards;
+}
+.pp,
+.pf,
+.pl {
+	animation: pip-in 420ms var(--ease) backwards;
+}
+.ln.term {
+	transform-box: fill-box;
+	transform-origin: center;
+}
+/* (as specific as the live march rule, so the copy shows at once instead of fading in) */
+.metro .ln.future.draw-under,
+.metro.live .ln.future.draw-under {
+	animation: none;
+}
+/* the ring a station sends out when its status changes, in the colour of the new status */
+.st-dot::before {
+	content: "";
+	position: absolute;
+	inset: -2px;
+	border-radius: 50%;
+	border: 2px solid var(--burst, var(--ring));
+	box-shadow:
+		0 0 12px var(--burst, var(--ring)),
+		0 0 18px var(--ring-glow);
+	opacity: 0;
+	pointer-events: none;
+}
+.st-dot[data-s="working"] {
+	--burst: var(--act);
+}
+.st-dot[data-s="verified"] {
+	--burst: var(--ok);
+}
+.st-dot[data-s="unverified"],
+.st-dot[data-s="waiting"] {
+	--burst: var(--warn);
+}
+.st-dot[data-s="failed"],
+.st-dot[data-s="stopped"],
+.st-dot[data-s="replaced"] {
+	--burst: var(--bad);
+}
+/* the light that sweeps across a card arriving from another station; the card it replaces fades out
+   underneath (a copy, .card-ghost, added by Work) */
+.work {
+	position: relative;
+}
+.card {
+	position: relative;
+}
+.work > .card {
+	z-index: 1;
+}
+.work > .card-ghost {
+	position: absolute;
+	z-index: 0;
+	margin: 0;
+	animation: none;
+	pointer-events: none;
+}
+.card::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--sweep);
+	opacity: 0;
+	pointer-events: none;
+}

@@ -1,8 +1,8 @@
 /**
  * Home (no run selected): start a run (task, variant, agent, "Pause after plan") and the list of
  * runs (live first) to open for replay. Loads its own data through `api`. Few words, same visual
- * system (`.home`, `.hero`, `.hcard`, `.hrow`, `.rl`/`.rlb` in styles.css); the hero's sunset is
- * decoration, hidden from assistive tech.
+ * system (`.home`, `.hero`, `.hcard`, `.hrow`, `.rl`/`.rlb` in styles/base.css); the hero's art is
+ * the skin's decoration (vaporwave draws a sunset in it), hidden from assistive tech.
  */
 
 import type { AgentKind, RunSummary, ServerInfo, TaskSummary } from "@vcm/protocol";

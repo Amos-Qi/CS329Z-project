@@ -1,14 +1,16 @@
 /**
  * The harness bar: the mockup's floating MOCKUP pill restyled as researcher chrome (`#harness`,
  * `.harness`, `.hg` groups, `.hb` buttons, `.scrub`). Back to runs, view switch (Modules / Log /
- * Raw; hidden in study mode), theme toggle, the Motion switch (stops the vaporwave animations, as
- * prefers-reduced-motion does), and the replay scrubber (slider over trace positions, play/pause,
- * step, jump to the end). Not part of either condition.
+ * Raw; hidden in study mode), theme toggle, the skin switch (only when there is more than one skin),
+ * the Motion switch (stops the skin's animations, as prefers-reduced-motion does), and the replay
+ * scrubber (slider over trace positions, play/pause, step, jump to the end). Not part of either
+ * condition.
  *
- * Home renders it without a run (no `ui`): then only the theme toggle and the Motion switch are
- * shown, the theme driven by `theme`/`onTheme`.
+ * Home renders it without a run (no `ui`): then only the theme toggle, the skin switch and the
+ * Motion switch are shown, the theme driven by `theme`/`onTheme`.
  */
 
+import { applySkin, SKINS, useSkin } from "../skins/index.ts";
 import type { Theme, Ui, View } from "../state/ui.ts";
 import { Icon } from "../ui/icons.tsx";
 import { setMotionOff, useMotionOff } from "../ui/motion.ts";
@@ -101,6 +103,7 @@ export function Harness({ ui, study, onBack, replay, theme: homeTheme, onTheme }
 				<Icon name={theme === "dark" ? "moon" : "sun"} size={14} />
 				{theme === "dark" ? "Dark" : "Light"}
 			</button>
+			{SKINS.length > 1 ? <SkinSwitch /> : null}
 			<button
 				type="button"
 				className="hb"
@@ -115,6 +118,30 @@ export function Harness({ ui, study, onBack, replay, theme: homeTheme, onTheme }
 				Motion
 			</button>
 		</section>
+	);
+}
+
+/** The skin on screen; a click shows the next one (in picker order) and remembers it. */
+function SkinSwitch() {
+	const id = useSkin();
+	const at = Math.max(
+		0,
+		SKINS.findIndex((s) => s.id === id),
+	);
+	const shown = SKINS[at] as (typeof SKINS)[number];
+	const next = SKINS[(at + 1) % SKINS.length] as (typeof SKINS)[number];
+	return (
+		<button
+			type="button"
+			className="hb"
+			data-k="hskin"
+			aria-label={`Skin: ${shown.label}. Switch to ${next.label}`}
+			data-tip={`Skin: ${shown.label}. Click for ${next.label}`}
+			onClick={() => void applySkin(next.id, true)}
+		>
+			<Icon name="eye" size={14} />
+			{shown.label}
+		</button>
 	);
 }
 
