@@ -86,8 +86,8 @@ export function loadTask(dir: string): TaskSpec {
 	};
 }
 
-export function summarizeTask(task: TaskSpec): TaskSummary {
-	return { id: task.id, title: task.title, split: task.split, variants: task.variants.map((v) => v.id) };
+export function summarizeTask(task: TaskSpec, scripted = false): TaskSummary {
+	return { id: task.id, title: task.title, split: task.split, variants: task.variants.map((v) => v.id), scripted };
 }
 
 /** Copies or clones the task repo into `workspace` and applies a variant's file overlays. */
@@ -112,4 +112,16 @@ export async function prepareWorkspace(task: TaskSpec, variant: Variant | undefi
 	}
 }
 
-// TODO: read_rewrite variants — a ModulesHost.rewriteToolResult built from variant.rewrites.
+export function makeRewriter(variant: Variant | undefined) {
+	const rules = variant?.kind === "read_rewrite" ? (variant.rewrites ?? []) : [];
+	if (rules.length === 0) return undefined;
+	return (toolName: string, input: Record<string, unknown>, text: string): string | undefined => {
+		const path = typeof input.path === "string" ? input.path : "";
+		let out = text;
+		for (const rule of rules) {
+			if ((rule.tool ?? "read") !== toolName || !new RegExp(rule.path).test(path)) continue;
+			out = out.split(rule.find).join(rule.replace);
+		}
+		return out === text ? undefined : out;
+	};
+}

@@ -1,0 +1,1827 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Observation Panel</title>
+<meta name="description" content="Clickable mockup, direction B (metro line): observation panel for one pi coding agent working in modules.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- Tokens: dark (default) ---------- */
+:root{
+  --bg:#0F172A; --card:#1B2336; --muted:#272F42; --border:#475569;
+  --control-border:#64748B; --ctl-on-warn:#8B7A57;
+  --hair:rgba(148,163,184,.16); --hair-2:rgba(148,163,184,.30);
+  /* --primary: filled surface of secondary (neutral) buttons; --btn-bg is the high-emphasis primary action */
+  --fg:#F8FAFC; --fg-2:#CBD5E1; --muted-fg:#94A3B8; --primary:#1E293B;
+  --ok:#22C55E; --ok-fg:#4ADE80; --ok-soft:rgba(34,197,94,.14); --on-ok:#0F172A;
+  --warn:#F59E0B; --warn-fg:#FBBF24; --warn-soft:rgba(245,158,11,.14); --warn-surface:#33291A; --warn-solid:#F59E0B; --warn-solid-h:#FBBF24; --on-warn:#0F172A;
+  --bad:#EF4444; --bad-fg:#F87171; --bad-soft:rgba(239,68,68,.14); --bad-solid:#DC2626; --on-bad:#FFFFFF;
+  --act:#60A5FA; --act-fg:#93C5FD; --act-soft:rgba(96,165,250,.16);
+  --pend:#94A3B8; --pend-line:#64748B; --run:#A78BFA;
+  --add-bg:rgba(34,197,94,.13); --del-bg:rgba(239,68,68,.15); --add-fg:#86EFAC; --del-fg:#FCA5A5;
+  --focus:#93C5FD; --btn-bg:#F8FAFC; --btn-bg-h:#E2E8F0; --btn-fg:#0F172A;
+  --tip-bg:#272F42; --shadow:0 10px 30px rgba(2,6,23,.55);
+  --mock-bg:#E2E8F0; --mock-fg:#0F172A; --mock-sub:rgba(15,23,42,.10);
+  --font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+/* ---------- Tokens: light (re-tuned, not inverted) ---------- */
+[data-theme="light"]{
+  --bg:#F3F5F9; --card:#FFFFFF; --muted:#EBEFF5; --border:#64748B;
+  --control-border:#64748B; --ctl-on-warn:#64748B;
+  --hair:rgba(15,23,42,.09); --hair-2:rgba(15,23,42,.16);
+  --fg:#0F172A; --fg-2:#334155; --muted-fg:#475569; --primary:#E2E8F0;
+  --ok:#15803D; --ok-fg:#166534; --ok-soft:#DCFCE7; --on-ok:#FFFFFF;
+  --warn:#B45309; --warn-fg:#92400E; --warn-soft:#FEF3C7; --warn-surface:#FEF3C7; --warn-solid:#B45309; --warn-solid-h:#92400E; --on-warn:#FFFFFF;
+  --bad:#DC2626; --bad-fg:#B91C1C; --bad-soft:#FEE2E2; --bad-solid:#B91C1C; --on-bad:#FFFFFF;
+  --act:#2563EB; --act-fg:#1D4ED8; --act-soft:#DBEAFE;
+  --pend:#64748B; --pend-line:#7B8BA1; --run:#7C3AED;
+  --add-bg:#DCFCE7; --del-bg:#FEE2E2; --add-fg:#166534; --del-fg:#991B1B;
+  --focus:#2563EB; --btn-bg:#0F172A; --btn-bg-h:#1E293B; --btn-fg:#FFFFFF;
+  --tip-bg:#FFFFFF; --shadow:0 8px 24px rgba(15,23,42,.14);
+  --mock-bg:#1E293B; --mock-fg:#F8FAFC; --mock-sub:rgba(248,250,252,.12);
+  color-scheme:light;
+}
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html,body{margin:0}
+html{scroll-padding-top:calc(var(--now-h,64px) + 8px);scroll-padding-bottom:calc(var(--mock-h,56px) + 8px)}
+body{background:var(--bg);color:var(--fg);font:400 14px/1.45 var(--font-ui);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+.mono{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input,textarea{font:inherit;color:var(--fg)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.i{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.g{flex:none;display:block}
+.muted{color:var(--muted-fg)}
+.spacer{flex:1}
+[hidden]{display:none!important}
+
+/* ---------- Buttons ---------- */
+.ib{width:36px;height:36px;display:inline-grid;place-items:center;border-radius:6px;color:var(--fg-2);border:1px solid transparent;transition:background-color .15s,color .15s,border-color .15s;position:relative}
+.ib:hover{background:var(--muted);color:var(--fg)}
+.ib[aria-pressed="true"]{background:var(--warn-soft);color:var(--warn-fg);border-color:var(--warn)}
+.ib.danger{color:var(--bad-fg)}
+.ib.danger:hover{background:var(--bad-soft)}
+.ib[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.ib[aria-disabled="true"]:hover{background:none}
+.ib .dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--act);box-shadow:0 0 0 2px var(--card)}
+.ib.sm{width:32px;height:32px}
+.now.waiting .ib .dot{box-shadow:0 0 0 2px var(--warn-surface)}
+.btn{height:32px;padding:0 12px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:14px;border:1px solid var(--control-border);background:var(--primary);color:var(--fg);white-space:nowrap;transition:background-color .15s,border-color .15s,opacity .15s}
+.btn:hover{background:var(--muted)}
+.btn.primary{background:var(--btn-bg);color:var(--btn-fg);border-color:var(--btn-bg)}
+.btn.primary:hover{background:var(--btn-bg-h);border-color:var(--btn-bg-h)}
+.btn.warn{background:var(--warn-solid);color:var(--on-warn);border-color:var(--warn-solid)}
+.btn.warn:hover{background:var(--warn-solid-h);border-color:var(--warn-solid-h)}
+.btn.danger{background:var(--bad-solid);color:var(--on-bad);border-color:var(--bad-solid)}
+.btn.danger:hover{opacity:.9}
+.btn.dghost{color:var(--bad-fg);border-color:var(--bad);background:transparent}
+.btn.dghost:hover{background:var(--bad-soft)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--fg-2)}
+.btn.ghost:hover{background:var(--muted)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:4px;background:var(--muted);color:var(--fg-2);font-size:12px;white-space:nowrap;max-width:100%}
+.chip.lnk{cursor:pointer;transition:background-color .15s}
+.chip.lnk:hover{background:var(--hair-2)}
+.chip.struck{text-decoration:line-through;text-decoration-color:var(--bad-fg);color:var(--muted-fg);background:transparent;border:1px dashed var(--pend-line)}
+.chip.keep{background:var(--ok-soft);color:var(--fg)}
+.chip.keep .i{color:var(--ok-fg)}
+
+/* ---------- Now bar (level 0) ---------- */
+.now{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:64px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--hair-2);transition:background-color .2s}
+.now.waiting{background:var(--warn-surface);border-bottom:2px solid var(--warn)}
+.now.waiting .dc-acts > .btn:not(.warn):not(.danger):not(.dghost){background:transparent;border-color:var(--ctl-on-warn)}
+.now.waiting .dc-acts > .btn:not(.warn):not(.danger):not(.dghost):hover{background:var(--warn-soft)}
+.now.waiting .dc-acts > .btn.dghost:hover,.now.waiting .dc-acts > .ctl > .btn.dghost:hover{background:var(--bad-solid);color:var(--on-bad);border-color:var(--bad-solid)}
+.now-state{display:flex;align-items:center;gap:10px;min-width:0;flex:0 1 auto}
+.now-title{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.now-title .k{color:var(--muted-fg);font-weight:400}
+.now-title .mono{font-size:14px;font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;background:var(--muted);color:var(--fg-2);white-space:nowrap}
+.pill.flag{background:var(--warn-soft);color:var(--warn-fg);border:1px solid var(--warn);cursor:pointer}
+.pill.armed{background:transparent;border:1px solid var(--warn);color:var(--warn-fg)}
+.prog{display:flex;align-items:center;gap:10px}
+.seg{display:flex;gap:3px;padding:7px 0;margin:-7px 0}
+/* segment shapes: verified = full fill · unverified = left half filled · working = hollow + centre dot · pending = hollow · replaced = dashed + red slash · stopped = hollow + centre square */
+.s{width:28px;height:10px;border-radius:2px;border:1.5px solid var(--pend-line);position:relative;overflow:hidden;display:block}
+.s::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:currentColor}
+.s.verified{border-color:var(--ok);color:var(--ok)} .s.verified::after{width:100%}
+.s.unverified{border-color:var(--warn);color:var(--warn)} .s.unverified::after{width:50%;box-shadow:1.5px 0 0 var(--card)}
+.s.working{border-color:var(--act);color:var(--act)} .s.working::after{left:50%;top:50%;bottom:auto;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%}
+.s.replaced{border-style:dashed;border-color:var(--pend)} .s.replaced::after{left:calc(50% - 1px);top:-6px;bottom:-6px;width:2px;background:var(--bad);transform:rotate(68deg)}
+.s.stopped{border-color:var(--bad);color:var(--bad)} .s.stopped::after{left:50%;top:50%;bottom:auto;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:1px}
+.now.waiting .s.unverified::after{box-shadow:1.5px 0 0 var(--warn-surface)}
+.now.waiting .s.pending{border-color:var(--ctl-on-warn)}
+.next{display:inline-flex;align-items:center;gap:5px;color:var(--muted-fg);font-size:12px;padding:4px 0;margin:-4px 0}
+.next .mono{color:var(--fg-2)}
+.ctls{display:flex;align-items:center;gap:4px;margin-left:auto}
+.ctl{position:relative}
+.vsep{width:1px;height:24px;background:var(--hair-2);margin:0 6px;flex:none}
+.dc-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+.dc-what{display:flex;align-items:center;gap:6px;color:var(--fg-2)}
+.dc-acts{display:flex;align-items:center;gap:8px;flex:1 1 100%;padding-left:34px;flex-wrap:wrap}
+.dc-ctl{display:flex;align-items:center;gap:4px;margin-left:auto}
+
+/* ---------- Popovers / tooltip / toast ---------- */
+.pop{position:absolute;top:calc(100% + 8px);right:0;z-index:40;width:340px;background:var(--card);border:1px solid var(--hair-2);border-radius:8px;box-shadow:var(--shadow);padding:12px;display:flex;flex-direction:column;gap:10px;color:var(--fg)}
+.pop h3{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.pop .row{display:flex;gap:8px;justify-content:flex-end}
+.when{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-fg)}
+.field{width:100%;height:32px;padding:0 10px;border-radius:6px;border:1px solid var(--control-border);background:var(--bg);color:var(--fg)}
+textarea.field{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
+.field:focus{outline:2px solid var(--focus);outline-offset:1px}
+.frow-in{display:flex;gap:8px}
+.nq{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:min(32vh,220px);overflow-y:auto;overscroll-behavior:contain}
+.nq li{display:flex;align-items:center;gap:8px;min-height:28px;padding:4px 8px;border-radius:6px;border:1px solid var(--hair);background:var(--bg);font-size:12px}
+.nq .i{color:var(--act-fg);flex:none}
+.nq .tag{flex:none}
+.nq .nt{flex:1;min-width:0;overflow-wrap:anywhere}
+.nq .tm{color:var(--muted-fg);flex:none}
+#tip{position:fixed;z-index:80;max-width:300px;padding:6px 9px;border-radius:6px;background:var(--tip-bg);color:var(--fg);border:1px solid var(--hair-2);box-shadow:var(--shadow);font-size:12px;line-height:1.4}
+#tip .lg{display:grid;grid-template-columns:14px auto;gap:4px 8px;align-items:center;margin-top:2px}
+.toast{position:fixed;right:16px;bottom:76px;z-index:60;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;background:var(--card);border:1px solid var(--hair-2);box-shadow:var(--shadow);font-size:14px;max-width:calc(100vw - 32px);pointer-events:none}
+.toast .i{color:var(--ok-fg)}
+
+/* ---------- Metro line (level 1) ---------- */
+.metro{position:relative;padding:44px 20px 14px;border-bottom:1px solid var(--hair)}
+.metro-svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:0}
+.ln{fill:none;stroke-width:4;stroke-linecap:round;transition:opacity .2s,stroke .2s}
+.ln.done{stroke:var(--fg-2)}
+.ln.future{stroke:var(--pend-line);stroke-dasharray:2 7;stroke-width:3.5}
+.ln.pre{stroke:var(--pend-line);stroke-width:2;stroke-dasharray:1 5}
+.ln.term{stroke:var(--fg-2);stroke-width:4}
+.ln.hl{stroke:var(--fg);stroke-width:4.5}
+.ln.dimln{stroke-width:2.5}
+.ln.gone{stroke:var(--bad);stroke-dasharray:5 6;stroke-width:3;opacity:.8}
+.arw{fill:none;stroke:var(--fg);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stations{position:relative;z-index:1;display:grid;grid-template-columns:.62fr repeat(4,minmax(0,1fr))}
+.st{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;padding:0 4px 4px;border-radius:8px;transition:background-color .15s}
+.st:hover .st-dot{background:var(--muted)}
+.st-dot{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--bg);position:relative;z-index:1;transition:background-color .15s,box-shadow .15s}
+.st-lab .i{display:inline-block;vertical-align:-2px;color:var(--muted-fg)}
+.st[aria-current="true"] .st-dot{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--fg)}
+/* related modules (upstream/downstream of the selection) get brighter labels; nothing is faded below 3:1 */
+.st.rel .st-lab{color:var(--fg-2)}
+.st.dim .st-lab .mono{color:var(--muted-fg)}
+.st-lab{font-size:12px;color:var(--muted-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.st-lab .mono{color:var(--fg-2);font-weight:500;margin-right:4px}
+.st[aria-current="true"] .st-lab,.st[aria-current="true"] .st-lab .mono{color:var(--fg)}
+.st-ev{display:flex;flex-direction:column;align-items:center;gap:5px;min-height:14px;font-size:12px;color:var(--muted-fg)}
+.st-ev.struck .pips{position:relative}
+.st-ev.struck .pips::after{content:"";position:absolute;left:-3px;right:-3px;top:50%;height:1.5px;margin-top:-.75px;background:var(--bad-fg)}
+.st .fl{position:absolute;top:-4px;right:-6px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--warn-solid);color:var(--on-warn)}
+/* markers live in DOM order between stations (tab order = visual order); drawMetro() sets left/top */
+.mk{position:absolute;z-index:2;transform:translate(-50%,-50%);display:grid;place-items:center}
+/* the train is a capsule docked on the INCOMING side of the M3 platform (touching its ring), so it never reads as heading to M4 */
+.train{width:34px;height:24px;border-radius:6px}
+.train i{display:block;width:28px;height:10px;border-radius:5px;background:var(--act);position:relative;animation:train 2.4s ease-in-out infinite alternate}
+.train i::before,.train i::after{content:"";position:absolute;top:3px;width:4px;height:4px;border-radius:1px;background:var(--bg)}
+.train i::before{left:7px}.train i::after{left:15px}
+@keyframes train{from{transform:translateX(-4px)}to{transform:translateX(0)}}
+.mk.held{width:28px;height:28px;border-radius:6px}
+/* unarmed boundary: no visible mark at rest (the shared Now-bar toggle is the main control); the octagon shows on hover/focus */
+.bnd,.mk.on{width:30px;height:30px;border-radius:50%}
+.bnd .o-on{display:none}
+.bnd:hover .o-on,.bnd:focus-visible .o-on{display:block}
+.cutline{position:absolute;z-index:2;width:0;height:72px;margin-top:-46px;border-left:2px dashed var(--bad);transform:translateX(-1px)}
+.cutmk{width:26px;height:26px;border-radius:50%;background:var(--bg);border:1.5px solid var(--bad);color:var(--bad-fg)}
+.spin{transform-box:view-box;transform-origin:50% 50%;animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- Evidence graphics ---------- */
+.db{display:inline-flex;gap:2px;vertical-align:middle;align-items:center}
+.db i{width:7px;height:7px;border-radius:1px;background:var(--pend-line);display:block}
+.db i.a{background:var(--ok)} .db i.d{background:var(--bad)}
+.dn{font-family:var(--font-mono);font-size:12px;white-space:nowrap}
+.dn .p{color:var(--ok-fg)} .dn .m{color:var(--bad-fg)} .dn .z{color:var(--muted-fg)}
+.pips{display:inline-flex;gap:3px;align-items:center;vertical-align:middle;flex-wrap:nowrap}
+.pp{width:7px;height:7px;border-radius:50%;background:var(--ok);display:block}
+.pf{width:9px;height:9px;position:relative;display:block}
+.pf::before,.pf::after{content:"";position:absolute;left:3.5px;top:-.5px;width:2px;height:10px;border-radius:1px;background:var(--bad);transform:rotate(45deg)}
+.pf::after{transform:rotate(-45deg)}
+.pl{width:8px;height:8px;border-radius:50%;border:2px solid var(--act);display:block}
+.tn{font-family:var(--font-mono);font-size:12px;color:var(--fg-2)}
+.strip{display:inline-flex;align-items:flex-end;gap:3px;height:24px;padding:5px;margin:-5px;box-sizing:border-box}
+.t{width:3px;border-radius:1px;display:block}
+.t-read{height:6px;background:var(--pend)}
+.t-edit{height:14px;background:var(--act)}
+.t-bash{height:10px;background:var(--run)}
+.t-test{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.t-test.fail{width:9px;height:9px;border-radius:0;background:transparent;position:relative}
+.t-test.fail::before,.t-test.fail::after{content:"";position:absolute;left:3.5px;top:-.5px;width:2px;height:10px;border-radius:1px;background:var(--bad);transform:rotate(45deg)}
+.t-test.fail::after{transform:rotate(-45deg)}
+.t-test.live{background:transparent;border:2px solid var(--act)}
+.strip:focus-visible{outline-offset:0}
+.lrh .btn.sm{flex:none}
+.db+.dn,.pips+.tn{margin-left:6px}
+/* row actions stay in the tab order (opacity, not visibility), so Shift+Tab reaches them too */
+.lra{display:flex;justify-content:flex-end;align-items:center;gap:6px;min-width:150px;flex:none;opacity:0;pointer-events:none}
+.lr:hover .lra,.lr:focus-within .lra,.lr.cur .lra,.lr.open .lra,.lr.edit .lra,.lr.act .lra{opacity:1;pointer-events:auto}
+@media (hover:none){.lra{opacity:1;pointer-events:auto}}
+</style>
+<style>
+/* ---------- Module card (level 2) + evidence (level 3) ---------- */
+.work{padding:16px 20px calc(var(--mock-h,56px) + 48px)}
+.card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);background:var(--card);border:1px solid var(--hair-2);border-radius:8px;overflow:hidden}
+.card.noev{grid-template-columns:minmax(0,1fr)}
+.card.sum{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.cm{padding:16px 20px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ce{border-left:1px solid var(--hair-2);min-width:0;display:flex;flex-direction:column}
+.ch{display:flex;align-items:center;gap:8px 10px;min-width:0;flex-wrap:wrap}
+.ch h2{margin:0;outline-offset:2px;font-size:18px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.cid{font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--muted-fg)}
+.ch .tools{display:flex;align-items:center;gap:6px;margin-left:auto}
+.rpl{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:999px;border:1px dashed var(--bad);flex:none}
+.cbody{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.card.noev .cbody{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 40px}
+.card.noev .cbody.solo{grid-template-columns:minmax(0,1fr)}
+.cl{display:flex;flex-direction:column;gap:14px;min-width:0}
+.goal{margin:0;display:flex;gap:8px;color:var(--fg-2);align-items:center}
+.goal .i{color:var(--muted-fg)}
+.lab{font-size:12px;color:var(--muted-fg);font-weight:500;letter-spacing:.02em;margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.crit{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.crit li{display:flex;align-items:center;gap:8px;min-height:26px}
+.crit .src{margin-left:auto;display:flex;gap:4px;align-items:center}
+.src .sx{display:inline-flex;align-items:center;gap:2px;height:22px;padding:0 5px;border-radius:4px;background:var(--muted)}
+.src .sx.ok{color:var(--ok-fg)} .src .sx.say{color:var(--warn-fg)}
+.src .sx .i{stroke-width:2}
+.facts{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px 24px;align-content:start}
+.facts>div{min-width:0}
+.frow{display:flex;align-items:center;gap:8px;min-height:28px;border-radius:4px;padding:2px 6px;margin:0 -6px;width:calc(100% + 12px);min-width:0}
+button.frow{transition:background-color .15s}
+button.frow:hover{background:var(--muted)}
+button.frow[aria-disabled="true"],.chip.lnk[aria-disabled="true"],.vchip[aria-disabled="true"]{cursor:default}
+button.frow[aria-disabled="true"]:hover{background:none}
+.frow .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.flagbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;background:var(--warn-soft);border:1px solid var(--warn)}
+.flagbar .i{color:var(--warn-fg)}
+.cf{display:flex;gap:8px;align-items:center;margin-top:auto}
+.vchip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border-radius:999px;border:1px solid var(--control-border);color:var(--fg-2);font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:background-color .15s}
+.vchip:hover{background:var(--muted)}
+.vchip.you{border-color:var(--act);color:var(--act-fg)}
+.empty{display:flex;align-items:center;gap:8px;color:var(--muted-fg);font-size:12px;min-height:28px}
+.ed{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--hair-2);border-radius:8px;background:var(--bg)}
+.ed .row{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid var(--hair)}
+.tab{height:32px;padding:0 10px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:var(--muted-fg);font-size:12px;transition:background-color .15s,color .15s}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"]{background:var(--muted);color:var(--fg);box-shadow:inset 0 0 0 1px var(--control-border)}
+.fh{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 4px;border-radius:6px;color:var(--fg-2)}
+.evb{padding:8px 10px 12px;overflow:auto;max-height:460px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.step{width:100%;display:grid;grid-template-columns:18px minmax(0,1fr) auto 38px;align-items:center;gap:10px;min-height:34px;padding:4px 8px;border-radius:6px;transition:background-color .15s}
+.step:hover{background:var(--muted)}
+.step[aria-expanded="true"]{background:var(--muted)}
+.step .tg{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono);font-size:12px;color:var(--fg)}
+.step .tm{color:var(--muted-fg);text-align:right;font-family:var(--font-mono);font-size:12px}
+.step .ic{color:var(--muted-fg)}
+.step.fail .ic{color:var(--bad-fg)}
+.step.you .ic{color:var(--act-fg)}
+.step.you .tg{font-family:var(--font-ui);color:var(--fg-2)}
+.det{margin:4px 0 8px 28px;border:1px solid var(--hair);border-radius:6px;overflow:hidden;background:var(--bg)}
+.det .dh{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--hair);font-family:var(--font-mono);font-size:12px;color:var(--fg-2)}
+.code{margin:0;font:12px/1.6 var(--font-mono);overflow-x:auto;padding:4px 0}
+.code div{white-space:pre;padding:0 10px;min-height:19px}
+.code .a{background:var(--add-bg);color:var(--add-fg)}
+.code .d{background:var(--del-bg);color:var(--del-fg)}
+.code .h{color:var(--muted-fg)}
+.code .c{color:var(--fg-2)}
+.code .hi{background:var(--warn-soft);color:var(--fg)}
+.code .f{color:var(--bad-fg)}
+.code .o{color:var(--ok-fg)}
+.vers{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.vers li{border:1px solid var(--hair);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.vers li.cur{border-color:var(--hair-2);background:var(--muted)}
+.vers .vh2{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-fg)}
+.sumfoot{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.redo{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px}
+.redo-h{display:flex;align-items:center;gap:8px}
+.redo-h h3{margin:0;font-size:16px;font-weight:600}
+.redo-h .i{color:var(--bad-fg)}
+.cq{list-style:none;margin:0;padding:10px 12px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--hair-2);border-radius:8px;background:var(--bg)}
+.cq li{display:grid;grid-template-columns:24px 64px minmax(0,1fr);align-items:center;gap:8px;min-height:26px}
+/* rewind strip: kept modules | cut | replaced attempts (one graphic for the conversation rewind) */
+.rw{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rwcut{display:inline-grid;place-items:center;width:22px;height:26px;color:var(--bad-fg);border-left:2px dashed var(--bad);margin-left:4px}
+.cq .k{font-size:12px;color:var(--muted-fg)}
+.cq .ci{color:var(--fg-2)}
+.cq .ci.bad{color:var(--bad-fg)}
+.rst{display:inline-flex;align-items:center;gap:4px}
+.rst .i:last-child{color:var(--act-fg)}
+.redo .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+
+/* ---------- Log view (baseline) ---------- */
+.log{padding:14px 20px calc(var(--mock-h,56px) + 48px)}
+.ltools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.fgrp{display:flex;gap:2px;padding:2px;border:1px solid var(--hair-2);border-radius:8px;flex-wrap:wrap}
+.fc{height:28px;padding:0 9px;border-radius:6px;font-size:12px;color:var(--muted-fg);display:inline-flex;align-items:center;gap:6px;transition:background-color .15s,color .15s}
+.fc:hover{color:var(--fg)}
+.fc[aria-pressed="true"],.fc[aria-checked="true"]{background:var(--muted);color:var(--fg);box-shadow:inset 0 0 0 1px var(--control-border)}
+.search{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--control-border);border-radius:6px;margin-left:auto;min-width:200px;color:var(--muted-fg);background:var(--card)}
+.search input{background:none;border:0;color:var(--fg);outline:none;width:100%;min-width:0}
+.search input::placeholder{color:var(--muted-fg)}
+.search:focus-within{outline:2px solid var(--focus);outline-offset:1px}
+.ll{list-style:none;margin:0;padding:0;border:1px solid var(--hair-2);border-radius:8px;background:var(--card);overflow:hidden}
+.lr{border-top:1px solid var(--hair)}
+.lr:first-child{border-top:0}
+.lrh{display:flex;align-items:center;gap:8px;padding-right:10px}
+.lrb{flex:1;min-width:0;display:grid;grid-template-columns:46px 40px 20px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:40px;padding:4px 12px;transition:background-color .15s}
+.lrb:hover{background:var(--muted)}
+/* the list clips overflow, so the ring is drawn inside the row */
+.lrb:focus-visible{outline-offset:-2px}
+.lr.cur .lrb{box-shadow:inset 3px 0 0 var(--act)}
+.lr.open .lrb{background:var(--muted)}
+/* redo cut: drawn on the Start row that the conversation rewinds to */
+.lr.cut{border-top:2px dashed var(--bad)}
+.lrb .tm{font-family:var(--font-mono);font-size:12px;color:var(--muted-fg)}
+.tag{font-family:var(--font-mono);font-size:12px;color:var(--fg-2);padding:1px 6px;border-radius:4px;background:var(--muted);text-align:center;justify-self:start}
+.lrb .sm2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrb .ic{color:var(--muted-fg)}
+.lrb .bdg{display:flex;gap:8px;align-items:center}
+.lr .lflag{color:var(--warn-fg)}
+.lrd{padding:2px 12px 12px 118px;display:flex;flex-direction:column;gap:8px}
+.lrd .det{margin:0}
+.lrd .plan{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.lrd .plan .ph{display:flex;align-items:center;gap:8px;min-height:26px}
+.lrd .plan .pi{padding-left:14px;color:var(--muted-fg);font-size:12px}
+.lrd .plan .pg{padding-left:14px;font-size:12px;color:var(--fg-2);display:flex;flex-direction:column;gap:2px}
+.lrd .plan .pg span{display:flex;align-items:center;gap:6px}
+.pb{width:6px;height:6px;border-radius:1px;background:var(--pend-line);display:block;flex:none}
+.lred{padding:4px 12px 14px 118px}
+.lred .redo{padding:12px;border:1px solid var(--hair-2);border-radius:8px;background:var(--bg)}
+.lred .cq{background:var(--card)}
+.lempty{padding:18px;color:var(--muted-fg);display:flex;gap:8px;align-items:center}
+
+/* ---------- Mockup chrome (not product) ---------- */
+.mock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 24px);padding:5px 6px;border-radius:999px;background:var(--mock-bg);color:var(--mock-fg);box-shadow:var(--shadow);font-size:12px;border:1px dashed var(--mock-fg)}
+.mock-tag{font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:0 8px 0 10px;font-size:11px}
+.mg{display:flex;gap:2px;background:var(--mock-sub);border-radius:999px;padding:2px}
+.mb{height:28px;padding:0 10px;border-radius:999px;color:inherit;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.mb:hover{background:var(--mock-sub)}
+.mb[aria-pressed="true"]{background:var(--mock-fg);color:var(--mock-bg)}
+.mb .kb{font-family:var(--font-mono);font-size:11px;opacity:.8}
+.mock :focus-visible{outline-color:var(--mock-fg)}
+
+/* ---------- Motion + responsive ---------- */
+@media (prefers-reduced-motion:reduce){
+  .train i,.spin{animation:none!important}
+  *{transition:none!important}
+}
+@media (max-width:1100px){
+  .card.noev .cbody{grid-template-columns:minmax(0,1fr)}
+  .card.sum{grid-template-columns:minmax(0,1fr)}
+  .card.sum .ce{border-left:0;border-top:1px solid var(--hair-2)}
+}
+@media (max-width:900px){
+  .card,.card.sum{grid-template-columns:minmax(0,1fr)}
+  .ce{border-left:0;border-top:1px solid var(--hair-2)}
+  .facts{grid-template-columns:minmax(0,1fr)}
+  .ch{flex-wrap:wrap}
+}
+@media (max-width:768px){
+  .now{padding:10px 16px;gap:10px}
+  .now-title{max-width:calc(100vw - 120px)}
+  .work,.log{padding-left:16px;padding-right:16px;padding-bottom:calc(var(--mock-h,140px) + 40px)}
+  .metro{padding:40px 16px 10px}
+  .st-ev,.st-lab .nm{display:none}
+  .lrb{grid-template-columns:40px 36px 18px minmax(0,1fr)}
+  .lrb .bdg{grid-column:4}
+  .lrb .bdg:empty{display:none}
+  /* narrow: actions wrap under the row and only open for the current/open/focused row, so summaries keep their width.
+     Collapsed (zero height), never display:none, so both Tab and Shift+Tab still reach them and :focus-within opens them. */
+  .lrh{flex-wrap:wrap;row-gap:0}
+  .lra{display:flex;min-width:0;width:100%;justify-content:flex-start;max-height:0;overflow:hidden;opacity:0;pointer-events:none;padding:0 12px 0 98px}
+  .lr.act .lra,.lr.cur .lra,.lr.open .lra,.lr.edit .lra,.lr:focus-within .lra{max-height:none;overflow:visible;opacity:1;pointer-events:auto;padding-top:8px;padding-bottom:8px}
+  .lra:empty{display:none}
+  .pop{position:fixed;left:16px;right:16px;width:auto;top:calc(var(--now-h,64px) + 8px)}
+  .train{width:26px}
+  .train i{width:20px;animation:none}
+  .train i::before{left:4px}.train i::after{left:12px}
+  .lrd,.lred{padding-left:12px}
+  .search{margin-left:0;flex:1}
+  .cq li{grid-template-columns:24px minmax(0,1fr)}
+  .cq .k{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+  .mock{border-radius:14px;bottom:8px}
+  .mg{flex-wrap:wrap;justify-content:center;border-radius:12px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.5" height="14" rx="1"/><rect x="14" y="5" width="3.5" height="14" rx="1"/></symbol>
+    <symbol id="i-pausestop" viewBox="0 0 24 24"><path d="M8.3 3h7.4L21 8.3v7.4L15.7 21H8.3L3 15.7V8.3z"/><path d="M10 9v6M14 9v6"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><path d="M8.5 9h7M8.5 12.5h4.5"/></symbol>
+    <symbol id="i-say" viewBox="0 0 24 24"><path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.4-4.6A8 8 0 1 1 20.5 11.5z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/></symbol>
+    <symbol id="i-term" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15H17"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="i-fileplus" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11.5v6M9 14.5h6"/></symbol>
+    <symbol id="i-filediff" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 10v5M9.5 12.5h5M9.5 17.5h5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.2L4.6 18.6A1.6 1.6 0 0 0 6 21h12a1.6 1.6 0 0 0 1.4-2.4L14 9.2V3"/><path d="M7.2 15h9.6"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M12 4.5V8M9 13.5v1M15 13.5v1"/><circle cx="12" cy="4" r=".6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.3l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+    <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.8"/><circle cx="6" cy="18" r="2.8"/><path d="M8.2 7.8L20 19M8.2 16.2L20 5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5M12 8v4.2l2.8 1.8"/></symbol>
+    <symbol id="i-chevr" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-chevd" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></symbol>
+    <symbol id="i-plan" viewBox="0 0 24 24"><path d="M3.5 6.5l1.5 1.5 2.5-2.5M3.5 12l1.5 1.5 2.5-2.5M3.5 17.5l1.5 1.5 2.5-2.5M11 7h9.5M11 12.5h9.5M11 18h9.5"/></symbol>
+    <symbol id="i-playc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10.2 8.8l5 3.2-5 3.2z"/></symbol>
+    <symbol id="i-checkc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.3l2.6 2.6 5-5.4"/></symbol>
+    <symbol id="i-idle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 9v6M14 9v6"/></symbol>
+    <symbol id="i-arrowr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+    <symbol id="i-end" viewBox="0 0 24 24"><path d="M3 12h13"/><path d="M19 5.5v13"/><circle cx="9" cy="12" r="2.5"/></symbol>
+  </defs>
+</svg>
+<header id="now" class="now" aria-label="Agent status"></header>
+<main id="main"></main>
+<div id="mock" class="mock" role="region" aria-label="Mockup controls (not part of the product)"></div>
+<div id="tip" role="tooltip" hidden></div>
+<!-- the visual toast is decorative for AT; every message also goes to the persistent live regions below, which render() never rewrites -->
+<div id="toast" class="toast" aria-hidden="true" hidden></div>
+<div id="live" class="sr-only" role="status" aria-atomic="true"></div>
+<div id="alert" class="sr-only" role="alert" aria-atomic="true"></div>
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   SCENARIO DATA (one object)
+   ===================================================================== */
+const DATA = {
+  task: 'Add discount codes to the shopping cart',
+  flag: { mod: 'M3', text: 'M3 claimed done without a passing test' },
+  pre: {
+    id: 'pre', title: 'Before plan',
+    actions: [
+      { t: '0:04', type: 'read', target: 'README.md', lines: 41 },
+      { t: '0:07', type: 'read', target: 'shop/cart.py', lines: 58 },
+      { t: '0:10', type: 'read', target: 'shop/money.py', lines: 22 },
+      { t: '0:12', type: 'bash', target: 'ls', out: '$ ls\nREADME.md  docs  shop  tests' }
+    ]
+  },
+  modules: [
+    { id: 'M1', title: 'Discount model and registry', short: 'Model', deps: [],
+      goal: 'Discount type and a registry of codes',
+      instr: 'Add a Discount dataclass and a DISCOUNT_CODES registry with SAVE10, BIG20 and FIVEOFF.',
+      start: '0:22', end: '1:02', dur: '0:40',
+      criteria: [{ text: 'DISCOUNT_CODES has the three codes', st: 'verified' }],
+      files: [{ path: 'shop/discounts.py', add: 17, del: 0 }],
+      tests: { pass: 4, fail: 0 }, looked: [],
+      actions: [
+        { t: '0:35', type: 'write', target: 'shop/discounts.py', add: 17, del: 0, diff: 'M1' },
+        { t: '0:58', type: 'test', target: 'pytest', cmd: 'pytest -q -k code', pass: 4, fail: 0, out: 'M1' }
+      ], out: 'M1' },
+    { id: 'M2', title: 'Apply codes in the cart', short: 'Apply', deps: ['M1'],
+      goal: 'Apply one code to the cart total',
+      instr: 'Let Cart apply one code and subtract discount_cents() from the total. Keep existing tests passing.',
+      start: '1:04', end: '2:14', dur: '1:10',
+      criteria: [{ text: 'Existing tests still pass', st: 'verified' }],
+      files: [{ path: 'shop/cart.py', add: 24, del: 1 }],
+      tests: { pass: 4, fail: 0 }, looked: ['shop/cart.py'],
+      actions: [
+        { t: '1:12', type: 'read', target: 'shop/cart.py', lines: 58 },
+        { t: '1:40', type: 'edit', target: 'shop/cart.py', add: 24, del: 1, diff: 'M2' },
+        { t: '2:05', type: 'test', target: 'pytest', cmd: 'pytest -q -k total', pass: 4, fail: 0, out: 'M2' }
+      ], out: 'M2' },
+    { id: 'M3', title: 'Rounding and minimum subtotal', short: 'Rounding', deps: ['M2'],
+      goal: 'Nearest-cent rounding, discount cap, minimum check',
+      instr: 'Round percentage discounts to the nearest cent, cap the discount at the subtotal, and re-check the minimum subtotal in discount_cents.',
+      start: '2:16', end: '3:40', dur: '1:24',
+      criteria: [
+        { text: 'Percent discounts round correctly', st: 'agent' },
+        { text: 'BIG20 stops applying below $50', st: 'agent' }
+      ],
+      files: [{ path: 'shop/cart.py', add: 5, del: 3 }],
+      tests: { pass: 11, fail: 1 }, looked: ['docs/CONTRIBUTING.md'],
+      actions: [
+        { t: '2:24', type: 'read', target: 'docs/CONTRIBUTING.md', lines: 37, excerpt: 'CONTRIB' },
+        { t: '2:51', type: 'edit', target: 'shop/cart.py', add: 5, del: 3, diff: 'M3' },
+        { t: '3:20', type: 'test', target: 'pytest', cmd: 'pytest -q', pass: 11, fail: 1, out: 'M3' }
+      ], out: 'M3' },
+    { id: 'M4', title: 'Tests', short: 'Tests', deps: ['M2', 'M3'],
+      goal: 'Tests for codes, rounding and the minimum',
+      instr: 'Add tests/test_discounts.py covering each code, nearest-cent rounding, and the $50 minimum for BIG20.',
+      start: '4:26', end: '5:52', dur: '1:26',
+      criteria: [{ text: 'New discount tests pass', st: 'verified' }],
+      files: [{ path: 'tests/test_discounts.py', add: 38, del: 0 }],
+      tests: { pass: 8, fail: 0 }, looked: [],
+      actions: [
+        { t: '4:58', type: 'write', target: 'tests/test_discounts.py', add: 38, del: 0, diff: 'M4' },
+        { t: '5:40', type: 'test', target: 'pytest', cmd: 'pytest -q tests/test_discounts.py', pass: 8, fail: 0, out: 'M4' }
+      ], out: 'M4' }
+  ],
+  /* diff lines: [kind, text]  kind: h=hunk, c=context, a=add, d=del */
+  diffs: {
+    M1: { file: 'shop/discounts.py', lines: [
+      ['h', '@@ -0,0 +1,17 @@ new file'],
+      ['a', '+from dataclasses import dataclass'], ['a', '+'],
+      ['a', '+@dataclass(frozen=True)'], ['a', '+class Discount:'],
+      ['a', '+    code: str'], ['a', '+    kind: str  # "percent" or "fixed"'],
+      ['a', '+    value: int'], ['a', '+    min_subtotal_cents: int = 0'], ['a', '+'],
+      ['a', '+DISCOUNT_CODES = {'],
+      ['a', '+    "SAVE10": Discount("SAVE10", "percent", 10),'],
+      ['a', '+    "BIG20": Discount("BIG20", "percent", 20, 5000),'],
+      ['a', '+    "FIVEOFF": Discount("FIVEOFF", "fixed", 500),'],
+      ['a', '+}'], ['h', '  … 3 more added lines']
+    ] },
+    M2: { file: 'shop/cart.py', lines: [
+      ['h', '@@ -1,3 +1,4 @@'],
+      ['c', ' from shop.money import format_cents'],
+      ['a', '+from shop.discounts import DISCOUNT_CODES'],
+      ['h', '@@ -18,6 +19,28 @@ class Cart:'],
+      ['c', '     def total_cents(self):'],
+      ['d', '-        return self.subtotal_cents()'],
+      ['a', '+        return self.subtotal_cents() - self.discount_cents()'],
+      ['c', ''],
+      ['a', '+    def apply_code(self, code):'],
+      ['a', '+        found = DISCOUNT_CODES.get(code.upper())'],
+      ['a', '+        if found is None:'],
+      ['a', '+            raise ValueError(f"unknown code: {code}")'],
+      ['a', '+        self.code = found'], ['a', '+'],
+      ['a', '+    def discount_cents(self):'],
+      ['a', '+        if self.code is None:'], ['a', '+            return 0'],
+      ['a', '+        subtotal = self.subtotal_cents()'],
+      ['a', '+        if self.code.kind == "percent":'],
+      ['a', '+            amount = (subtotal * self.code.value + 50) // 100'],
+      ['h', '  … 10 more added lines']
+    ] },
+    M3: { file: 'shop/cart.py', lines: [
+      ['h', '@@ -27,9 +27,11 @@ class Cart:'],
+      ['c', '     def discount_cents(self):'],
+      ['d', '-        if self.code is None:'],
+      ['d', '-            return 0'],
+      ['c', '         subtotal = self.subtotal_cents()'],
+      ['a', '+        if self.code is None or subtotal < self.code.min_subtotal_cents:'],
+      ['a', '+            return 0'],
+      ['c', '         if self.code.kind == "percent":'],
+      ['a', '+            # Finance policy (docs/CONTRIBUTING.md): truncate fractional cents.'],
+      ['d', '-            amount = (subtotal * self.code.value + 50) // 100'],
+      ['a', '+            amount = subtotal * self.code.value // 100'],
+      ['c', '         else:'],
+      ['c', '             amount = self.code.value'],
+      ['a', '+        amount = min(amount, subtotal)'],
+      ['c', '         return amount']
+    ] },
+    M4: { file: 'tests/test_discounts.py', lines: [
+      ['h', '@@ -0,0 +1,38 @@ new file'],
+      ['a', '+from shop.cart import Cart'], ['a', '+'],
+      ['a', '+def make_cart(cents):'], ['a', '+    cart = Cart()'],
+      ['a', '+    cart.add("widget", cents)'], ['a', '+    return cart'], ['a', '+'],
+      ['a', '+def test_save10_applies():'],
+      ['a', '+    cart = make_cart(2000)'], ['a', '+    cart.apply_code("SAVE10")'],
+      ['a', '+    assert cart.discount_cents() == 200'],
+      ['h', '  … 27 more added lines']
+    ] }
+  },
+  outs: {
+    M1: [['c', '$ pytest -q -k code'], ['o', '....                                     [100%]'], ['o', '4 passed, 8 deselected in 0.07s']],
+    M2: [['c', '$ pytest -q -k total'], ['o', '....                                     [100%]'], ['o', '4 passed, 8 deselected in 0.08s']],
+    M3: [['c', '$ pytest -q'], ['c', '...........F                             [100%]'],
+         ['f', 'FAILED tests/test_cart.py::test_percent_rounds_to_nearest_cent'],
+         ['c', '    cart = Cart(); cart.add("widget", 1995); cart.apply_code("SAVE10")'],
+         ['f', '>   assert cart.discount_cents() == 200'],
+         ['f', 'E   assert 199 == 200'],
+         ['f', '11 passed, 1 failed in 0.21s']],
+    M3live: [['c', '$ pytest -q'], ['c', '...........F'], ['h', '  running …']],
+    M3stop: [['c', '$ pytest -q'], ['c', '...........F'], ['h', '  stopped by you before pytest finished']],
+    M4: [['c', '$ pytest -q tests/test_discounts.py'], ['o', '........                                 [100%]'], ['o', '8 passed in 0.11s']]
+  },
+  excerpts: {
+    CONTRIB: [['h', 'docs/CONTRIBUTING.md  lines 18-23'], ['c', '## Money'],
+      ['c', '- Store every amount as integer cents.'],
+      ['c', '- Finance policy: truncate fractional cents'],
+      ['c', '  (never round a discount up).']]
+  }
+};
+const MODS = DATA.modules.map(m => m.id);
+const EDGES = [];
+DATA.modules.forEach(m => m.deps.forEach(d => EDGES.push([d, m.id])));
+
+/* =====================================================================
+   UI STATE
+   ===================================================================== */
+const S = {
+  state: 1, view: 'modules', theme: 'dark',
+  sel: 'M3', evOpen: false, evTab: 'steps', exp: null,
+  pauseAt: null, pop: null, editor: null, versions: {},
+  notes: 0, wait: 42, stopped: null,
+  drafts: {}, noteDraft: '', ulog: [], seq: 0,
+  evOpener: null, edOpener: null,
+  lf: { mod: 'all', type: 'all', flag: false, q: '' }, lexp: null, lcur: -1,
+  focus: null, scrollEd: false, tail: false
+};
+function initVersions() {
+  const v = {};
+  DATA.modules.forEach(m => { v[m.id] = [{ v: 1, by: 'agent', t: '0:20', text: m.instr }]; });
+  return v;
+}
+S.versions = initVersions();
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sec = t => { const p = t.split(':'); return (+p[0]) * 60 + (+p[1]); };
+const fmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const ic = (n, s, cls) => `<svg class="i ${cls || ''}" width="${s || 16}" height="${s || 16}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+/* informational graphic that can take keyboard focus, so its tooltip shows on hover AND focus */
+const tipImg = (label, tipText) => `tabindex="0" role="img" aria-label="${esc(label)}" data-tip="${esc(tipText || label)}"`;
+const STATUS_LABEL = {
+  verified: 'Done, verified by tests', unverified: 'Done, unverified (no passing test after last edit)',
+  working: 'Working', waiting: 'Waiting for you', pending: 'Not started',
+  failed: 'Failed', replaced: 'Will be replaced by redo', stopped: 'Stopped', pre: 'Before plan'
+};
+
+function glyph(st, s, anim) {
+  s = s || 20;
+  let b = '';
+  switch (st) {
+    case 'verified': b = '<circle cx="10" cy="10" r="8.5" fill="var(--ok)"/><path d="M6 10.4l2.7 2.7 5.3-5.6" fill="none" stroke="var(--on-ok)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>'; break;
+    case 'unverified': b = '<circle cx="10" cy="10" r="7.6" fill="none" stroke="var(--warn)" stroke-width="1.8"/><path d="M10 2.4A7.6 7.6 0 0 0 10 17.6Z" fill="var(--warn)"/>'; break;
+    case 'working': b = '<circle cx="10" cy="10" r="7.4" fill="none" stroke="var(--pend-line)" stroke-width="2"/><g class="' + (anim ? 'spin' : '') + '"><path d="M10 2.6A7.4 7.4 0 0 1 17.4 10" fill="none" stroke="var(--act)" stroke-width="2.4" stroke-linecap="round"/></g><circle cx="10" cy="10" r="2.6" fill="var(--act)"/>'; break;
+    case 'waiting': b = '<rect x="4.4" y="4.4" width="11.2" height="11.2" rx="1.2" transform="rotate(45 10 10)" fill="var(--warn)"/>'; break;
+    case 'pending': b = '<circle cx="10" cy="10" r="7.4" fill="none" stroke="var(--pend)" stroke-width="1.8"/>'; break;
+    case 'failed': b = '<circle cx="10" cy="10" r="8.5" fill="var(--bad)"/><path d="M7 7l6 6M13 7l-6 6" stroke="var(--on-bad)" stroke-width="1.9" stroke-linecap="round"/>'; break;
+    case 'stopped': b = '<rect x="3.6" y="3.6" width="12.8" height="12.8" rx="2.4" fill="var(--bad)"/>'; break;
+    case 'replaced': b = '<circle cx="10" cy="10" r="7.4" fill="none" stroke="var(--pend)" stroke-width="1.8" stroke-dasharray="3 2.2"/><path d="M4.6 15.4L15.4 4.6" stroke="var(--bad)" stroke-width="1.9" stroke-linecap="round"/>'; break;
+    /* run end = metro terminus (bar + buffer), deliberately not the verified check */
+    case 'end': b = '<rect x="1.5" y="8.6" width="12" height="2.8" rx="1.4" fill="var(--fg-2)"/><rect x="14.6" y="3" width="3.6" height="14" rx="1.2" fill="var(--fg-2)"/>'; break;
+    default: b = '<circle cx="10" cy="10" r="5" fill="var(--pend)"/>';
+  }
+  return `<svg class="g" width="${s}" height="${s}" viewBox="0 0 20 20" aria-hidden="true">${b}</svg>`;
+}
+function octagon(s, solid) {
+  s = s || 20;
+  return `<svg class="g" width="${s}" height="${s}" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.7 1.5h6.6l5.2 5.2v6.6l-5.2 5.2H6.7l-5.2-5.2V6.7z" fill="${solid ? 'var(--warn-solid)' : 'var(--bg)'}" stroke="var(--warn)" stroke-width="1.5"/><path d="M8.2 7v6M11.8 7v6" stroke="${solid ? 'var(--on-warn)' : 'var(--warn-fg)'}" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+}
+/* nums: false = bar only; 'align' = keep a muted zero so columns line up; default = omit the zero side */
+function diffbar(a, d, nums) {
+  const tot = a + d; let na = 0, nd = 0;
+  if (tot > 0) { na = Math.round(5 * a / tot); nd = 5 - na; if (d > 0 && nd === 0) { nd = 1; na = 4; } if (a > 0 && na === 0) { na = 1; nd = 4; } }
+  let bl = '';
+  for (let i = 0; i < 5; i++) bl += `<i class="${i < na ? 'a' : (i < na + nd ? 'd' : '')}"></i>`;
+  const z = v => nums === 'align' ? `<span class="z">${v}</span>` : '';
+  const pa = a ? `<span class="p">+${a}</span>` : z('+0'), pd = d ? `<span class="m">−${d}</span>` : z('−0');
+  return `<span class="db" role="img" aria-label="+${a} −${d} lines">${bl}</span>` +
+    (nums === false ? '' : `<span class="dn" aria-hidden="true">${pa}${pa && pd ? ' ' : ''}${pd}</span>`);
+}
+function pips(p, f, live, nums, cap) {
+  const n = p + f, max = cap || 12;
+  const sp = n > max ? Math.round(p / n * max) : p, sf = n > max ? max - sp : f;
+  let h = '';
+  for (let i = 0; i < sp; i++) h += '<i class="pp"></i>';
+  for (let i = 0; i < sf; i++) h += '<i class="pf"></i>';
+  if (live) h += '<i class="pl"></i>';
+  const lbl = `Tests: ${p} passed, ${f} failed${live ? ', still running' : ''}`;
+  return `<span class="pips" role="img" aria-label="${lbl}">${h}</span>` + (nums === false ? '' : `<span class="tn" aria-hidden="true">${p}/${n}</span>`);
+}
+function strip(acts, focusable) {
+  const map = { read: 't-read', write: 't-edit', edit: 't-edit', bash: 't-bash', test: 't-test' };
+  const c = { read: 0, edit: 0, bash: 0, test: 0 };
+  let h = '';
+  acts.forEach(a => {
+    let cls = map[a.type];
+    if (a.type === 'test') cls += a.live ? ' live' : (a.fail > 0 ? ' fail' : '');
+    h += `<i class="t ${cls}"></i>`;
+    c[a.type === 'write' ? 'edit' : a.type]++;
+  });
+  return `<span class="strip" role="img" aria-label="Activity: ${c.read} read, ${c.edit} edit, ${c.bash} command, ${c.test} test runs" data-tip="legend"${focusable ? ' tabindex="0"' : ''}>${h}</span>`;
+}
+/* a code block can scroll (and so take focus), so it is a named region */
+function codeBlock(lines, label) {
+  return `<div class="code" role="region" aria-label="${esc(label || 'Output')}">` + lines.map(l => `<div class="${l[0]}">${esc(l[1])}</div>`).join('') + '</div>';
+}
+
+/* =====================================================================
+   STATE MODEL (derived from S.state)
+   ===================================================================== */
+function statusOf(id) {
+  const st = S.state;
+  if (id === 'pre') return 'pre';
+  if (id === 'M1' || id === 'M2') return 'verified';
+  if (id === 'M3') return st === 1 ? (S.stopped ? 'stopped' : 'working') : 'unverified';
+  return st >= 3 ? 'verified' : 'pending';
+}
+const isWaiting = () => S.state === 2 && !S.stopped;
+const isLive = () => S.state <= 2 && !S.stopped;
+function workingMod() { return MODS.find(id => statusOf(id) === 'working') || null; }
+function redoTarget() { return S.editor && S.editor.kind === 'redo' ? S.editor.id : null; }
+function shownStatus(id) {
+  const k = redoTarget();
+  if (k && id !== 'pre' && MODS.indexOf(id) >= MODS.indexOf(k) && statusOf(id) !== 'pending') return 'replaced';
+  return statusOf(id);
+}
+function mod(id) {
+  if (id === 'pre') return Object.assign({}, DATA.pre, { status: 'pre', goal: DATA.task, deps: [], files: [], criteria: [], tests: null, looked: DATA.pre.actions.filter(a => a.type === 'read').map(a => a.target) });
+  const base = DATA.modules.find(x => x.id === id);
+  if (!base) return null;
+  const m = Object.assign({}, base);
+  const st = S.state;
+  m.status = statusOf(id);
+  if (id === 'M3' && st === 1) {
+    m.dur = '1:12'; m.end = null;
+    m.criteria = base.criteria.map(c => ({ text: c.text, st: 'pending' }));
+    /* stopped mid-pytest: the partial result stays, the run is no longer live */
+    const live = !S.stopped;
+    m.tests = { pass: 11, fail: 1, live };
+    m.actions = base.actions.map((a, i) => i === 2 ? Object.assign({}, a, live ? { live: true } : { stopped: true, out: 'M3stop' }) : a);
+    if (!live) m.out = 'M3stop';
+  }
+  if (id === 'M4' && st < 3) {
+    m.dur = null; m.start = null; m.end = null; m.files = []; m.tests = null; m.actions = []; m.looked = [];
+    m.criteria = base.criteria.map(c => ({ text: c.text, st: 'pending' }));
+  }
+  m.ver = S.versions[id];
+  m.cur = m.ver[m.ver.length - 1];
+  m.flag = id === 'M3' && st >= 2;
+  return m;
+}
+const sumAdd = m => m.files.reduce((s, f) => s + f.add, 0);
+const sumDel = m => m.files.reduce((s, f) => s + f.del, 0);
+function depsText(id) {
+  const up = EDGES.filter(e => e[1] === id).map(e => e[0]), dn = EDGES.filter(e => e[0] === id).map(e => e[1]);
+  const p = [];
+  if (up.length) p.push('needs ' + up.join(' and '));
+  if (dn.length) p.push('needed by ' + dn.join(' and '));
+  return p.join(' · ');
+}
+/* plain-text twin of a station's one evidence graphic (and the facts behind it) */
+function evidenceText(m) {
+  if (!m.tests) return '';
+  const t = `tests ${m.tests.pass} passed, ${m.tests.fail} failed`;
+  const d = `+${sumAdd(m)} −${sumDel(m)} lines`;
+  if (m.status === 'working') {
+    const c = { read: 0, edit: 0, test: 0 };
+    m.actions.forEach(a => { c[a.type === 'write' ? 'edit' : a.type] = (c[a.type === 'write' ? 'edit' : a.type] || 0) + 1; });
+    return `running ${m.dur} · ${c.read} read, ${c.edit} edit, ${d} · ${t} so far, still running`;
+  }
+  return `${d} · ${t}`;
+}
+function runClock() { return S.stopped ? S.stopped.t : S.state === 1 ? '3:28' : S.state === 2 ? fmt(Math.min(sec('3:40') + S.wait, sec('4:25'))) : '6:00'; }
+function nextBoundary() { return !isLive() ? null : S.state === 1 ? 'M3' : 'M4'; }
+/* the metro offers exactly the boundary the shared Now-bar toggle arms (same intervention set in both views) */
+function pauseOptions() { return isLive() ? [nextBoundary()] : []; }
+function defaultSel(n) { return n === 3 ? null : 'M3'; }
+
+/* =====================================================================
+   LEVEL 0 · NOW BAR (shared by both views)
+   ===================================================================== */
+function renderNow() {
+  const el = $('#now');
+  const st = S.state, waiting = isWaiting();
+  el.className = 'now' + (waiting ? ' waiting' : '');
+  el.setAttribute('aria-label', waiting ? 'Decision needed' : 'Agent status');
+  const prog = S.view === 'modules' ? progressHTML() : '';
+  let h = '';
+  if (waiting) {
+    /* row 1: state, what happened + its flag, progress, then the persistent controls in the same corner as in Working */
+    h += `<div class="now-state">${glyph('waiting', 24)}<div class="dc-title"><span>Waiting for you</span>` +
+      `<span class="pill" id="waitP" ${tipImg('Waiting for you for ' + fmt(S.wait), 'How long the agent has waited for you')}>${ic('clock', 14)}<span class="mono" id="waitT">${fmt(S.wait)}</span></span></div></div>`;
+    h += `<div class="dc-what" ${tipImg('M3 done, no passing test after its last edit', DATA.flag.text)}>${glyph('unverified', 16)}<span class="mono">M3</span><span>done, no passing test</span></div>`;
+    h += flagPill() + prog;
+    h += `<div class="dc-ctl">${armedChip()}${ctlPause()}${ctlNote()}</div>`;
+    /* row 2: exactly the four decisions */
+    const edOn = kv => S.editor && S.editor.kind + ':' + S.editor.id === kv;
+    h += `<div class="dc-acts">
+      <button class="btn warn" data-a="continue" data-k="dc-cont">${ic('arrowr', 16)}Continue to M4</button>
+      <button class="btn" data-a="edit" data-v="change:M4" data-k="dc-change" aria-expanded="${edOn('change:M4')}"${edOn('change:M4') ? ' aria-controls="edPanel"' : ''}>${ic('edit', 16)}Change M4 first</button>
+      <span class="spacer"></span>
+      <button class="btn dghost" data-a="edit" data-v="redo:M3" data-k="dc-redo" aria-expanded="${edOn('redo:M3')}"${edOn('redo:M3') ? ' aria-controls="redoPanel"' : ''}>${ic('undo', 16)}Redo M3</button>
+      ${ctlStop(true)}</div>`;
+  } else {
+    if (S.stopped) {
+      const where = S.stopped.from === 1 ? '<span class="k">Stopped in</span> <span class="mono">M3</span> <span class="k">·</span> Rounding and minimum subtotal' : '<span class="k">Stopped before</span> <span class="mono">M4</span> <span class="k">·</span> Tests';
+      h += `<div class="now-state">${glyph('stopped', 24)}<div class="now-title">${where}</div></div>`;
+    } else if (st === 1) {
+      h += `<div class="now-state">${glyph('working', 24, true)}<div class="now-title"><span class="k">Working on</span> <span class="mono">M3</span> <span class="k">·</span> Rounding and minimum subtotal</div></div>`;
+      h += `<span class="pill" ${tipImg('Current action: running pytest')}>${ic('term', 14)}<span class="mono">pytest</span></span>`;
+    } else {
+      h += `<div class="now-state">${glyph('end', 24)}<div class="now-title">Finished</div></div>`;
+    }
+    h += prog + flagPill();
+    /* controls exist only while the agent can still act on them */
+    if (isLive()) h += `<div class="ctls">${armedChip()}${ctlPause()}${ctlNote()}<span class="vsep" aria-hidden="true"></span>${ctlStop(false)}</div>`;
+  }
+  el.innerHTML = h;
+}
+/* L0 reflects only the agent's state (no L1 selection outline) */
+function progressHTML() {
+  const segs = MODS.map(id => `<i class="s ${shownStatus(id)}"></i>`).join('');
+  const lbl = 'Progress: ' + MODS.map(id => id + ' ' + STATUS_LABEL[shownStatus(id)]).join('; ');
+  const nx = S.state === 1 && !S.stopped ? `<span class="next" ${tipImg('Next module: M4 · Tests')}>${ic('arrowr', 14)}<span>next</span><span class="mono">M4</span></span>` : '';
+  return `<div class="prog"><span class="seg" ${tipImg(lbl)}>${segs}</span>${nx}</div>`;
+}
+function flagPill() {
+  if (S.state < 2) return '';  /* the one flag (M3 claimed done without a passing test) exists from the boundary on */
+  return `<div class="ctl"><button class="pill flag" data-a="pop" data-v="flags" aria-label="1 flag. Show flags" aria-expanded="${S.pop === 'flags'}" aria-haspopup="dialog" data-tip="Flags" data-k="flagbtn">${ic('flag', 14)}<span class="mono">1</span></button>${S.pop === 'flags' ? flagsPop() : ''}</div>`;
+}
+function armedChip() {
+  if (!S.pauseAt || !isLive()) return '';
+  return `<span class="pill armed" id="armedChip" ${tipImg('Pause armed after ' + S.pauseAt, 'Agent will stop and wait for you after ' + S.pauseAt)}>${octagon(14, true)}<span>after</span><span class="mono">${S.pauseAt}</span></span>`;
+}
+/* constant name; aria-pressed carries the state and the armed chip describes where */
+function ctlPause() {
+  const on = !!S.pauseAt;
+  const tipTxt = on ? `Pause armed after ${S.pauseAt}. Press to disarm` : `Pause at next stop (after ${nextBoundary()})`;
+  return `<button class="ib" data-a="pause" aria-pressed="${on}" aria-label="Pause at next stop"${on ? ' aria-describedby="armedChip"' : ''} data-tip="${esc(tipTxt)}" data-k="pausebtn">${ic('pausestop', 20)}</button>`;
+}
+function ctlNote() {
+  return `<div class="ctl"><button class="ib" data-a="pop" data-v="note" aria-label="Note to agent${S.notes ? ', ' + S.notes + ' queued' : ''}" data-tip="Note to agent" aria-expanded="${S.pop === 'note'}" aria-haspopup="dialog" data-k="notebtn">${ic('note', 20)}${S.notes ? '<span class="dot" aria-hidden="true"></span>' : ''}</button>${S.pop === 'note' ? notePop() : ''}</div>`;
+}
+function notePop() {
+  const when = S.state === 1 ? 'Reaches the agent after its current step (pytest)' : 'Reaches the agent when it continues to M4';
+  /* what you already sent and the agent has not read yet (notes and corrections; the bar's count), in both views */
+  const q = S.ulog.filter(u => u.detail != null);
+  const list = q.length ? `<ul class="nq" id="noteQ" tabindex="0" aria-label="${q.length} queued for the agent">${q.map(u =>
+    `<li>${ic(u.icon, 14)}${u.mod === 'run' ? '<span class="sr-only">Note:</span> ' : `<span class="sr-only">Correction for</span> <span class="tag">${u.mod}</span> `}<span class="nt">${esc(u.detail)}</span><span class="mono tm">${u.t}</span></li>`).join('')}</ul>` : '';
+  return `<form class="pop" role="dialog" aria-label="Note to agent" data-f="note">${list}
+    <label class="when" for="noteIn">${ic('clock', 14)}${when}</label>
+    <div class="frow-in"><input id="noteIn" class="field" autocomplete="off" placeholder="One line for the agent" data-k="notein" value="${esc(S.noteDraft)}"${q.length ? ' aria-describedby="noteQ"' : ''}><button class="btn primary" type="submit">${ic('send', 16)}Send</button></div>
+  </form>`;
+}
+function ctlStop(labelled) {
+  const btn = labelled
+    ? `<button class="btn dghost" data-a="pop" data-v="stop" aria-expanded="${S.pop === 'stop'}" aria-haspopup="dialog" data-k="stopbtn">${ic('stop', 16)}Stop</button>`
+    : `<button class="ib danger" data-a="pop" data-v="stop" aria-label="Stop the agent" data-tip="Stop the agent" aria-expanded="${S.pop === 'stop'}" aria-haspopup="dialog" data-k="stopbtn">${ic('stop', 20)}</button>`;
+  return `<div class="ctl">${btn}${S.pop === 'stop' ? stopPop() : ''}</div>`;
+}
+function stopPop() {
+  const what = S.state === 1 ? 'M3 stops mid-step. Code changes so far are kept.' : 'The run ends before M4. Code is kept.';
+  return `<div class="pop" role="alertdialog" aria-modal="true" aria-labelledby="stopH" aria-describedby="stopD">
+    <h3 id="stopH">${ic('stop', 16)}Stop the agent?</h3>
+    <p id="stopD" class="muted" style="margin:0;font-size:12px">${what}</p>
+    <div class="row"><button class="btn" data-a="pop-close" data-k="stopcancel">Cancel</button><button class="btn danger" data-a="stop-go" data-k="stopgo">${ic('stop', 16)}Stop now</button></div></div>`;
+}
+function flagsPop() {
+  return `<div class="pop" role="dialog" aria-label="Flags"><h3>${ic('flag', 16)}Flags</h3>
+    <button class="btn ghost" style="justify-content:flex-start;height:auto;min-height:34px;white-space:normal;text-align:left" data-a="flag-go" data-k="flaggo">${glyph('unverified', 16)}<span>${esc(DATA.flag.text)}</span>${ic('chevr', 14)}</button></div>`;
+}
+
+/* =====================================================================
+   LEVEL 1 · METRO LINE (modular view)
+   ===================================================================== */
+function relSet(sel) {
+  if (!sel || sel === 'pre') return null;
+  const r = new Set([sel]);
+  EDGES.forEach(e => { if (e[0] === sel) r.add(e[1]); if (e[1] === sel) r.add(e[0]); });
+  return r;
+}
+function renderMetro() {
+  const rel = relSet(S.sel), k = redoTarget();
+  let h = `<section class="metro" id="metro" aria-label="Plan">
+    <svg class="metro-svg" id="metroSvg" aria-hidden="true"></svg>
+    <div class="stations" id="stations" role="group" aria-label="Plan: before plan and ${MODS.length} modules. Use j and k to move.">`;
+  ['pre'].concat(MODS).forEach(id => {
+    if (k && id === k) h += cutHTML(k);
+    h += beforeStationHTML(id, k) + stationHTML(id, rel) + afterStationHTML(id);
+  });
+  return h + '</div></section>';
+}
+/* markers live in DOM order where they sit on the line, so Tab follows the line */
+function beforeStationHTML(id, k) {
+  /* the train docks on the incoming side of the working station */
+  if (statusOf(id) === 'working' && !k) return `<span class="mk train" data-at="tr:${id}" ${tipImg('Agent is working in ' + id)}><i></i></span>`;
+  return '';
+}
+function afterStationHTML(id) {
+  let m = '';
+  if (id === 'M3' && isWaiting()) m += `<span class="mk held" data-at="b:M3" ${tipImg('Agent is held after M3, waiting for you', 'Agent is held here, waiting for you')}>${glyph('waiting', 18)}</span>`;
+  if (pauseOptions().indexOf(id) >= 0) {
+    const on = S.pauseAt === id;
+    const tipTxt = on ? `Pause armed: agent will wait after ${id}. Click to remove` : `Pause after ${id}`;
+    const body = on ? octagon(24, true) : `<span class="o-on">${octagon(20, false)}</span>`;
+    m += `<button class="mk ${on ? 'on' : 'bnd'}" data-at="b:${id}" data-a="bnd" data-v="${id}" data-k="bnd-${id}" aria-pressed="${on}" aria-label="Pause after ${id}" data-tip="${tipTxt}">${body}</button>`;
+  }
+  return m;
+}
+function cutHTML(k) {
+  return `<span class="cutline" data-at="c:${k}" aria-hidden="true"></span>` +
+    `<span class="mk cutmk" data-at="c:${k}" ${tipImg('Redo rewinds to here, before ' + k, 'Redo rewinds to here (before ' + k + ')')}>${ic('cut', 14)}</span>`;
+}
+function stationHTML(id, rel) {
+  const m = mod(id), s = shownStatus(id), cur = S.sel === id;
+  const cls = rel ? (rel.has(id) ? ' rel' : ' dim') : '';
+  let ev = '', lab, tip, desc;
+  if (id === 'pre') {
+    lab = ic('eye', 14);
+    /* same tick vocabulary as the activity strip, so one legend covers both */
+    ev = strip(DATA.pre.actions);
+    tip = 'Before plan: read README.md, shop/cart.py, shop/money.py · ran ls';
+    desc = 'Read 3 files, ran 1 command';
+  } else {
+    lab = `<span class="mono">${id}</span><span class="nm">${esc(m.short)}</span>`;
+    /* ONE compact evidence graphic per station: the latest tests as pips */
+    if (m.tests) ev = pips(m.tests.pass, m.tests.fail, m.tests.live, false, 8);
+    desc = [evidenceText(m), depsText(id)].filter(Boolean).join(' · ');
+    tip = `${id} · ${m.title} — ${STATUS_LABEL[s]}${desc ? ' · ' + desc : ''}`;
+  }
+  const aria = id === 'pre' ? 'Before plan' : `${id} ${m.title}, ${STATUS_LABEL[s]}${m.flag ? ', flagged' : ''}`;
+  const flag = m.flag ? `<span class="fl" aria-hidden="true">${ic('flag', 12)}</span>` : '';
+  return `<button class="st${cls}" data-a="sel" data-v="${id}" data-id="${id}" data-k="st-${id}" aria-current="${cur}" aria-label="${esc(aria)}" aria-describedby="ev-${id}" data-tip="${esc(tip)}">
+    <span class="st-dot">${glyph(s, id === 'pre' ? 16 : 22)}${flag}</span>
+    <span class="st-lab">${lab}</span>
+    <span class="st-ev${s === 'replaced' ? ' struck' : ''}">${ev}</span><span class="sr-only" id="ev-${id}">${esc(desc)}</span></button>`;
+}
+function drawMetro() {
+  const metro = $('#metro');
+  if (!metro) return;
+  const svg = $('#metroSvg'), stn = $('#stations');
+  const mr = metro.getBoundingClientRect(), sr = stn.getBoundingClientRect();
+  const P = {};
+  $$('.st', metro).forEach(b => {
+    const d = $('.st-dot', b).getBoundingClientRect();
+    P[b.dataset.id] = { x: d.left - mr.left + d.width / 2, y: d.top - mr.top + d.height / 2, r: d.width / 2 };
+  });
+  const y = P.M1.y, W = mr.width;
+  svg.setAttribute('width', W); svg.setAttribute('height', mr.height);
+  svg.setAttribute('viewBox', `0 0 ${W} ${mr.height}`);
+  const sel = S.sel, k = redoTarget(), ki = k ? MODS.indexOf(k) : 99, rel = relSet(sel);
+  const gap = P.M2.x - P.M1.x;
+  const endX = Math.min(P.M4.x + gap * 0.42, W - 14);
+  const bx = id => id === 'M4' ? endX : (P[id].x + P[MODS[MODS.indexOf(id) + 1]].x) / 2;
+  let h = `<line class="ln pre" x1="${P.pre.x}" y1="${y}" x2="${P.M1.x}" y2="${y}"/>`;
+  h += `<line class="ln ${S.state >= 3 ? 'done' : 'future'}${k ? ' gone' : ''}" x1="${P.M4.x}" y1="${y}" x2="${endX}" y2="${y}"/>`;
+  EDGES.forEach(e => {
+    const a = e[0], b = e[1], ia = MODS.indexOf(a), ib = MODS.indexOf(b), adj = ib - ia === 1;
+    let cls = statusOf(b) !== 'pending' ? 'done' : 'future';
+    /* highlighted = both ends in the selection's related set; arrowheads only on the selection's own edges */
+    const hl = !!rel && rel.has(a) && rel.has(b);
+    const own = !!sel && (a === sel || b === sel);
+    const dim = !!rel && !hl;
+    let d, ax, ay;
+    if (adj) { d = `M${P[a].x} ${y} L${P[b].x} ${y}`; ax = P[a].x + (P[b].x - P[a].x) * 0.3; ay = y; }
+    else {
+      const x1 = P[a].x, x2 = P[b].x, dx = x2 - x1, H = 38;
+      d = `M${x1} ${y} C${x1 + dx * 0.18} ${y - H} ${x2 - dx * 0.18} ${y - H} ${x2} ${y}`;
+      ax = (x1 + x2) / 2; ay = y - H * 0.75;
+    }
+    if (k && ib >= ki) {
+      if (adj && ia === ki - 1) {
+        const mx = (P[a].x + P[b].x) / 2;
+        h += `<path class="ln done" d="M${P[a].x} ${y} L${mx} ${y}"/>`;
+        d = `M${mx} ${y} L${P[b].x} ${y}`;
+      }
+      cls = 'gone';
+    }
+    h += `<path class="ln ${cls}${hl ? ' hl' : ''}${dim ? ' dimln' : ''}" d="${d}"/>`;
+    if (own && hl) h += `<path class="arw" d="M${ax - 3.5} ${ay - 4.5} L${ax + 2.5} ${ay} L${ax - 3.5} ${ay + 4.5}"/>`;
+  });
+  if (S.state >= 3 && !k) h += `<line class="ln term" x1="${endX}" y1="${y - 9}" x2="${endX}" y2="${y + 9}"/>`;
+  svg.innerHTML = h;
+
+  /* place the in-flow markers (train, held diamond, stop signs, redo cut) on the line */
+  const ox = sr.left - mr.left, oy = sr.top - mr.top;
+  $$('[data-at]', stn).forEach(el => {
+    const p = el.dataset.at.split(':'), id = p[1];
+    let x = P[id].x, yy = y;
+    if (p[0] === 'b') x = bx(id);
+    else if (p[0] === 'tr') { const w = el.firstElementChild ? el.firstElementChild.offsetWidth : 28; x = P[id].x - P[id].r - 3 - w / 2; }
+    else if (p[0] === 'c') {
+      const i = MODS.indexOf(id); x = (P[i === 0 ? 'pre' : MODS[i - 1]].x + P[id].x) / 2;
+      /* the scissors ride above the track, clear of the arrowheads and the selection ring */
+      if (el.classList.contains('cutmk')) yy = y - 40;
+    }
+    el.style.left = (x - ox) + 'px';
+    el.style.top = (yy - oy) + 'px';
+  });
+}
+
+/* =====================================================================
+   LEVEL 2 · MODULE CARD  +  LEVEL 3 · EVIDENCE
+   ===================================================================== */
+function renderWork() {
+  if (S.state >= 3 && !S.sel) return `<div class="work">${summaryCard()}</div>`;
+  return `<div class="work">${moduleCard(mod(S.sel || 'M3'))}</div>`;
+}
+function moduleCard(m) {
+  const ed = S.editor;
+  const redoHere = !!ed && ed.kind === 'redo' && ed.id === m.id;
+  const edHere = !!ed && ed.kind !== 'redo' && ed.id === m.id;
+  const evOpen = S.evOpen || redoHere;
+  const st = m.status;
+  /* keep the real status shape; a small slashed chip says a pending redo will replace it */
+  const rpl = shownStatus(m.id) === 'replaced' ? `<span class="rpl" ${tipImg(STATUS_LABEL.replaced)}>${glyph('replaced', 16)}</span>` : '';
+  const deps = m.id === 'pre' ? '' : depsText(m.id);
+  const left = (m.goal ? `<p class="goal">${ic('target', 16)}<span>${esc(m.goal)}</span></p>` : '') + critHTML(m);
+  const facts = factsHTML(m, redoHere);
+  return `<article class="card${evOpen ? '' : ' noev'}" aria-labelledby="cardT">
+    <div class="cm">
+      <header class="ch">${glyph(st, 24)}${rpl}${m.id !== 'pre' ? `<span class="cid">${m.id}</span>` : ''}<h2 id="cardT" tabindex="-1">${esc(m.title)}</h2><span class="sr-only">, ${STATUS_LABEL[st]}${deps ? ', ' + deps : ''}</span><div class="tools">${cardTools(m, redoHere)}</div></header>
+      <div class="cbody${left && facts ? '' : ' solo'}">${left ? `<div class="cl">${left}</div>` : ''}${facts}</div>
+      ${edHere ? editorHTML(m) : ''}
+      ${edHere || redoHere ? '' : `<div class="cf">${primaryBtn(m)}</div>`}
+    </div>
+    ${evOpen ? `<aside class="ce" id="evCol" aria-label="${redoHere ? 'Redo' : 'Evidence'}">${redoHere ? redoPanel(m) : evidenceHTML(m)}</aside>` : ''}
+  </article>`;
+}
+function evToggle(redoHere) {
+  /* hidden while the redo panel occupies the second column, so the toggle never disagrees with the UI */
+  if (redoHere) return '';
+  const o = S.evOpen;
+  return `<button class="ib" data-a="ev" aria-expanded="${o}"${o ? ' aria-controls="evCol"' : ''} aria-label="${o ? 'Hide' : 'Show'} evidence" data-tip="${o ? 'Hide' : 'Show'} evidence" data-k="evtoggle">${ic('panel', 18)}</button>`;
+}
+/* while the redo panel holds the second column, evidence triggers are inert (aria-disabled) instead of changing hidden state */
+const dis = off => off ? ' aria-disabled="true"' : '';
+function cardTools(m, redoHere) {
+  if (m.id === 'pre') return `<span class="pill" ${tipImg('Before the plan was made, 0:00 to 0:20', 'Before the plan was made')}>${ic('clock', 14)}<span class="mono">0:00–0:20</span></span>${evToggle(redoHere)}`;
+  let h = '';
+  if (m.dur) { const t = `${m.status === 'working' ? 'Running for' : 'Took'} ${m.dur}`; h += `<span class="pill" ${tipImg(t)}>${ic('clock', 14)}<span class="mono">${m.dur}</span></span>`; }
+  const you = m.cur.by === 'you';
+  h += `<button class="vchip${you ? ' you' : ''}" data-a="tab" data-v="versions" aria-label="Instructions v${m.cur.v}, written by ${you ? 'you' : 'the agent'}. Show history" data-tip="Instructions v${m.cur.v} · by ${you ? 'you' : 'agent'}" data-k="vchip"${dis(redoHere)}>${ic(you ? 'user' : 'bot', 14)}v${m.cur.v}</button>`;
+  return h + evToggle(redoHere);
+}
+function critHTML(m) {
+  if (!m.criteria.length) return '';
+  const rows = m.criteria.map(c => {
+    const g = c.st === 'verified' ? 'verified' : c.st === 'agent' ? 'unverified' : c.st === 'failed' ? 'failed' : 'pending';
+    /* status shape + exactly ONE source icon (flask = tests show it, speech bubble = agent says); details in tooltip + name */
+    const tipTxt = c.st === 'verified' ? 'Met · tests show it' : c.st === 'agent' ? 'Agent says met · tests don’t show it (1 failing)' : 'Not checked yet';
+    const say = c.st === 'verified' ? 'met, tests show it' : c.st === 'agent' ? 'agent says met, tests do not show it (1 failing)' : 'not checked yet';
+    const src = c.st === 'verified' ? `<span class="sx ok">${ic('flask', 14)}</span>` : c.st === 'agent' ? `<span class="sx say">${ic('say', 14)}</span>` : '';
+    return `<li tabindex="0" data-tip="${esc(tipTxt)}" aria-label="${esc(c.text + ': ' + say)}">${glyph(g, 16)}<span>${esc(c.text)}</span><span class="src" aria-hidden="true">${src}</span></li>`;
+  }).join('');
+  return `<div><div class="lab">Done when</div><ul class="crit">${rows}</ul></div>`;
+}
+/* no text labels: each fact is identified by its leading icon (file / flask / eye / activity) + tooltip; empty facts are not drawn */
+function factsHTML(m, off) {
+  const g = [];
+  if (m.files.length) g.push(`<div role="group" aria-label="Changed files">${m.files.map(f => `<button class="frow" data-a="go-diff" data-k="f-${esc(f.path)}" aria-label="Changed ${esc(f.path)}, +${f.add} −${f.del} lines. Open diff" data-tip="Changed · open diff"${dis(off)}>${ic('file', 16, 'muted')}<span class="fn mono">${esc(f.path)}</span><span class="spacer"></span>${diffbar(f.add, f.del)}</button>`).join('')}</div>`);
+  if (m.tests) g.push(`<div role="group" aria-label="Latest tests"><button class="frow" data-a="go-tests" data-k="f-tests" aria-label="Latest tests: ${m.tests.pass} passed, ${m.tests.fail} failed${m.tests.live ? ', still running' : ''}. Open output" data-tip="Latest tests · open output"${dis(off)}>${ic('flask', 16, 'muted')}${pips(m.tests.pass, m.tests.fail, m.tests.live)}</button></div>`);
+  if (m.looked.length) g.push(`<div role="group" aria-label="Looked at"><div class="chips">${m.looked.map(p => `<button class="chip lnk mono" data-a="go-read" data-v="${esc(p)}" data-k="lk-${esc(p)}" aria-label="Looked at ${esc(p)}. Open step" data-tip="Looked at · open step"${dis(off)}>${ic('eye', 12)}${esc(p)}</button>`).join('')}</div></div>`);
+  if (m.actions.length) g.push(`<div role="group" aria-label="Activity"><div class="frow">${ic('activity', 16, 'muted')}${strip(m.actions, true)}</div></div>`);
+  return g.length ? `<div class="facts">${g.join('')}</div>` : '';
+}
+function primaryBtn(m) {
+  if (m.id === 'pre') return '';
+  if (m.status === 'pending') return `<button class="btn primary" data-a="edit" data-v="change:${m.id}" data-k="prim">${ic('edit', 16)}Change ${m.id}…</button>`;
+  if (m.status === 'working') return `<button class="btn primary" data-a="edit" data-v="correct:${m.id}" data-k="prim">${ic('note', 16)}Correct ${m.id}…</button>`;
+  return `<button class="btn dghost" data-a="edit" data-v="redo:${m.id}" data-k="prim">${ic('undo', 16)}Redo from ${m.id}…</button>`;
+}
+function editorHTML(m) {
+  const ed = S.editor;
+  if (ed.kind === 'change') {
+    const nv = m.cur.v + 1;
+    return `<div class="ed" id="edPanel" role="group" aria-labelledby="edH">
+      <div class="lab" id="edH">${ic('edit', 14)}Instructions for <span class="mono">${m.id}</span><span class="vchip" style="cursor:default">${ic(m.cur.by === 'you' ? 'user' : 'bot', 12)}v${m.cur.v}${ic('arrowr', 12)}${ic('user', 12)}v${nv}</span></div>
+      <textarea id="edText" class="field" rows="3" data-bind="text" data-k="edtext" aria-labelledby="edH">${esc(ed.text)}</textarea>
+      <div class="when">${ic('clock', 14)}Used when ${m.id} starts</div>
+      <div class="row"><button class="btn" data-a="ed-cancel" data-k="edcancel">Cancel</button><button class="btn primary" data-a="ed-save" data-k="edsave">${ic('check', 16)}Save as v${nv}</button></div></div>`;
+  }
+  return `<div class="ed" id="edPanel" role="group" aria-labelledby="edH">
+    <div class="lab" id="edH">${ic('note', 14)}Correction for <span class="mono">${m.id}</span></div>
+    <textarea id="edText" class="field" rows="2" data-bind="text" data-k="edtext" aria-labelledby="edH" placeholder="What should ${m.id} do differently?">${esc(ed.text)}</textarea>
+    <div class="when">${ic('clock', 14)}Reaches the agent after its current step (pytest)</div>
+    <div class="row"><button class="btn" data-a="ed-cancel" data-k="edcancel">Cancel</button><button class="btn primary" data-a="ed-save" data-k="edsave">${ic('send', 16)}Send correction</button></div></div>`;
+}
+
+/* ---------- evidence column ---------- */
+function evidenceHTML(m) {
+  const tabs = [{ k: 'steps', icon: 'list', lbl: 'Steps' }];
+  if (m.id !== 'pre') {
+    tabs.push({ k: 'diff', icon: 'filediff', lbl: 'Diff' });
+    tabs.push({ k: 'tests', icon: 'flask', lbl: 'Test output' });
+    tabs.push({ k: 'versions', icon: 'history', lbl: 'Instruction versions' });
+  }
+  const t = tabs.some(x => x.k === S.evTab) ? S.evTab : 'steps';
+  /* icon-only tabs: the numbers already appear on the card (level 2), so they are not repeated here */
+  const th = tabs.map(x => `<button class="tab" role="tab" id="tab-${x.k}" aria-selected="${x.k === t}" aria-controls="evp" tabindex="${x.k === t ? 0 : -1}" data-a="tab" data-v="${x.k}" data-k="tab-${x.k}" aria-label="${x.lbl}" data-tip="${x.lbl}">${ic(x.icon, 16)}</button>`).join('');
+  return `<div class="tabs" role="tablist" aria-label="Evidence">${th}</div><div class="evb" role="tabpanel" id="evp" tabindex="0" aria-labelledby="tab-${t}">${tabBody(m, t)}</div>`;
+}
+function emptyEv() { return `<div class="empty">${glyph('pending', 14)}<span>Not started</span></div>`; }
+function tabBody(m, t) {
+  if (t === 'diff') {
+    if (!m.files.length) return emptyEv();
+    const d = DATA.diffs[m.id];
+    return `<div class="det" style="margin:0"><div class="dh">${ic('file', 14)}<span>${esc(d.file)}</span><span class="spacer"></span>${diffbar(sumAdd(m), sumDel(m))}</div>${codeBlock(d.lines, 'Diff ' + d.file)}</div>`;
+  }
+  if (t === 'tests') {
+    if (!m.tests) return emptyEv();
+    return `<div class="det" style="margin:0"><div class="dh">${ic('term', 14)}<span>pytest</span><span class="spacer"></span>${pips(m.tests.pass, m.tests.fail, m.tests.live)}</div>${codeBlock(DATA.outs[m.tests.live ? 'M3live' : m.out], 'pytest output')}</div>`;
+  }
+  if (t === 'versions') return versionsHTML(m);
+  return stepsHTML(m);
+}
+function versionsHTML(m) {
+  return '<ol class="vers">' + m.ver.slice().reverse().map((v, i) =>
+    `<li class="${i === 0 ? 'cur' : ''}"><div class="vh2">${ic(v.by === 'you' ? 'user' : 'bot', 14)}<span class="mono">v${v.v}</span><span>· by ${v.by === 'you' ? 'you' : 'agent'}</span><span class="spacer"></span><span class="mono">${v.t}</span></div><div>${esc(v.text)}</div></li>`).join('') + '</ol>';
+}
+const STEP_IC = { read: 'eye', write: 'fileplus', edit: 'edit', bash: 'term', test: 'flask', fold: 'layers' };
+function foldSteps(acts) {
+  const out = []; let i = 0;
+  while (i < acts.length) {
+    if (acts[i].type === 'read') {
+      let j = i; while (j < acts.length && acts[j].type === 'read') j++;
+      if (j - i >= 2) { out.push({ type: 'fold', items: acts.slice(i, j), t: acts[i].t }); i = j; continue; }
+    }
+    out.push(acts[i]); i++;
+  }
+  return out;
+}
+/* the module's agent steps (keyed by fold index) plus the corrections and notes that reached it, in time order.
+   Both come from the same data the Log shows (S.ulog), so either view can review what you sent. */
+function stepsHTML(m) {
+  const rows = foldSteps(m.actions).map((a, i) => ({ a, key: m.id + '-' + i }))
+    .concat(S.ulog.filter(u => (u.mod === m.id || u.to === m.id) && u.detail != null).map(u => ({ u, key: m.id + '-' + u.id })));
+  if (!rows.length) return emptyEv();
+  const t = r => sec((r.a || r.u).t);
+  /* stable: at equal times the agent's step stays before what you sent */
+  rows.forEach((r, i) => { r.i = i; });
+  rows.sort((x, y) => t(x) - t(y) || x.i - y.i);
+  return '<ul class="steps">' + rows.map(r => {
+    const open = S.exp === r.key;
+    return r.u ? `<li>${userStepRow(r.u, r.key, open)}${open ? userDetail(r.u.detail) : ''}</li>`
+      : `<li>${stepRow(r.a, r.key, open)}${open ? stepDetail(r.a) : ''}</li>`;
+  }).join('') + '</ul>';
+}
+function userStepRow(u, key, open) {
+  const what = u.mod === 'run' ? 'Note · by you' : 'Correction · by you';
+  return `<button class="step you" data-a="step" data-v="${key}" data-k="step-${key}" aria-expanded="${open}" aria-label="${esc(what + ': ' + u.detail)}">${ic(u.icon, 16, 'ic')}<span class="tg">${what}</span><span></span><span class="tm">${u.t}</span></button>`;
+}
+const userDetail = text => `<div class="det"><div class="dh">${ic('user', 14)}<span>by you</span></div><div style="padding:8px 10px">${esc(text)}</div></div>`;
+function stepRow(a, key, open) {
+  /* result badges: diff bar for edits, pips for tests, a red x only when a command fails; successful reads and commands carry none */
+  let tg = a.target, badge = '', lbl;
+  if (a.type === 'fold') { tg = `explored ${a.items.length} files`; badge = strip(a.items); lbl = `Explored ${a.items.length} files: ${a.items.map(x => x.target).join(', ')}`; }
+  else if (a.type === 'read') lbl = `Read ${a.target}`;
+  else if (a.type === 'write' || a.type === 'edit') { badge = diffbar(a.add, a.del); lbl = `${a.type === 'write' ? 'Wrote' : 'Edited'} ${a.target}, +${a.add} −${a.del} lines`; }
+  else if (a.type === 'test') { badge = pips(a.pass, a.fail, a.live); lbl = `Ran pytest: ${a.pass} passed, ${a.fail} failed${a.live ? ', still running' : a.stopped ? ', stopped' : ''}`; }
+  else { lbl = `Ran ${a.target}${a.exit ? ', failed' : ''}`; if (a.exit) badge = ic('x', 14); }
+  const fail = (a.type === 'test' && a.fail > 0) || !!a.exit;
+  return `<button class="step${fail ? ' fail' : ''}" data-a="step" data-v="${key}" data-k="step-${key}" aria-expanded="${open}" aria-label="${esc(lbl)}">${ic(STEP_IC[a.type], 16, 'ic')}<span class="tg">${esc(tg)}</span><span style="display:flex;align-items:center;gap:6px">${badge}</span><span class="tm">${a.t}</span></button>`;
+}
+function argsOf(a) {
+  if (a.type === 'fold') return 'read × ' + a.items.length;
+  if (a.type === 'read' || a.type === 'write' || a.type === 'edit') return `${a.type}(path="${a.target}")`;
+  if (a.type === 'test') return `bash("${a.cmd || 'pytest -q'}")`;
+  return `bash("${a.target}")`;
+}
+function stepDetail(a) {
+  let body;
+  const nm = argsOf(a);
+  if (a.type === 'fold') body = codeBlock(a.items.map(x => ['c', `${x.t}  read ${x.target}  · ${x.lines} lines`]), nm);
+  else if (a.type === 'read') body = codeBlock(a.excerpt ? DATA.excerpts[a.excerpt] : [['c', `${a.target} · ${a.lines} lines`]], 'Excerpt ' + a.target);
+  else if (a.type === 'write' || a.type === 'edit') body = codeBlock(DATA.diffs[a.diff].lines, 'Diff ' + a.target);
+  else if (a.type === 'test') body = codeBlock(DATA.outs[a.live ? 'M3live' : a.out], 'pytest output');
+  else body = codeBlock(a.out.split('\n').map(l => ['c', l]), a.target + ' output');
+  return `<div class="det"><div class="dh">${ic('term', 14)}<span>${esc(argsOf(a))}</span></div>${body}</div>`;
+}
+
+/* ---------- run summary (finished, nothing selected) ----------
+   The metro line above already shows each module's status and tests, so the summary only adds
+   what the line does not: run time (shown once, here), the flag, and the whole-run files. */
+function summaryCard() {
+  const files = [
+    { p: 'shop/discounts.py', a: 17, d: 0, by: ['M1'] },
+    { p: 'shop/cart.py', a: 29, d: 4, by: ['M2', 'M3'] },
+    { p: 'tests/test_discounts.py', a: 38, d: 0, by: ['M4'] }
+  ];
+  const ta = files.reduce((n, f) => n + f.a, 0), td = files.reduce((n, f) => n + f.d, 0);
+  const frows = files.map(f => `<button class="frow" data-a="sel" data-v="${f.by[f.by.length - 1]}" data-k="sf-${f.p}" aria-label="${f.p}, +${f.a} −${f.d} lines, changed by ${f.by.join(' and ')}">${ic('file', 16, 'muted')}<span class="fn mono">${esc(f.p)}</span><span class="spacer"></span>${f.by.map(b => `<span class="tag">${b}</span>`).join('')}${diffbar(f.a, f.d, 'align')}</button>`).join('');
+  return `<article class="card sum" aria-labelledby="cardT">
+    <div class="cm">
+      <header class="ch">${glyph('end', 24)}<h2 id="cardT" tabindex="-1">Run summary</h2><div class="tools"><span class="pill" ${tipImg('Run time 6:00', 'Run time')}>${ic('clock', 14)}<span class="mono">6:00</span></span></div></header>
+      <div class="sumfoot"><button class="pill flag" data-a="sel" data-v="M3" data-k="sum-flag" aria-label="1 flag: ${esc(DATA.flag.text)}. Open M3">${ic('flag', 14)}<span class="mono">1</span><span>${esc(DATA.flag.text)}</span></button></div>
+    </div>
+    <aside class="ce" aria-label="Whole-run files">
+      <div class="tabs"><span class="fh" ${tipImg('Whole run: ' + files.length + ' files changed, +' + ta + ' −' + td + ' lines', 'Whole run: ' + files.length + ' files changed')}>${ic('filediff', 16)}<span class="mono">${files.length}</span>${diffbar(ta, td)}</span></div>
+      <div class="evb">${frows}</div>
+    </aside>
+  </article>`;
+}
+
+/* ---------- redo panel (inline, with consequence preview) ---------- */
+/* one graphic for the conversation rewind: kept modules | cut | replaced attempts */
+function rewindStrip(k, kept, affected) {
+  const ev = events(), ci = Math.max(1, ev.findIndex(e => e.id === 's-' + k)), n = ev.length;
+  const lbl = `Conversation rewound to before ${k}, keeps ${ci} of ${n} events. ` +
+    (kept.length ? `Keeps ${kept.join(' and ')}. ` : '') + `Replaces ${affected.map(id => id + ' attempt 1').join(' and ')}.`;
+  return `<span class="rw" role="img" aria-label="${esc(lbl)}">` +
+    kept.map(id => `<span class="chip keep mono" aria-hidden="true">${ic('check', 12)}${id}</span>`).join('') +
+    `<span class="rwcut" aria-hidden="true">${ic('cut', 14)}</span>` +
+    affected.map(id => `<span class="chip struck mono" aria-hidden="true">${glyph('replaced', 12)}${id} #1</span>`).join('') + '</span>';
+}
+function redoPanel(m) {
+  const ed = S.editor, k = m.id, ki = MODS.indexOf(k);
+  const affected = MODS.slice(ki).filter(id => statusOf(id) !== 'pending');
+  const kept = MODS.slice(0, ki);
+  const files = [];
+  affected.forEach(id => mod(id).files.forEach(f => { if (files.indexOf(f.path) < 0) files.push(f.path); }));
+  const running = isLive() && S.state === 1;
+  const nv = m.cur.v + 1;
+  return `<section class="redo" id="redoPanel" aria-labelledby="redoH">
+    <div class="redo-h">${ic('undo', 18)}<h3 id="redoH">Redo from <span class="mono">${k}</span></h3><span class="spacer"></span><button class="ib" data-a="ed-cancel" aria-label="Close redo" data-tip="Close" data-k="redox">${ic('x', 18)}</button></div>
+    <div><label class="lab" for="rdText">Instructions <span class="vchip" style="cursor:default">${ic(m.cur.by === 'you' ? 'user' : 'bot', 12)}v${m.cur.v}${ic('arrowr', 12)}${ic('user', 12)}v${nv}</span></label>
+      <textarea id="rdText" class="field" rows="3" data-bind="text" data-k="rdtext">${esc(ed.text)}</textarea></div>
+    <div><label class="lab" for="rdNote">What went wrong</label>
+      <input id="rdNote" class="field" data-bind="note" data-k="rdnote" value="${esc(ed.note || '')}" placeholder="Optional · e.g. used the wrong rounding rule" autocomplete="off"></div>
+    <ul class="cq" aria-label="What this redo will do">
+      <li><span class="ci">${ic('undo', 16)}</span><span class="k">Restore</span><span class="chips">${files.length ? files.map(p => `<span class="chip mono rst" role="img" aria-label="Restore ${esc(p)}">${ic('file', 12)}${esc(p)}${ic('undo', 12)}</span>`).join('') : '<span class="muted">—</span>'}</span></li>
+      <li><span class="ci">${ic('history', 16)}</span><span class="k">Rewind</span>${rewindStrip(k, kept, affected)}</li>
+      <li><span class="ci${running ? ' bad' : ''}">${ic(running ? 'stop' : 'idle', 16)}</span><span class="k">Agent</span><span><span aria-hidden="true">${running ? 'Stops now' : 'Idle'}</span><span class="sr-only">${running ? 'The agent is stopped now and waits until idle' : 'The agent is idle, nothing to stop'}</span></span></li>
+    </ul>
+    <div class="row"><button class="btn" data-a="ed-cancel" data-k="rdcancel">Cancel</button><button class="btn danger" data-a="redo-go" data-k="rdgo">${ic('undo', 16)}${running ? 'Stop &amp; redo' : 'Redo'} from ${k}</button></div>
+  </section>`;
+}
+
+/* =====================================================================
+   LOG VIEW (baseline condition)
+   ===================================================================== */
+function actEv(a, m, id) {
+  const T = { read: 'read', write: 'edit', edit: 'edit', bash: 'bash', test: 'test' };
+  const verb = { read: 'Read', write: 'Write', edit: 'Edit', bash: 'Run', test: 'Run' }[a.type];
+  return { id, t: a.t, mod: m, type: T[a.type], icon: STEP_IC[a.type], text: `${verb} ${a.target}${a.live ? ' · running' : a.stopped ? ' · stopped' : ''}`, a };
+}
+/* the plain chronological record: agent events, plus one row per user intervention (both views see the same data) */
+function events() {
+  const st = S.state, E = [];
+  E.push({ id: 'run0', t: '0:00', mod: 'run', type: 'run', icon: 'playc', text: 'Run started' });
+  DATA.pre.actions.forEach((a, i) => E.push(actEv(a, 'pre', 'pre-' + i)));
+  E.push({ id: 'plan', t: '0:20', mod: 'plan', type: 'plan', icon: 'plan', text: 'Plan v1 · 4 modules' });
+  MODS.forEach(id => {
+    const m = mod(id);
+    if (m.status === 'pending') return;
+    E.push({ id: 's-' + id, t: m.start, mod: id, type: 'module', icon: 'playc', text: `Start ${id} · ${m.title}`, m: id, kind: 'start' });
+    m.actions.forEach((a, i) => E.push(actEv(a, id, id + '-a' + i)));
+    if (m.status === 'verified' || m.status === 'unverified') E.push({ id: 'f-' + id, t: m.end, mod: id, type: 'module', glyph: m.status, text: `Finish ${id} · ${m.status === 'verified' ? 'verified' : 'unverified'}`, m: id, kind: 'finish', flag: m.flag });
+  });
+  if (st >= 2) E.push({ id: 'hold', t: '3:40', mod: 'run', type: 'run', glyph: 'waiting', text: isWaiting() ? 'Held before M4 · waiting for you' : 'Held before M4' });
+  if (st >= 3) E.push({ id: 'cont', t: '4:26', pri: -0.5, mod: 'run', type: 'user', icon: 'user', text: 'Continued by you' });
+  if (st >= 3) E.push({ id: 'run1', t: '6:00', mod: 'run', type: 'run', glyph: 'end', text: 'Run finished · 4 modules · 1 flag' });
+  /* your interventions (instruction versions, corrections, notes, pauses) in the order you made them */
+  const U = S.ulog.slice();
+  MODS.forEach(id => S.versions[id].forEach(v => { if (v.by === 'you') U.push({ id: 'v-' + id + '-' + v.v, seq: v.seq, t: v.t, mod: id, type: 'plan', icon: 'user', text: `${id} instructions v${v.v} · by you`, ver: id }); }));
+  U.sort((a, b) => a.seq - b.seq).forEach(u => E.push(u));
+  /* stable sort keeps same-time events in the order they were pushed */
+  const key = e => sec(e.t) + (e.pri || 0);
+  return E.map((e, i) => [e, i]).sort((x, y) => key(x[0]) - key(y[0]) || x[1] - y[1]).map(x => x[0]);
+}
+function logUser(e) { S.ulog.push(Object.assign({ id: 'u' + (S.ulog.length + 1), seq: ++S.seq, t: runClock(), mod: 'run', type: 'user', icon: 'user' }, e)); }
+const TYPES = [
+  { k: 'all', short: 'All', lbl: 'All event types' },
+  { k: 'plan', icon: 'plan', short: 'Plan', lbl: 'Plan events and your interventions' },
+  { k: 'module', icon: 'playc', short: 'Module', lbl: 'Module start and finish' },
+  { k: 'read', icon: 'eye', short: 'Read', lbl: 'File reads' },
+  { k: 'edit', icon: 'edit', short: 'Edit', lbl: 'File edits' },
+  { k: 'cmd', icon: 'term', short: 'Run', lbl: 'Commands and tests' }
+];
+const TYPE_GROUP = { plan: ['plan', 'user'], module: ['module', 'run'], read: ['read'], edit: ['edit'], cmd: ['bash', 'test'] };
+function visibleEvents() {
+  const f = S.lf, q = f.q.trim().toLowerCase();
+  return events().filter(e => {
+    /* the row an open editor is anchored to always stays visible, so no editor is ever active but hidden */
+    if (S.editor && e.id === S.editor.row) return true;
+    /* the plan row belongs to every planned module (it carries Change Mk), not to the before-plan exploration */
+    if (f.mod !== 'all' && e.mod !== f.mod && !(e.id === 'plan' && f.mod !== 'pre')) return false;
+    if (f.type !== 'all' && TYPE_GROUP[f.type].indexOf(e.type) < 0) return false;
+    if (f.flag && !e.flag) return false;
+    if (q && (e.text + ' ' + e.mod + ' ' + e.type).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+}
+function renderLog() {
+  const mods = ['all', 'pre'].concat(MODS);
+  return `<section class="log" aria-label="Event log">
+    <div class="ltools" role="group" aria-label="Log filters">
+      <div class="fgrp" role="radiogroup" aria-label="Module">${mods.map(v => { const on = S.lf.mod === v; return `<button class="fc" role="radio" data-a="lf-mod" data-v="${v}" aria-checked="${on}" tabindex="${on ? 0 : -1}" data-k="lfm-${v}"${v === 'all' ? ' aria-label="All modules"' : ''}>${v === 'all' ? 'All' : `<span class="mono">${v}</span>`}</button>`; }).join('')}</div>
+      <div class="fgrp" role="radiogroup" aria-label="Event type">${TYPES.map(t => { const on = S.lf.type === t.k; return `<button class="fc" role="radio" data-a="lf-type" data-v="${t.k}" aria-checked="${on}" tabindex="${on ? 0 : -1}" data-k="lft-${t.k}" data-tip="${t.lbl}">${t.icon ? ic(t.icon, 14) : ''}${t.short}</button>`; }).join('')}</div>
+      <div class="fgrp"><button class="fc" data-a="lf-flag" aria-pressed="${S.lf.flag}" data-k="lff" data-tip="Only flagged events">${ic('flag', 14)}Flagged</button></div>
+      <label class="search">${ic('search', 16)}<span class="sr-only">Search events</span><input id="q" type="search" placeholder="Search" value="${esc(S.lf.q)}" data-k="q" autocomplete="off"></label>
+    </div>
+    <ol class="ll" id="logList" tabindex="-1" aria-label="Events, oldest first">${logRows()}</ol>
+  </section>`;
+}
+/* the same interventions as the Modules view, on the rows where they naturally belong */
+function rowActions(e, latestAct) {
+  const b = [], ed = S.editor;
+  const exp = (kv, row) => { const on = !!ed && ed.kind + ':' + ed.id === kv && ed.row === row; return ` aria-expanded="${on}"${on ? ` aria-controls="${ed.kind === 'redo' ? 'redoPanel' : 'edPanel'}"` : ''}`; };
+  if (e.id === 'plan') MODS.forEach(id => { if (statusOf(id) === 'pending') b.push(`<button class="btn sm" data-a="edit" data-v="change:${id}" data-row="${e.id}" data-k="la-${e.id}-${id}"${exp('change:' + id, e.id)}>${ic('edit', 14)}Change ${id}…</button>`); });
+  const w = workingMod();
+  if (w && e.mod === w) {
+    /* Correct on every row of the active module: labelled on its newest row, icon-only elsewhere */
+    b.push(e.id === latestAct
+      ? `<button class="btn sm" data-a="edit" data-v="correct:${w}" data-row="${e.id}" data-k="la-${e.id}"${exp('correct:' + w, e.id)}>${ic('note', 14)}Correct ${w}…</button>`
+      : `<button class="ib sm" data-a="edit" data-v="correct:${w}" data-row="${e.id}" data-k="la-${e.id}" aria-label="Correct ${w}…" data-tip="Correct ${w}"${exp('correct:' + w, e.id)}>${ic('note', 16)}</button>`);
+  }
+  if (e.kind && statusOf(e.m) !== 'working') b.push(`<button class="btn sm dghost" data-a="edit" data-v="redo:${e.m}" data-row="s-${e.m}" data-k="la-${e.id}"${exp('redo:' + e.m, 's-' + e.m)}>${ic('undo', 14)}Redo from ${e.m}…<span class="sr-only">, ${e.kind} row</span></button>`);
+  return `<div class="lra">${b.join('')}</div>`;
+}
+function logDetail(e) {
+  if (e.a) return stepDetail(e.a);
+  if (e.ver) return versionsHTML(mod(e.ver));
+  if (e.detail) return userDetail(e.detail);
+  /* plan as proposed at 0:20 (id, title, deps, goal, done-when, v1 text): no live status, which would be a treatment-only overview */
+  if (e.type === 'plan') return `<ol class="plan">${MODS.map(id => { const m = mod(id), v1 = S.versions[id][0]; return `<li><div class="ph"><i class="pb" aria-hidden="true"></i><span class="cid" style="font-size:12px">${id}</span><span>${esc(m.title)}</span>${m.deps.length ? `<span class="pill" style="height:22px" ${tipImg('Depends on ' + m.deps.join(' and '))}>${ic('link', 12)}<span class="mono">${m.deps.join(' ')}</span></span>` : ''}</div><div class="pg"><span>${ic('target', 12)}${esc(m.goal)}</span>${DATA.modules.find(x => x.id === id).criteria.map(c => `<span><i class="pb" aria-hidden="true"></i>Done when: ${esc(c.text)}</span>`).join('')}</div><div class="pi">${esc(v1.text)}</div></li>`; }).join('')}</ol>`;
+  if (e.kind === 'start') { const m = mod(e.m); return `<div class="det"><div class="dh">${ic(m.cur.by === 'you' ? 'user' : 'bot', 14)}<span>instructions v${m.cur.v} · by ${m.cur.by === 'you' ? 'you' : 'agent'}</span></div><div style="padding:8px 10px">${esc(m.cur.text)}</div></div>`; }
+  if (e.kind === 'finish') return critHTML(mod(e.m));
+  if (e.id === 'hold') return `<div class="flagbar" role="note">${ic('flag', 16)}<span>${esc(DATA.flag.text)}</span></div>`;
+  if (e.id === 'run0') return `<div class="det"><div class="dh">${ic('playc', 14)}<span>task</span></div><div style="padding:8px 10px">${esc(DATA.task)}</div></div>`;
+  /* run finished: plain event data only (no per-module aggregate) */
+  if (e.id === 'run1') return `<div class="det"><div class="dh">${glyph('end', 14)}<span>4 modules · 1 flag · 6:00</span></div><div style="padding:8px 10px">${esc(DATA.task)}</div></div>`;
+  return '';
+}
+function logRows() {
+  const ev = visibleEvents();
+  if (!ev.length) return `<li class="lempty">${glyph('pending', 16)}<span>No matching events</span></li>`;
+  const w = workingMod(), acts = w ? ev.filter(e => e.mod === w) : [];
+  const latestAct = acts.length ? acts[acts.length - 1].id : null;
+  const ed = S.editor;
+  return ev.map((e, i) => {
+    const open = S.lexp === e.id, cur = S.lcur === i;
+    const icon = e.glyph ? glyph(e.glyph, 16) : ic(e.icon, 16, 'ic');
+    let badge = '';
+    if (e.a && (e.a.type === 'write' || e.a.type === 'edit')) badge = diffbar(e.a.add, e.a.del);
+    if (e.a && e.a.type === 'test') badge = pips(e.a.pass, e.a.fail, e.a.live);
+    /* the flag icon is decoration; the row's own tooltip and hidden text carry the meaning */
+    if (e.flag) badge += `<span class="lflag" aria-hidden="true">${ic('flag', 14)}</span>`;
+    const edHere = ed && ed.row === e.id;
+    const det = open ? logDetail(e) : '';
+    const cls = (open ? ' open' : '') + (cur ? ' cur' : '') + (edHere ? ' edit' : '') + (e.id === latestAct ? ' act' : '') + (edHere && ed.kind === 'redo' ? ' cut' : '');
+    return `<li class="lr${cls}">
+      <div class="lrh"><button class="lrb" data-a="lrow" data-v="${e.id}" data-k="lr-${e.id}" aria-expanded="${open}"${e.flag ? ` data-tip="${esc(DATA.flag.text)}"` : ''}><span class="tm">${e.t}</span><span class="tag">${e.mod}</span>${icon}<span class="sm2">${esc(e.text)}${e.flag ? '<span class="sr-only">, flagged</span>' : ''}</span><span class="bdg">${badge}</span></button>${rowActions(e, latestAct)}</div>
+      ${det ? `<div class="lrd">${det}</div>` : ''}
+      ${edHere ? `<div class="lred">${ed.kind === 'redo' ? redoPanel(mod(ed.id)) : editorHTML(mod(ed.id))}</div>` : ''}
+    </li>`;
+  }).join('');
+}
+
+/* =====================================================================
+   MOCKUP CHROME (not product)
+   ===================================================================== */
+function renderMock() {
+  const st = [['1', 'Working'], ['2', 'Waiting for you'], ['3', 'Finished'], ['4', 'Redo preview']];
+  $('#mock').innerHTML = `<span class="mock-tag" tabindex="0" data-tip="Keys: 1–4 state · v view · t theme · j/k move · Enter open · Esc back">Mockup</span>
+    <div class="mg" role="group" aria-label="Scenario state">${st.map(s => `<button class="mb" data-a="state" data-v="${s[0]}" aria-pressed="${S.state === +s[0]}" data-k="ms-${s[0]}"><span class="kb">${s[0]}</span>${s[1]}</button>`).join('')}</div>
+    <div class="mg" role="group" aria-label="View (study condition)">${[['modules', 'Modules'], ['log', 'Log']].map(v => `<button class="mb" data-a="view" data-v="${v[0]}" aria-pressed="${S.view === v[0]}" data-k="mv-${v[0]}">${v[1]}</button>`).join('')}</div>
+    <button class="mb" data-a="theme" aria-label="Theme: ${S.theme}. Switch to ${S.theme === 'dark' ? 'light' : 'dark'}" data-k="mtheme">${ic(S.theme === 'dark' ? 'moon' : 'sun', 14)}${S.theme === 'dark' ? 'Dark' : 'Light'}</button>`;
+}
+
+/* =====================================================================
+   RENDER + ACTIONS
+   ===================================================================== */
+/* bar sizes drive scroll-padding, so focus never lands under the sticky Now bar or the fixed mockup pill */
+function setBarVars() {
+  const r = document.documentElement.style;
+  r.setProperty('--now-h', $('#now').offsetHeight + 'px');
+  r.setProperty('--mock-h', Math.max(0, Math.round(innerHeight - $('#mock').getBoundingClientRect().top)) + 'px');
+}
+function ensureVisible(el) {
+  if (!el || !el.getBoundingClientRect || !el.isConnected || el.closest('#now, #mock')) return;
+  const r = el.getBoundingClientRect(), top = $('#now').offsetHeight + 8, bot = $('#mock').getBoundingClientRect().top - 8;
+  if (r.height > bot - top) return;
+  if (r.top < top || r.bottom > bot) el.scrollIntoView({ block: 'nearest' });
+}
+/* the Stop confirmation is modal: everything else in the bar and the page is inert while it is open */
+function applyModal() {
+  const pop = S.pop === 'stop' ? $('#now .pop') : null;
+  $('#main').inert = !!pop;
+  for (let n = pop; n && n.id !== 'now'; n = n.parentElement)
+    Array.from(n.parentElement.children).forEach(c => { if (c !== n) c.inert = true; });
+}
+function fallbackFocus() {
+  if (S.view === 'modules') return $(`[data-k="st-${S.sel}"]`) || $('#cardT');
+  return $('#logList');
+}
+function render() {
+  hideTip();
+  const ae = document.activeElement;
+  const inProduct = !!(ae && ae !== document.body && ae.closest && ae.closest('#now, #main'));
+  /* S.focus may list several keys: the first one still rendered wins */
+  const keys = [].concat(S.focus || (ae && ae.dataset ? ae.dataset.k : null)).filter(Boolean);
+  S.focus = null;
+  document.documentElement.setAttribute('data-theme', S.theme);
+  renderNow();
+  $('#main').innerHTML = S.view === 'modules' ? renderMetro() + renderWork() : renderLog();
+  renderMock();
+  if (S.view === 'modules') drawMetro();
+  applyModal();
+  setBarVars();
+  if (S.tail) { S.tail = false; window.scrollTo(0, document.documentElement.scrollHeight); }
+  if (S.scrollEd) { S.scrollEd = false; const ed = $('.lred') || $('.redo') || $('.ed'); if (ed) ed.scrollIntoView({ block: 'nearest' }); }
+  let el = null;
+  for (const k of keys) { el = document.querySelector(`[data-k="${String(k).replace(/["\\]/g, '\\$&')}"]`); if (el) break; }
+  if (!el && (keys.length || inProduct)) el = fallbackFocus();
+  if (el) { el.focus({ preventScroll: true }); ensureVisible(el); }
+}
+function announceState() {
+  if (isWaiting()) announce('Decision needed. The agent is waiting before M4. ' + DATA.flag.text + '.', true);
+  else if (S.state === 1) announce('Agent working on M3, Rounding and minimum subtotal.');
+  else if (S.state === 3) announce('Run finished. 1 flag.');
+  else announce('Run finished. Redo preview from M3 is open.');
+}
+function setState(n) {
+  const prev = S.state;
+  S.state = n; S.sel = defaultSel(n); S.evOpen = false; S.evTab = 'steps'; S.exp = null;
+  S.pauseAt = null; S.pop = null; S.versions = initVersions(); S.wait = 42; S.notes = 0; S.stopped = null;
+  S.drafts = {}; S.noteDraft = ''; S.ulog = []; S.seq = 0; S.evOpener = null; S.edOpener = null;
+  S.lexp = null; S.lcur = -1;
+  S.editor = n === 4 ? { kind: 'redo', id: 'M3', text: DATA.modules[2].instr, note: 'Requirement says round half up, not truncate', row: 's-M3' } : null;
+  S.scrollEd = n === 4 && S.view === 'log';
+  S.tail = n <= 2 && S.view === 'log';
+  S.focus = 'ms-' + n;
+  render();
+  if (n !== prev) announceState();
+}
+function switchView(v, fk) {
+  S.view = v; S.pop = null; S.exp = null; S.lexp = null; S.lcur = -1;
+  if (S.editor) { if (v === 'modules') S.sel = S.editor.id; S.scrollEd = true; }
+  else S.tail = v === 'log' && S.state <= 2;   /* the log opens at its live end, like the Modules card */
+  S.focus = fk; render();
+}
+const draftKey = ed => ed.kind + ':' + ed.id;
+/* an editor that closes because the selection moved keeps its text as a draft */
+function stashEditor() {
+  const ed = S.editor; if (!ed) return;
+  S.drafts[draftKey(ed)] = { text: ed.text, note: ed.note };
+  S.editor = null; S.edOpener = null;
+}
+function selectMod(id) {
+  if (S.view !== 'modules') return;
+  if (S.sel === id) {
+    if (redoTarget() === id) return;   /* the redo panel holds the evidence column: nothing hidden changes */
+    S.evOpen = true; S.evOpener = 'st-' + id; S.focus = 'tab-' + S.evTab; render(); return;
+  }
+  if (S.editor && S.editor.id !== id) stashEditor();
+  S.sel = id; S.exp = null; S.evOpener = null;
+  S.focus = 'st-' + id;
+  render();
+}
+function defaultRow(kind, id) {
+  if (kind === 'change') return 'plan';
+  if (kind === 'correct') { const ev = events().filter(e => e.mod === id); return ev.length ? ev[ev.length - 1].id : 's-' + id; }
+  return 's-' + id;
+}
+function openEditor(kind, id, row, opener) {
+  const m = mod(id);
+  /* the Log draws the redo cut on the Start row the conversation rewinds to */
+  row = kind === 'redo' ? 's-' + id : (row || defaultRow(kind, id));
+  if (S.editor && draftKey(S.editor) === kind + ':' + id) { S.editor.row = row; if (opener) S.edOpener = opener; }
+  else {
+    stashEditor();
+    const d = S.drafts[kind + ':' + id];
+    S.editor = { kind, id, text: d ? d.text : (kind === 'correct' ? '' : m.cur.text), note: d ? d.note : '', row };
+    S.edOpener = opener || null;
+  }
+  S.pop = null;
+  if (S.view === 'modules') { if (S.sel !== id) { S.exp = null; S.evOpener = null; } S.sel = id; }
+  S.focus = kind === 'redo' ? 'rdtext' : 'edtext';
+  S.scrollEd = true;
+  render();
+  /* prefilled instructions: the caret starts at the end, so typing adds to them instead of going in front */
+  const ta = document.activeElement;
+  if (ta && ta.tagName === 'TEXTAREA') { const n = ta.value.length; ta.setSelectionRange(n, n); }
+}
+/* Esc (keep = true) keeps the typed text as a draft; Cancel discards it. Focus returns to whatever opened the editor. */
+function closeEditor(keep) {
+  const ed = S.editor; if (!ed) return;
+  if (keep) S.drafts[draftKey(ed)] = { text: ed.text, note: ed.note }; else delete S.drafts[draftKey(ed)];
+  const op = S.edOpener; S.editor = null; S.edOpener = null;
+  if (op && op.sel !== undefined && S.view === 'modules') S.sel = op.sel;   /* opened from the decision card */
+  S.focus = [op && op.k, S.view === 'modules' ? 'prim' : 'lr-' + ed.row];
+  render();
+}
+function saveEditor() {
+  const ed = S.editor;
+  if (!ed) return;
+  if (ed.kind === 'correct' && !ed.text.trim()) { S.focus = 'edtext'; render(); return; }
+  delete S.drafts[draftKey(ed)];
+  const op = S.edOpener, back = op && op.k; S.edOpener = null; S.editor = null;
+  if (ed.kind === 'change') {
+    const vs = S.versions[ed.id], nv = vs[vs.length - 1].v + 1;
+    vs.push({ v: nv, by: 'you', seq: ++S.seq, t: runClock(), text: ed.text });
+    S.focus = S.view === 'modules' ? [back && back.indexOf('dc-') === 0 ? back : null, 'vchip'] : [back, 'lr-plan'];
+    render(); toast(`${ed.id} instructions saved as v${nv} · by you`);
+  } else {
+    S.notes++;
+    logUser({ mod: ed.id, icon: 'note', text: `Correction for ${ed.id} · by you`, detail: ed.text });
+    S.focus = S.view === 'modules' ? 'prim' : [back, 'lr-' + ed.row];
+    render(); toast('Correction queued · reaches the agent after pytest');
+  }
+}
+function togglePause(at, fk) {
+  const was = S.pauseAt;
+  S.pauseAt = at; S.focus = fk;
+  logUser({ icon: 'pausestop', text: at ? `Pause armed after ${at}` : `Pause removed (was after ${was})` });
+  render();
+}
+function stopAgent() {
+  S.stopped = { from: S.state === 2 ? 2 : 1, t: runClock() };
+  S.pop = null; S.pauseAt = null;
+  if (S.editor && S.editor.kind === 'correct') stashEditor();   /* nothing left to correct */
+  logUser({ glyph: 'stopped', text: 'Stopped by you' });
+  if (S.view === 'modules') {
+    if (S.editor && S.editor.id !== 'M3') stashEditor();
+    if (S.sel !== 'M3') { S.exp = null; S.evOpener = null; }
+    S.sel = 'M3'; S.focus = ['prim', 'st-M3'];
+  } else S.focus = 'lr-' + S.ulog[S.ulog.length - 1].id;
+  render(); toast('Agent stopped');
+}
+/* mockup shortcut: continuing jumps to the scenario's finished run (M4 started at 4:26) */
+function continueRun() {
+  if (S.editor) stashEditor();
+  S.state = 3; S.sel = null; S.pop = null; S.pauseAt = null; S.evOpen = false; S.exp = null; S.lexp = null; S.lcur = -1;
+  S.focus = S.view === 'modules' ? 'st-M4' : 'lr-cont';
+  render(); toast('Continued to M4 · the mockup skips to the finished run');
+}
+const POP_KEY = { note: 'notebtn', stop: 'stopbtn', flags: 'flagbtn' };
+/* Esc goes up one level from wherever focus is; on bar controls it only dismisses the tooltip */
+function escapeLevel(t) {
+  if (S.pop) { S.focus = POP_KEY[S.pop]; S.pop = null; render(); return true; }
+  t = t && t.closest ? t : document.body;
+  if (t.closest('#now, #mock')) return false;
+  const body = t === document.body;
+  if (S.editor && (body || t.closest('.ed, .redo'))) { closeEditor(true); return true; }
+  if (S.view === 'modules') {
+    const inEv = !!t.closest('#evCol'), inCard = !!t.closest('.card'), inSt = !!t.closest('#stations');
+    if (S.exp && (inEv || body)) { S.focus = 'step-' + S.exp; S.exp = null; render(); return true; }
+    if (S.editor && inCard) { closeEditor(true); return true; }
+    if (S.evOpen && (inEv || inCard || inSt || body)) {
+      const own = inSt && t.closest('[data-k]');
+      S.evOpen = false; S.exp = null;
+      S.focus = own ? own.dataset.k : [S.evOpener, 'st-' + (S.sel || 'M3')]; S.evOpener = null;
+      render(); return true;
+    }
+    if (S.sel && S.state >= 3 && (inCard || inSt || body)) { S.focus = 'st-' + S.sel; S.sel = null; render(); return true; }
+    if (S.sel && inCard) { S.focus = 'st-' + S.sel; render(); return true; }
+    return false;
+  }
+  if (S.lexp && (body || t.closest('#logList'))) { S.focus = 'lr-' + S.lexp; S.lexp = null; render(); return true; }
+  return false;
+}
+/* j/k move from the FOCUSED item (station or log row), falling back to the selection only outside the list */
+function move(dir, t) {
+  if (S.view === 'modules') {
+    const ids = ['pre'].concat(MODS), st = t.closest('.st');
+    const base = st ? st.dataset.id : S.sel;
+    let i = base ? ids.indexOf(base) + dir : (dir > 0 ? 1 : ids.length - 1);
+    i = Math.max(0, Math.min(ids.length - 1, i));
+    const id = ids[i];
+    if (S.editor && S.editor.id !== id) stashEditor();
+    if (S.sel !== id) { S.exp = null; S.evOpener = null; }
+    S.sel = id; S.focus = 'st-' + id; render();
+  } else {
+    const ev = visibleEvents();
+    if (!ev.length) return;
+    const lr = t.closest('.lr'), b = lr && lr.querySelector('.lrb');
+    const cur = b ? ev.findIndex(x => x.id === b.dataset.v) : S.lcur;
+    S.lcur = Math.max(0, Math.min(ev.length - 1, (cur < 0 && dir < 0 ? ev.length : cur) + dir));
+    S.focus = 'lr-' + ev[S.lcur].id; render();
+  }
+}
+function openLevel() {
+  if (S.view === 'modules') {
+    if (!S.sel || redoTarget() === S.sel) return;
+    if (!S.evOpen) { S.evOpen = true; S.evOpener = 'st-' + S.sel; S.focus = 'tab-' + S.evTab; render(); return; }
+    const m = mod(S.sel);
+    if (m.actions.length) { S.evTab = 'steps'; S.exp = m.id + '-0'; S.focus = 'step-' + S.exp; render(); }
+  } else {
+    const ev = visibleEvents();
+    if (S.lcur >= 0 && ev[S.lcur]) { const id = ev[S.lcur].id; S.lexp = S.lexp === id ? null : id; S.focus = 'lr-' + id; render(); }
+  }
+}
+function openEv(b, tab, fk) {
+  if (!b.closest('#evCol')) S.evOpener = b.dataset.k;
+  S.evTab = tab; S.evOpen = true; S.focus = fk; render();
+}
+
+/* ---------- tooltip (hover + keyboard focus) ---------- */
+const tip = $('#tip');
+let tipEl = null, tipSrc = null;
+function legendHTML() {
+  return '<div>Activity ticks</div><div class="lg"><i class="t t-read"></i><span>read</span><i class="t t-edit"></i><span>edit or write</span><i class="t t-bash"></i><span>command</span><i class="t t-test"></i><span>tests passed</span><i class="t t-test fail"></i><span>a test failed</span><i class="t t-test live"></i><span>tests running</span></div>';
+}
+function showTip(el, src) {
+  const t = el.getAttribute('data-tip');
+  /* an open popover's trigger shows no tooltip (it would cover the popover) */
+  if (!t || el.getAttribute('aria-expanded') === 'true') { hideTip(); return; }
+  tipEl = el; tipSrc = src;
+  /* only a hover tip takes the pointer; a focus tip never blocks clicks on what it covers */
+  tip.style.pointerEvents = src === 'hover' ? 'auto' : 'none';
+  tip.innerHTML = t === 'legend' ? legendHTML() : esc(t);
+  tip.hidden = false;
+  const r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  /* evidence tabs: tooltip above, so it never covers the panel they control */
+  const above = el.getAttribute('role') === 'tab';
+  let top = above ? r.top - th - 8 : r.bottom + 8;
+  if (above && top < 8) top = r.bottom + 8;
+  if (!above && top + th > innerHeight - 8) top = r.top - th - 8;
+  const left = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, innerWidth - tw - 8));
+  tip.style.top = Math.max(8, top) + 'px';
+  tip.style.left = left + 'px';
+}
+function hideTip() { tip.hidden = true; tipEl = null; tipSrc = null; }
+/* hover tips follow real pointer movement; a focus tip is not hidden by the pointer resting elsewhere */
+/* a hover tip survives the short trip from its trigger onto the tip itself, so it can be read or magnified (WCAG 1.4.13) */
+let tipHideT = 0;
+document.addEventListener('mousemove', e => {
+  if (tip.contains(e.target)) { clearTimeout(tipHideT); return; }
+  const el = e.target.closest ? e.target.closest('[data-tip]') : null;
+  if (el) { clearTimeout(tipHideT); if (el !== tipEl) showTip(el, 'hover'); }
+  else if (tipEl && tipSrc === 'hover') { clearTimeout(tipHideT); tipHideT = setTimeout(() => { if (tipSrc === 'hover') hideTip(); }, 250); }
+}, { passive: true });
+document.addEventListener('focusin', e => {
+  const el = e.target.closest ? e.target.closest('[data-tip]') : null;
+  if (el) showTip(el, 'focus'); else if (tipSrc !== 'hover') hideTip();
+  requestAnimationFrame(() => { if (document.activeElement === e.target) ensureVisible(e.target); });
+});
+document.documentElement.addEventListener('mouseleave', () => { if (tipSrc === 'hover') hideTip(); });
+window.addEventListener('scroll', () => {
+  if (tipEl && tipSrc === 'focus' && tipEl === document.activeElement && tipEl.isConnected) showTip(tipEl, 'focus'); else hideTip();
+}, true);
+
+/* ---------- toast + live regions ---------- */
+function announce(msg, assertive) {
+  /* a decision alert is only true while waiting: once the run moves on, the next status message clears it */
+  if (!assertive && !isWaiting()) { const a = $('#alert'); clearTimeout(a._t); a.textContent = ''; }
+  const el = $(assertive ? '#alert' : '#live');
+  el.textContent = '';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = msg; }, 80);
+}
+let toastT = 0;
+function toast(msg) {
+  const el = $('#toast');
+  el.innerHTML = ic('check', 16) + '<span>' + esc(msg) + '</span>';
+  el.hidden = false;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { el.hidden = true; }, 2800);
+  announce(msg);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]');
+  if (S.pop && !e.target.closest('.pop') && !(b && b.dataset.a === 'pop')) {
+    S.pop = null;
+    if (!b) { render(); return; }
+  }
+  if (!b || b.getAttribute('aria-disabled') === 'true') return;
+  const a = b.dataset.a, v = b.dataset.v;
+  /* while the redo panel holds the evidence column, evidence triggers change nothing hidden */
+  const redoCol = S.view === 'modules' && !!redoTarget() && redoTarget() === S.sel;
+  switch (a) {
+    case 'state': setState(+v); break;
+    case 'view': switchView(v, 'mv-' + v); break;
+    case 'theme': S.theme = S.theme === 'dark' ? 'light' : 'dark'; S.focus = 'mtheme'; render(); break;
+    case 'sel': selectMod(v); break;
+    case 'pause': togglePause(S.pauseAt ? null : nextBoundary(), 'pausebtn'); break;
+    case 'bnd': togglePause(S.pauseAt === v ? null : v, 'bnd-' + v); break;
+    case 'pop':
+      S.pop = S.pop === v ? null : v;
+      S.focus = S.pop === 'note' ? 'notein' : S.pop === 'stop' ? 'stopcancel' : S.pop === 'flags' ? 'flaggo' : POP_KEY[v];
+      render(); hideTip(); break;
+    case 'pop-close': S.focus = POP_KEY[S.pop]; S.pop = null; render(); break;
+    case 'stop-go': stopAgent(); break;
+    case 'continue': continueRun(); break;
+    case 'flag-go':
+      S.pop = null;
+      if (S.view === 'modules') {
+        if (S.editor && S.editor.id !== 'M3') stashEditor();
+        if (S.sel !== 'M3') { S.exp = null; S.evOpener = null; }
+        S.sel = 'M3'; S.focus = 'st-M3';
+      } else { S.lf.flag = true; S.lcur = -1; S.focus = 'lff'; }
+      render(); break;
+    case 'ev': if (redoCol) break; S.evOpen = !S.evOpen; if (S.evOpen) S.evOpener = 'evtoggle'; S.focus = 'evtoggle'; render(); break;
+    case 'tab': if (redoCol) break; openEv(b, v, 'tab-' + v); break;
+    case 'go-diff': if (redoCol) break; openEv(b, 'diff', 'tab-diff'); break;
+    case 'go-tests': if (redoCol) break; openEv(b, 'tests', 'tab-tests'); break;
+    case 'go-read': {
+      if (redoCol) break;
+      const m = mod(S.sel || 'M3'), steps = foldSteps(m.actions);
+      const i = steps.findIndex(s => s.type === 'read' ? s.target === v : s.type === 'fold' && s.items.some(x => x.target === v));
+      S.exp = i >= 0 ? m.id + '-' + i : null;
+      openEv(b, 'steps', i >= 0 ? 'step-' + S.exp : 'tab-steps'); break;
+    }
+    case 'step': S.exp = S.exp === v ? null : v; S.focus = 'step-' + v; render(); break;
+    case 'edit': { const p = v.split(':'); openEditor(p[0], p[1], b.dataset.row, { k: b.dataset.k, sel: b.closest('#now') ? S.sel : undefined }); break; }
+    case 'ed-cancel': closeEditor(false); break;
+    case 'ed-save': saveEditor(); break;
+    case 'redo-go': {
+      const ed = S.editor; if (!ed) break;
+      const running = isLive() && S.state === 1;
+      delete S.drafts[draftKey(ed)];
+      S.editor = null; S.edOpener = null;
+      S.focus = S.view === 'modules' ? ['prim', 'st-' + ed.id] : 'lr-' + ed.row;
+      render(); toast(`${running ? 'Agent stopped · redo' : 'Redo'} from ${ed.id} started (mockup only)`); break;
+    }
+    case 'lf-mod': S.lf.mod = v; S.lcur = -1; S.focus = 'lfm-' + v; render(); break;
+    case 'lf-type': S.lf.type = v; S.lcur = -1; S.focus = 'lft-' + v; render(); break;
+    case 'lf-flag': S.lf.flag = !S.lf.flag; S.lcur = -1; S.focus = 'lff'; render(); break;
+    case 'lrow': { S.lexp = S.lexp === v ? null : v; S.lcur = visibleEvents().findIndex(x => x.id === v); S.focus = 'lr-' + v; render(); break; }
+  }
+});
+document.addEventListener('submit', e => {
+  const f = e.target;
+  if (f.dataset.f !== 'note') return;
+  e.preventDefault();
+  const inp = $('#noteIn'), val = inp ? inp.value.trim() : '';
+  if (!val) { if (inp) inp.focus(); return; }
+  S.notes++; S.noteDraft = ''; S.pop = null; S.focus = 'notebtn';
+  logUser({ icon: 'note', text: 'Note to agent · by you', detail: val, to: S.state === 2 ? 'M4' : 'M3' });
+  render();
+  toast(S.state === 1 ? 'Note queued · reaches the agent after pytest' : 'Note queued · reaches the agent when it continues');
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.bind && S.editor) S.editor[t.dataset.bind] = t.value;
+  if (t.id === 'noteIn') S.noteDraft = t.value;
+  if (t.id === 'q') { S.lf.q = t.value; S.lcur = -1; $('#logList').innerHTML = logRows(); }
+});
+/* non-modal popovers (note, flags) close when focus leaves them and their trigger, without moving focus */
+document.addEventListener('focusout', e => {
+  if (S.pop !== 'note' && S.pop !== 'flags') return;
+  const ctl = e.target.closest && e.target.closest('.ctl'), to = e.relatedTarget;
+  if (!ctl || !to || ctl.contains(to) || !ctl.querySelector('.pop')) return;
+  S.pop = null;
+  ctl.querySelector('.pop').remove();
+  const trig = ctl.querySelector('[aria-expanded="true"]');
+  if (trig) trig.setAttribute('aria-expanded', 'false');
+});
+document.addEventListener('keydown', e => {
+  const t = e.target && e.target.closest ? e.target : document.body;
+  if (S.pop === 'stop' && e.key === 'Tab') {
+    const f = $$('#now .pop button');
+    if (!f.length) return;
+    e.preventDefault();
+    const i = f.indexOf(document.activeElement);
+    f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    return;
+  }
+  const typing = t.matches('input, textarea');
+  if (e.key === 'Escape') {
+    if (typing && t.id === 'q' && t.value) return;
+    if (escapeLevel(t)) e.preventDefault(); else hideTip();
+    return;
+  }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  const role = t.getAttribute('role');
+  if (role === 'tab' && /^(ArrowRight|ArrowLeft|Home|End)$/.test(e.key)) {
+    const tabs = $$('[role="tab"]', t.parentNode), i = tabs.indexOf(t);
+    const n = e.key === 'Home' ? tabs[0] : e.key === 'End' ? tabs[tabs.length - 1] : tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+    if (n) { e.preventDefault(); S.evTab = n.dataset.v; S.focus = n.dataset.k; render(); }
+    return;
+  }
+  /* log filter radiogroups: roving tabindex, arrows move + select */
+  if (role === 'radio' && /^Arrow(Right|Left|Down|Up)$/.test(e.key)) {
+    const rs = $$('[role="radio"]', t.closest('[role="radiogroup"]')), i = rs.indexOf(t);
+    const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
+    const n = rs[(i + d + rs.length) % rs.length];
+    if (n) { e.preventDefault(); n.click(); }
+    return;
+  }
+  if (t.closest('.pop')) return;
+  /* product shortcuts j/k/Enter only act while the plan, the card or the log list has focus (WCAG 2.1.4) */
+  const scoped = !t.closest('#now, #mock, .redo, .ed') && !!t.closest('#stations, .card, #logList');
+  switch (e.key) {
+    case 'j': case 'J': if (scoped) { e.preventDefault(); move(1, t); } break;
+    case 'k': case 'K': if (scoped) { e.preventDefault(); move(-1, t); } break;
+    case 'Enter': if (scoped && (t.id === 'cardT' || t.id === 'logList')) { e.preventDefault(); openLevel(); } break;
+    /* mockup chrome only */
+    case '1': case '2': case '3': case '4': setState(+e.key); break;
+    case 'v': switchView(S.view === 'modules' ? 'log' : 'modules', null); break;
+    case 't': S.theme = S.theme === 'dark' ? 'light' : 'dark'; render(); break;
+  }
+});
+let rz = 0;
+window.addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { setBarVars(); if (S.view === 'modules') drawMetro(); }); });
+if (window.ResizeObserver) { const ro = new ResizeObserver(() => setBarVars()); ro.observe($('#now')); ro.observe($('#mock')); }
+setInterval(() => {
+  if (!isWaiting()) return;
+  S.wait++;
+  const el = $('#waitT'), p = $('#waitP');
+  if (el) el.textContent = fmt(S.wait);
+  if (p) p.setAttribute('aria-label', 'Waiting for you for ' + fmt(S.wait));
+}, 1000);
+
+render();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { setBarVars(); if (S.view === 'modules') drawMetro(); });
+})();
+</script>
+</body>
+</html>

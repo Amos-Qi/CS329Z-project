@@ -17,6 +17,8 @@
 		"test": "vitest run",
 		"check": "biome check . && npm run typecheck",
 		"format": "biome check --write .",
+		"record": "node --env-file-if-exists=.env packages/server/src/record.ts",
+		"demo:record": "node --env-file-if-exists=.env packages/server/src/record.ts --agent scripted",
 		"grade": "tasks/.venv/bin/python tasks/grade.py"
 	},
 	"devDependencies": {

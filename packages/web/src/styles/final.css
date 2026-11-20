@@ -1,0 +1,169 @@
+/* biome-ignore-all lint/complexity/noImportantStyles: reduced motion has to beat every skin's animation */
+/* biome-ignore-all lint/style/noDescendingSpecificity: rule order is the reviewed mockup's; reordering changes the cascade */
+/*
+ * Loaded after the skin, so it wins over every skin: prefers-reduced-motion and the harness's Motion
+ * switch stop all animation, transition, drift and tilt (a skin hides its own decoration that has no
+ * still form), and the narrow-screen layout.
+ */
+@media (prefers-reduced-motion: reduce) {
+	/* no animation, drift, tilt or snap: hover and press keep only their colour and glow */
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+		translate: none !important;
+		rotate: none !important;
+	}
+}
+/* the harness's Motion switch, off: the same as prefers-reduced-motion */
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+	animation: none !important;
+	transition: none !important;
+	translate: none !important;
+	rotate: none !important;
+}
+@media (max-width: 1100px) {
+	.card.noev .cbody {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.card.sum {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.card.sum .ce {
+		border-left: 0;
+		border-top: 1px solid var(--hair-2);
+	}
+}
+@media (max-width: 900px) {
+	.card,
+	.card.sum {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.ce {
+		border-left: 0;
+		border-top: 1px solid var(--hair-2);
+	}
+	.facts {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.ch {
+		flex-wrap: wrap;
+	}
+}
+@media (max-width: 768px) {
+	.now {
+		padding: 10px 16px;
+		gap: 10px;
+	}
+	.now-title {
+		max-width: calc(100vw - 120px);
+	}
+	.work,
+	.log,
+	.raw,
+	.home {
+		padding-left: 16px;
+		padding-right: 16px;
+		padding-bottom: calc(var(--harness-h, 140px) + 40px);
+	}
+	.metro {
+		padding: 40px 16px 10px;
+	}
+	.st-ev,
+	.st-lab .nm {
+		display: none;
+	}
+	.lrb {
+		grid-template-columns: 40px 36px 18px minmax(0, 1fr);
+	}
+	.lrb .bdg {
+		grid-column: 4;
+	}
+	.lrb .bdg:empty {
+		display: none;
+	}
+	/* narrow: actions wrap under the row and only open for the current/open/focused row, so summaries keep their width.
+     Collapsed (zero height), never display:none, so both Tab and Shift+Tab still reach them and :focus-within opens them. */
+	.lrh {
+		flex-wrap: wrap;
+		row-gap: 0;
+	}
+	.lra {
+		display: flex;
+		min-width: 0;
+		width: 100%;
+		justify-content: flex-start;
+		max-height: 0;
+		overflow: hidden;
+		opacity: 0;
+		pointer-events: none;
+		padding: 0 12px 0 98px;
+	}
+	.lr.act .lra,
+	.lr.cur .lra,
+	.lr.open .lra,
+	.lr.edit .lra,
+	.lr:focus-within .lra {
+		max-height: none;
+		overflow: visible;
+		opacity: 1;
+		pointer-events: auto;
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+	.lra:empty {
+		display: none;
+	}
+	.pop {
+		position: fixed;
+		left: 16px;
+		right: 16px;
+		width: auto;
+		top: calc(var(--now-h, 64px) + 8px);
+	}
+	.train {
+		width: 26px;
+	}
+	.train i {
+		width: 20px;
+		animation: none;
+	}
+	.train i::before {
+		left: 4px;
+	}
+	.train i::after {
+		left: 12px;
+	}
+	.lrd,
+	.lred {
+		padding-left: 12px;
+	}
+	.search {
+		margin-left: 0;
+		flex: 1;
+	}
+	.cq li {
+		grid-template-columns: 24px minmax(0, 1fr);
+	}
+	.cq .k {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	.harness {
+		border-radius: 14px;
+		bottom: 8px;
+	}
+	.hg {
+		flex-wrap: wrap;
+		justify-content: center;
+		border-radius: 12px;
+	}
+}

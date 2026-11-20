@@ -36,8 +36,17 @@ export interface ModulesHost {
 }
 
 export interface ModulesExtensionOptions {
-	/** Bash commands matching this are recorded as test runs. Default: /\bpytest\b/. */
+	/**
+	 * A bash command is recorded as a test run when one of its simple commands (quoted strings and heredoc
+	 * bodies removed) matches this. Default: TEST_COMMAND (pytest or `python -m pytest`, `node --test`, or a
+	 * package's test script such as `npm test`).
+	 */
 	testCommandPattern?: RegExp;
 	/** Append a reminder to mutating tool results when no module is active. Default: true. */
 	remindUnassigned?: boolean;
+	/**
+	 * Light gate (docs/design.md §10): block edit and write calls while no module is active, telling the
+	 * agent to plan and start a module first. Default: false (the protocol only reminds).
+	 */
+	gateEdits?: boolean;
 }

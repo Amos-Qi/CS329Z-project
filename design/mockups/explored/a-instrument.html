@@ -1,0 +1,1623 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Observation Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- Tokens: dark (default) ---------- */
+:root{
+  --bg:#0F172A; --surface:#1B2336; --muted:#272F42; --primary:#1E293B;
+  --border:#475569; --border-strong:#64748B; --hair:rgba(148,163,184,.16); --hair-2:rgba(148,163,184,.28);
+  --connector:#64748B;
+  --fg:#F8FAFC; --fg-2:#CBD5E1; --fg-muted:#94A3B8;
+  --ok:#22C55E; --ok-bg:rgba(34,197,94,.12);
+  --warn:#F59E0B; --warn-fg:#F59E0B; --warn-bg:#3A2C0E; --warn-line:rgba(245,158,11,.6);
+  --danger:#EF4444; --danger-fg:#F87171; --danger-solid:#C62828; --danger-bg:rgba(239,68,68,.10);
+  --active:#60A5FA; --active-bg:rgba(96,165,250,.14);
+  --pending:#8391A7;
+  --accent:#60A5FA; --accent-hover:#93C5FD; --on-accent:#0F172A; --on-danger:#FFFFFF;
+  --focus:#93C5FD; --knock:#1B2336;
+  --read:#94A3B8; --edit:#60A5FA; --bash:#E2E8F0;
+  --add-bg:rgba(34,197,94,.13); --del-bg:rgba(239,68,68,.13); --add-fg:#4ADE80; --del-fg:#FCA5A5;
+  --shadow:0 10px 28px rgba(2,6,23,.45);
+  --mock:#C084FC; --mock-bg:#161226; --mock-fg:#E9D5FF;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:6px; --t:180ms;
+}
+/* ---------- Tokens: light (re-tuned, not inverted) ---------- */
+:root[data-theme="light"]{
+  --bg:#F4F6FA; --surface:#FFFFFF; --muted:#EEF2F7; --primary:#FFFFFF;
+  --border:#CBD5E1; --border-strong:#8492A6; --hair:rgba(15,23,42,.09); --hair-2:rgba(15,23,42,.16);
+  --connector:#64748B;
+  --fg:#0F172A; --fg-2:#334155; --fg-muted:#526175;
+  --ok:#15803D; --ok-bg:#EAF7EF;
+  --warn:#B45309; --warn-fg:#92400E; --warn-bg:#FDECC8; --warn-line:#C2850C;
+  --danger:#DC2626; --danger-fg:#B91C1C; --danger-solid:#B91C1C; --danger-bg:#FDF0F0;
+  --active:#2563EB; --active-bg:#EAF1FE;
+  --pending:#64748B;
+  --accent:#1D4ED8; --accent-hover:#1E40AF; --on-accent:#FFFFFF; --on-danger:#FFFFFF;
+  --focus:#2563EB; --knock:#FFFFFF;
+  --read:#64748B; --edit:#2563EB; --bash:#334155;
+  --add-bg:#E7F6EC; --del-bg:#FCEBEB; --add-fg:#166534; --del-fg:#B91C1C;
+  --shadow:0 10px 28px rgba(15,23,42,.12);
+  --mock:#7E22CE; --mock-bg:#FAF5FF; --mock-fg:#581C87;
+}
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/1.45 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+[aria-disabled="true"]{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+[hidden]{display:none!important}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:-.01em}
+.muted{color:var(--fg-muted)}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.i.s14{width:14px;height:14px}.i.s16{width:16px;height:16px}
+.g{flex:none;display:block}
+.cap{font-size:12px;font-weight:500;color:var(--fg-muted);display:flex;align-items:center;gap:6px;margin:0 0 8px;letter-spacing:.02em}
+.app{display:flex;flex-direction:column;height:100vh}
+.gap{flex:1}
+
+/* ---------- Buttons ---------- */
+.ib{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:var(--r);color:var(--fg-2);border:1px solid var(--hair-2);background:transparent;transition:background var(--t),border-color var(--t),color var(--t)}
+.ib:hover:not([aria-disabled="true"]){background:var(--muted);color:var(--fg)}
+.ib[aria-pressed="true"]{background:var(--active-bg);border-color:var(--active);color:var(--active)}
+.ib.danger{color:var(--danger-fg);border-color:color-mix(in srgb,var(--danger) 55%,transparent)}
+.ib.danger:hover:not([aria-disabled="true"]){background:var(--danger-bg);color:var(--danger-fg)}
+.btn{height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border-radius:var(--r);border:1px solid var(--hair-2);color:var(--fg);font-weight:500;font-size:14px;white-space:nowrap;transition:background var(--t),border-color var(--t),color var(--t);flex:none}
+.btn:hover:not([aria-disabled="true"]){background:var(--muted)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover:not([aria-disabled="true"]){background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.danger{color:var(--danger-fg);border-color:color-mix(in srgb,var(--danger) 60%,transparent)}
+.btn.danger:hover:not([aria-disabled="true"]){background:var(--danger-bg)}
+.btn.danger-solid{background:var(--danger-solid);border-color:var(--danger-solid);color:var(--on-danger)}
+.btn.danger-solid:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;color:var(--fg-muted)}
+.btn.ghost.danger:hover{color:var(--danger-fg)}
+.linkbtn{font-weight:500;text-align:left;border-radius:4px;min-height:28px;display:inline-flex;align-items:center}
+.linkbtn:hover{text-decoration:underline;text-underline-offset:3px}
+.sep{width:1px;height:24px;background:var(--hair-2);flex:none}
+
+/* ---------- Chips ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 7px;border-radius:4px;border:1px solid var(--hair-2);background:var(--muted);color:var(--fg-2);font-size:12px;white-space:nowrap;max-width:100%;flex:none}
+.chip .mono{overflow:hidden;text-overflow:ellipsis}
+.chip.ok{border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:var(--ok-bg);color:var(--fg)}
+.chip.ok .i{color:var(--ok)}
+.chip.strike{text-decoration:line-through;text-decoration-color:var(--danger-fg);text-decoration-thickness:1.5px;color:var(--fg-muted);background:transparent;border-style:dashed}
+.chip.ver{background:transparent;height:28px;cursor:pointer;transition:border-color var(--t)}
+.chip.ver:hover{border-color:var(--border-strong)}
+.chip.you{border-color:var(--active);color:var(--active)}
+
+/* ---------- Now bar (Level 0) ---------- */
+.now{flex:none;position:relative;z-index:20;background:var(--primary);border-bottom:1px solid var(--hair-2)}
+.now-row{display:flex;align-items:center;gap:14px;min-height:60px;padding:10px 20px}
+.now-state{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto}
+.now-title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.now-title .mono{font-size:14px;font-weight:500}
+.now-title .dot{color:var(--fg-muted);font-weight:400;margin:0 6px}
+.now-act{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:var(--r);background:var(--muted);color:var(--fg-2);flex:none}
+.now-mid{display:flex;align-items:center;gap:12px;flex:none}
+.now-ctl{display:flex;align-items:center;gap:8px;flex:none}
+.flagct{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 10px;border-radius:var(--r);color:var(--warn-fg);border:1px solid var(--warn-line);font-family:var(--mono);font-size:12px;font-weight:500}
+.flagct:hover{background:var(--warn-bg)}
+.next{display:inline-flex;align-items:center;gap:5px;color:var(--fg-muted);font-size:12px;white-space:nowrap}
+.next b{font-family:var(--mono);font-weight:500;color:var(--fg)}
+.segs{display:flex;align-items:center;gap:3px}
+.seg{position:relative;height:28px;width:42px;display:grid;align-items:center}
+.seg i{display:block;height:10px;border-radius:2px;border:1.5px solid var(--pending);position:relative;overflow:hidden}
+.seg.s-pending i{border-style:dashed}
+.seg.s-verified i{background:var(--ok);border-color:var(--ok)}
+.seg.s-unverified i{border-color:var(--ok)}
+.seg.s-unverified i::after{content:"";position:absolute;inset:0 50% 0 0;background:var(--ok)}
+.seg.s-working i{border-color:var(--active)}
+.seg.s-working i::after{content:"";position:absolute;top:0;bottom:0;left:0;width:55%;background:var(--active-bg);border-right:3px solid var(--active)}
+.seg.s-stopped i{border-color:var(--danger)}
+.seg.s-stopped i::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;transform:translate(-50%,-50%);background:var(--danger);border-radius:1px}
+.seg.sel i{outline:1.5px solid var(--fg-muted);outline-offset:2px}
+.seg-stop{width:3px;height:20px;border-radius:2px;background:var(--active);margin:0 2px;flex:none}
+.seg-hold{width:10px;height:10px;transform:rotate(45deg);background:var(--warn);margin:0 3px;flex:none}
+.now.waiting{background:var(--warn-bg);border-bottom:2px solid var(--warn);box-shadow:inset 4px 0 0 var(--warn)}
+.decide{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 20px 12px 54px}
+.timer{font-family:var(--mono);font-size:14px;color:var(--warn-fg);font-weight:500;display:inline-flex;align-items:center;gap:5px;flex:none}
+.happened{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:var(--r);background:var(--surface);border:1px solid var(--hair-2);color:var(--fg-2);font-size:12px;white-space:nowrap;flex:none}
+.note{display:flex;align-items:center;gap:10px;padding:10px 20px;border-top:1px solid var(--hair);background:var(--surface)}
+.note label{font-size:12px;color:var(--fg-muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.inp{height:32px;padding:0 10px;border-radius:var(--r);border:1px solid var(--border-strong);background:var(--bg);min-width:0}
+.inp:focus{border-color:var(--focus)}
+.inp:focus-visible,.ed textarea:focus-visible{outline-offset:1px}
+.note .inp{flex:1}
+.pop{position:absolute;right:16px;top:calc(100% + 6px);z-index:60;width:290px;padding:14px;border-radius:8px;background:var(--surface);border:1px solid var(--hair-2);box-shadow:var(--shadow)}
+.pop h3{margin:0 0 4px;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center}
+.pop p{margin:0 0 12px;color:var(--fg-muted);font-size:12px}
+.pop .row-btns{display:flex;justify-content:flex-end;gap:8px}
+
+/* ---------- Main layout ---------- */
+.main{flex:1;min-height:0;position:relative;display:grid;grid-template-columns:380px minmax(0,1fr)}
+.main.logv{grid-template-columns:minmax(0,1fr)}
+.pane{min-height:0;overflow:auto;padding:20px 20px 88px}
+.rail{border-right:1px solid var(--hair-2)}
+
+/* ---------- Plan rail (Level 1) ---------- */
+.rail-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:0 4px}
+.rail-head .cap{margin:0}
+.rlist{list-style:none;margin:0;padding:0;position:relative}
+/* connector sits above row backgrounds (so selection never breaks the line) and below the glyphs */
+.rlist::before{content:"";position:absolute;left:23px;top:20px;bottom:28px;width:2px;background:var(--connector);z-index:1}
+.rrow{--rowbg:var(--bg);position:relative;width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 18px;align-items:center;gap:10px;min-height:58px;padding:7px 8px 7px 12px;border-radius:var(--r);text-align:left;transition:background var(--t)}
+.rrow:hover{--rowbg:color-mix(in srgb,var(--muted) 60%,var(--bg));background:var(--rowbg)}
+.rrow.sel{--rowbg:var(--muted);background:var(--rowbg);box-shadow:inset 2px 0 0 var(--accent)}
+.rrow .gw{width:24px;height:24px;display:grid;place-items:center;background:var(--rowbg);border-radius:50%;position:relative;z-index:2;transition:background var(--t)}
+.rsum{min-height:44px;margin-bottom:8px}
+.rsum .gw{color:var(--fg-2)}
+.rrow .rid{font-family:var(--mono);font-size:12px;color:var(--fg-muted);font-weight:500}
+.rrow .rt{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow.pre{min-height:40px}
+.rrow.pre .rt{font-size:12px;color:var(--fg-muted);font-weight:400}
+.rbody{display:grid;gap:4px;min-width:0}
+.rl1{display:flex;align-items:center;gap:8px;min-width:0}
+.rrow.pre .rl1{justify-content:space-between}
+.rrow.dim .rt,.rrow.dim .rid{color:var(--fg-muted);text-decoration:line-through;text-decoration-color:var(--hair-2)}
+.rev{display:flex;align-items:center;gap:8px;min-height:14px}
+.fdots{display:flex;gap:4px;align-items:center}
+.fdot{width:8px;height:10px;border:1.5px solid var(--read);border-radius:1.5px;display:block}
+.tsq{width:6px;height:6px;background:var(--bash);display:block;margin-left:2px}
+.dep{width:18px;height:18px;display:grid;place-items:center;border-radius:4px;color:var(--fg-muted)}
+.dep.up,.dep.down{color:var(--accent);background:var(--active-bg)}
+.dep.keep{color:var(--ok)}
+.needs{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--fg-muted)}
+.needs b{font-family:var(--mono);font-weight:500;color:var(--fg-2)}
+.bound{position:relative;height:28px;display:flex;align-items:center;padding-left:46px;gap:6px;font-size:12px;color:var(--active)}
+.bound::before{content:"";position:absolute;left:36px;right:8px;top:50%;border-top:1.5px dashed var(--active)}
+.bound .bb{position:absolute;left:12px;top:2px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--bg);border:1.5px solid var(--active);color:var(--active);z-index:2}
+.bound .bt{position:relative;background:var(--bg);padding:0 6px;font-family:var(--mono)}
+.bound.hold{color:var(--warn)}
+.bound.hold::before{border-top-color:var(--warn)}
+.bound.hold .bb{border:0}
+.elap{font-family:var(--mono);font-size:12px;color:var(--active)}
+.khint{display:flex;gap:4px;margin:16px 0 0 12px;opacity:.85}
+kbd{font-family:var(--mono);font-size:12px;min-width:20px;height:20px;padding:0 5px;display:inline-grid;place-items:center;border-radius:4px;border:1px solid var(--hair-2);color:var(--fg-muted);background:var(--surface)}
+
+/* ---------- Graphics ---------- */
+.dbar{display:inline-flex;align-items:center;width:62px;height:12px;position:relative;flex:none}
+.dbar::before{content:"";position:absolute;left:30px;top:0;bottom:0;width:1.5px;background:var(--border-strong)}
+.dbar .dl,.dbar .da{position:absolute;top:3px;height:6px;border-radius:1px}
+.dbar .dl{right:33px;background:var(--danger)}
+.dbar .da{left:33px;background:var(--ok)}
+.dnum{font-family:var(--mono);font-size:12px;white-space:nowrap}
+.dnum .a{color:var(--add-fg)}.dnum .d{color:var(--del-fg);margin-left:4px}
+.pips{display:inline-flex;align-items:center;gap:2px;height:12px;flex:none}
+.pip{width:5px;height:8px;border-radius:1px;background:var(--ok);display:block}
+.pip.f{height:12px;background:transparent;border:1.5px solid var(--danger);position:relative;border-radius:1px}
+.pip.f::after{content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;background:var(--danger);transform:translateY(-50%)}
+.pips.none .pip{background:transparent;border:1px dashed var(--pending)}
+.strip{display:block;overflow:visible;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{transform-origin:12px 12px;animation:spin 1.6s linear infinite}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}*{transition:none!important}}
+
+/* ---------- Module card (Level 2) ---------- */
+.card{background:var(--surface);border:1px solid var(--hair-2);border-radius:10px;max-width:880px;margin:0 auto}
+.card-h{display:flex;align-items:center;gap:12px;padding:16px 20px 6px}
+.card-h h2{margin:0;font-size:18px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-h .cid{font-family:var(--mono);font-size:14px;color:var(--fg-muted);font-weight:500}
+.goal{margin:0;padding:0 20px 14px 56px;color:var(--fg-2)}
+.callout{margin:0 20px 14px;width:calc(100% - 40px);min-height:40px;padding:6px 12px;border-radius:var(--r);display:flex;align-items:center;gap:10px;border:1px solid var(--warn-line);background:var(--warn-bg);font-size:14px;text-align:left;transition:border-color var(--t)}
+.callout:hover{border-color:var(--warn)}
+.callout > .i{color:var(--warn-fg)}
+.callout .seq{display:inline-flex;align-items:center;gap:6px;color:var(--fg-2)}
+.callout .seq .ic-edit{display:inline-flex}
+.cgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);border-top:1px solid var(--hair)}
+.blk{padding:14px 20px;min-width:0}
+.cgrid .blk:nth-child(odd){border-right:1px solid var(--hair)}
+.cgrid .blk:nth-child(n+3){border-top:1px solid var(--hair)}
+.crit{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.crit li{display:grid;grid-template-columns:18px minmax(0,1fr) 22px;gap:8px;align-items:center}
+.src{width:22px;height:22px;display:grid;place-items:center;border-radius:4px;color:var(--fg-muted)}
+.src.tests{color:var(--ok)}.src.agent{color:var(--warn)}
+.trow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tnum{font-family:var(--mono);font-size:18px;font-weight:500}
+.tnum small{font-size:12px;color:var(--fg-muted)}
+.stale{display:inline-flex;align-items:center;gap:14px}
+.stale .g{opacity:.6}
+.stale .tnum{color:var(--fg-muted)}
+.livet{display:inline-flex;align-items:center}
+.frow{display:grid;grid-template-columns:16px minmax(0,1fr) auto auto 28px;gap:8px;align-items:center;min-height:30px}
+.frow .mono{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini{width:28px;height:28px;display:grid;place-items:center;border-radius:var(--r);color:var(--fg-muted);border:1px solid transparent;transition:background var(--t)}
+.mini:hover{background:var(--muted);color:var(--fg);border-color:var(--hair-2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.actblk{border-top:1px solid var(--hair);display:flex;align-items:center;gap:16px;padding:12px 20px 16px;flex-wrap:wrap}
+.actblk .cap{margin:0}
+.stripw{flex:1;min-width:120px;display:flex;align-items:center;gap:10px}
+.stripw .mono{color:var(--fg-muted)}
+.stripw .strip{max-width:calc(100% - 80px);height:auto}
+.empty{color:var(--fg-muted);font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;color:var(--fg-2)}
+.badge.ok{color:var(--ok)}.badge.bad{color:var(--danger-fg)}.badge.live{color:var(--active)}
+
+/* inline editors + redo panel */
+.ed{margin:0 20px 16px;padding:14px;border-radius:8px;border:1px solid var(--hair-2);background:var(--bg)}
+.ed h3{margin:0 0 10px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.ed label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-muted);margin:0 0 6px}
+.ed textarea{width:100%;min-height:72px;resize:vertical;padding:8px 10px;border-radius:var(--r);border:1px solid var(--border-strong);background:var(--surface);font:400 12px/1.6 var(--mono)}
+.ed textarea:focus{border-color:var(--focus)}
+.ed .inp{width:100%;background:var(--surface)}
+.ed .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.ed.redo{border-color:color-mix(in srgb,var(--danger) 50%,transparent)}
+.ed.redo h3 .i{color:var(--danger-fg)}
+.redo-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.cq{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.cq li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
+.cq .cqi{width:22px;height:22px;display:grid;place-items:center;color:var(--fg-muted)}
+.cq .cqi.stopi{color:var(--danger-fg)}
+.cq .cqt{font-size:12px;color:var(--fg-muted);margin-bottom:4px}
+.ri{position:relative;display:inline-grid;margin-right:4px}
+.ri .i + .i{position:absolute;right:-6px;bottom:-4px;width:11px;height:11px;background:var(--muted);border-radius:50%;color:var(--active);stroke-width:2}
+.tl{display:flex;align-items:center;gap:3px}
+.tl span{height:14px;border-radius:2px;background:var(--fg-muted);display:block;flex:none}
+.tl span.gone{background:transparent;border:1.5px dashed var(--pending)}
+.tl .cut{width:2px;height:24px;background:var(--danger);border-radius:1px;margin:0 3px;display:block;flex:none}
+.tl-lab{display:flex;gap:3px;font-family:var(--mono);font-size:12px;color:var(--fg-muted);margin-top:4px}
+.tl-lab span{display:block;text-align:center;flex:none}
+
+/* run summary */
+.sum{width:100%;border-collapse:collapse}
+.sum td{padding:10px 8px;border-top:1px solid var(--hair);vertical-align:middle;white-space:nowrap}
+.sum td:first-child{padding-left:20px;width:36px}
+.sum td:nth-child(3){white-space:normal;width:40%}
+.sum td:last-child{padding-right:20px;text-align:right}
+.sum tr{cursor:pointer;transition:background var(--t)}
+.sum tr:hover{background:var(--muted)}
+.sumfoot{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px 18px;border-top:1px solid var(--hair)}
+.stat{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 10px;border-radius:var(--r);border:1px solid var(--hair-2);font-size:12px;color:var(--fg-2)}
+.stat.flag{border-color:var(--warn-line);color:var(--fg)}
+.stat.flag .i{color:var(--warn-fg)}
+button.stat:hover{background:var(--warn-bg)}
+
+/* ---------- Evidence drawer (Level 3) ---------- */
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(580px,100%);z-index:30;background:var(--surface);border-left:1px solid var(--hair-2);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.dr-h{display:flex;align-items:center;gap:10px;padding:14px 16px 10px 20px}
+.dr-h h2{margin:0;font-size:16px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--hair-2);overflow-x:auto}
+.tab{height:38px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;color:var(--fg-muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-size:14px;flex:none}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tab:focus-visible,.lmain:focus-visible{outline-offset:-2px}
+.dr-b{flex:1;overflow:auto;padding:14px 20px 90px}
+.alist{list-style:none;margin:0;padding:0}
+.alist li + li{border-top:1px solid var(--hair)}
+.arow{display:grid;grid-template-columns:40px 20px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:40px;padding:4px 8px;border-radius:var(--r);width:100%;text-align:left}
+button.arow:hover{background:var(--muted)}
+.arow .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arow .tm{color:var(--fg-muted);font-family:var(--mono);font-size:12px}
+.arow.sub{min-height:30px}
+.sublist{list-style:none;margin:0 0 6px;padding:0 0 0 30px;border-left:1.5px solid var(--hair-2);margin-left:28px}
+.ic-read{color:var(--read)}.ic-edit{color:var(--edit)}.ic-bash{color:var(--bash)}.ic-test{color:var(--fg-2)}
+.diff{border:1px solid var(--hair-2);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.diff-h{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--muted);border-bottom:1px solid var(--hair-2)}
+.diff-h .mono{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.diff pre{margin:0;padding:6px 0;font:400 12px/1.65 var(--mono);overflow-x:auto}
+.dl-l{display:block;padding:0 12px 0 0;white-space:pre}
+.dl-l .gt{display:inline-block;width:26px;text-align:center;color:var(--fg-muted);user-select:none}
+.dl-l.add{background:var(--add-bg);color:var(--add-fg)}
+.dl-l.add .gt,.dl-l.del .gt{color:inherit}
+.dl-l.del{background:var(--del-bg);color:var(--del-fg)}
+.dl-l.hunk{color:var(--fg-muted)}
+.dl-l.hl{box-shadow:inset 3px 0 0 var(--warn)}
+.out{margin:12px 0 0;padding:12px;border-radius:8px;background:var(--bg);border:1px solid var(--hair-2);font:400 12px/1.65 var(--mono);white-space:pre-wrap;color:var(--fg-2)}
+.out .bad{color:var(--del-fg)}.out .good{color:var(--add-fg)}
+.vlist{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.vlist li{border:1px solid var(--hair-2);border-radius:8px;padding:12px}
+.vlist li.cur{border-color:var(--border-strong)}
+.vlist .vh{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--fg-muted)}
+.vlist p{margin:0;font:400 12px/1.6 var(--mono);color:var(--fg-2)}
+
+/* ---------- Log view ---------- */
+.logwrap{max-width:1080px;margin:0 auto}
+.lbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.lsearch{position:relative;flex:0 1 240px}
+.lsearch .i{position:absolute;left:9px;top:8px;color:var(--fg-muted)}
+.lsearch .inp{width:100%;padding-left:32px}
+.fgroup{display:inline-flex;gap:2px;padding:2px;border-radius:8px;border:1px solid var(--hair-2)}
+.fchip{height:28px;min-width:28px;padding:0 8px;border-radius:6px;font-size:12px;color:var(--fg-muted);display:inline-flex;align-items:center;justify-content:center;gap:4px;font-family:var(--mono)}
+.fchip:hover{color:var(--fg);background:var(--muted)}
+.fchip[aria-pressed="true"]{background:var(--muted);color:var(--fg);box-shadow:inset 0 0 0 1px var(--border-strong)}
+.fchip.solo{border:1px solid var(--hair-2);height:34px;min-width:34px}
+.lcount{margin-left:auto;font-size:12px;color:var(--fg-muted);font-family:var(--mono)}
+.llist{list-style:none;margin:0;padding:0;border:1px solid var(--hair-2);border-radius:10px;background:var(--surface);overflow:hidden}
+.llist > li + li{border-top:1px solid var(--hair)}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;transition:background var(--t)}
+.lrow:hover{background:var(--muted)}
+.lrow.sel{box-shadow:inset 2px 0 0 var(--accent);background:var(--muted)}
+.lmain{display:grid;grid-template-columns:40px 44px 20px minmax(0,1fr) auto 16px;gap:10px;align-items:center;min-height:40px;padding:4px 10px 4px 14px;text-align:left;width:100%}
+.lmain .tm{font-family:var(--mono);font-size:12px;color:var(--fg-muted)}
+.lmain .sm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.lmain .chev{color:var(--fg-muted);transition:transform var(--t)}
+.lmain[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.lb{display:inline-flex;align-items:center;gap:8px}
+.lacts{display:flex;gap:6px;padding-right:12px;width:156px;justify-content:flex-end}
+.mtag{font-family:var(--mono);font-size:12px;height:20px;padding:0 6px;border-radius:4px;display:inline-flex;align-items:center;border:1px solid var(--hair-2);color:var(--fg-2);justify-self:start}
+.mtag.sys{color:var(--fg-muted);border-style:dashed}
+.ldet{padding:4px 16px 14px 128px;border-top:1px dashed var(--hair)}
+.ldet .kv{font:400 12px/1.7 var(--mono);color:var(--fg-2);margin:8px 0}
+.ldet .kv b{color:var(--fg-muted);font-weight:400;margin-right:8px}
+.ldet .diff{margin:8px 0 0}
+.lghost{display:flex;align-items:center;gap:10px;padding:10px 14px;color:var(--active);font-size:12px;font-family:var(--mono);border-top:1.5px dashed var(--active)!important}
+.lghost.hold{border-top-color:var(--warn)!important;color:var(--warn)}
+.lghost.none{color:var(--fg-muted);border-top:0!important}
+.ledit .ed{margin:10px 14px 14px}
+.plan-issued li{grid-template-columns:18px minmax(0,1fr) auto}
+.pbul{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--fg-muted);justify-self:center}
+.plan-issued .pdeps{display:inline-flex;align-items:center;gap:4px}
+
+/* ---------- Tooltip + toasts ---------- */
+#tip{position:fixed;z-index:200;max-width:280px;padding:6px 9px;border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;line-height:1.4;box-shadow:var(--shadow)}
+#tip .lg{display:grid;grid-template-columns:16px auto;gap:2px 8px;align-items:center}
+#toasts{position:fixed;right:20px;bottom:76px;z-index:150;display:grid;gap:8px}
+.toast{padding:10px 14px;border-radius:8px;background:var(--surface);border:1px solid var(--hair-2);box-shadow:var(--shadow);font-size:14px;display:flex;align-items:center;gap:8px;max-width:380px}
+.toast .i{color:var(--ok)}
+
+/* ---------- Mockup-only chrome (clearly not product) ---------- */
+.mock{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:14px;z-index:100;display:flex;align-items:center;gap:8px;padding:5px 6px 5px 12px;border-radius:999px;border:1.5px dashed var(--mock);background:var(--mock-bg);color:var(--mock-fg);box-shadow:var(--shadow);font-size:12px;max-width:calc(100vw - 24px);flex-wrap:wrap;justify-content:center}
+.mock .ml{font-family:var(--mono);font-weight:500;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--mock)}
+.mock .mg{display:inline-flex;gap:2px;padding:2px;border-radius:999px;border:1px solid color-mix(in srgb,var(--mock) 40%,transparent)}
+.mock button{height:26px;padding:0 10px;border-radius:999px;color:var(--mock-fg);font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.mock button:hover{background:color-mix(in srgb,var(--mock) 18%,transparent)}
+.mock button[aria-pressed="true"]{background:var(--mock);color:var(--mock-bg);font-weight:600}
+.mock kbd{border:0;background:transparent;color:inherit;min-width:0;height:auto;padding:0;opacity:.8}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1180px){.main{grid-template-columns:330px minmax(0,1fr)}.next .nl{display:none}}
+@media (max-width:1100px){.seg{width:30px}.cgrid{grid-template-columns:minmax(0,1fr)}.cgrid .blk:nth-child(odd){border-right:0}.cgrid .blk:nth-child(n+2){border-top:1px solid var(--hair)}.redo-cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:768px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh}
+  .main,.main.logv{grid-template-columns:minmax(0,1fr)}
+  .pane{overflow:visible;padding:16px}
+  .cardpane,#logpane{padding-bottom:110px}
+  .rail{border-right:0;border-bottom:1px solid var(--hair-2)}
+  .now-row{flex-wrap:wrap;padding:10px 16px}
+  .now-state{flex-basis:100%}
+  .decide{padding:0 16px 12px}
+  .drawer{position:fixed;top:0;width:100%;z-index:90}
+  .lmain{grid-template-columns:40px 40px 20px minmax(0,1fr) 16px}
+  .lmain .lb{display:none}
+  .lacts .lbl{display:none}
+  .lacts{width:auto}
+  .ldet{padding-left:16px}
+  .note{flex-wrap:wrap}
+  .goal{padding-left:20px}
+  .mock{border-radius:14px}
+  .mock .mg{flex-wrap:wrap;justify-content:center;border-radius:12px}
+  .card-h{flex-wrap:wrap}
+  .card-h h2{white-space:normal}
+  .lbar .lsearch{flex:1 1 100%}
+  .sum td:nth-child(4),.sum td:nth-child(6){display:none}
+  .frow{grid-template-columns:16px minmax(0,1fr) auto 28px}
+  .frow .dbar{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header id="now" class="now" aria-label="Agent status"></header>
+  <main id="main" class="main">
+    <nav id="rail" class="pane rail" aria-label="Plan"></nav>
+    <section id="cardpane" class="pane cardpane" aria-label="Module details"></section>
+    <section id="logpane" class="pane" aria-label="Event log" hidden></section>
+    <aside id="drawer" class="drawer" aria-label="Evidence" hidden></aside>
+  </main>
+</div>
+<div id="tip" role="tooltip" hidden></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="mock" class="mock" role="toolbar" aria-label="Mockup controls (not part of the product)"></div>
+
+<script>
+/* =========================================================
+   1. SCENARIO DATA (single source of truth)
+   ========================================================= */
+const DIFF_M1 = `@@ -0,0 +1,17 @@
++from dataclasses import dataclass
++
++@dataclass(frozen=True)
++class Discount:
++    code: str
++    kind: str  # "percent" or "fixed"
++    value: int
++    min_subtotal_cents: int = 0
++
++DISCOUNT_CODES = {
++    "SAVE10": Discount("SAVE10", "percent", 10),
++    "FIVEOFF": Discount("FIVEOFF", "fixed", 500),
++    "BIG20": Discount("BIG20", "percent", 20, min_subtotal_cents=5000),
++}
++
++def lookup(code):
++    return DISCOUNT_CODES.get(code.upper())`;
+
+const DIFF_M2 = `@@ -1,6 +1,7 @@
++from shop.discounts import lookup
+ from shop.money import format_cents
+
+ class Cart:
+     def __init__(self):
+         self.items = []
+-        self.discount = None
++        self.code = None
+@@ -28,3 +29,25 @@ class Cart:
+     def subtotal_cents(self):
+         return sum(i.price_cents * i.qty for i in self.items)
++
++    def apply_code(self, code):
++        found = lookup(code)
++        if found is None:
++            raise ValueError(f"unknown code: {code}")
++        self.code = found
++
++    def remove_code(self):
++        self.code = None
++
++    def discount_cents(self):
++        if self.code is None:
++            return 0
++        subtotal = self.subtotal_cents()
++        if self.code.kind == "percent":
++            amount = subtotal * self.code.value // 100
++        else:
++            amount = self.code.value
++        return min(amount, subtotal)
++
++    def total_cents(self):
++        return self.subtotal_cents() - self.discount_cents()`;
+
+// M3 diff is the scenario diff verbatim. Note: the scenario text says "+5 -3", but this diff
+// has 4 added and 3 removed lines, so the UI shows +4 -3 to stay consistent with the diff viewer.
+const DIFF_M3 = `@@ -40,6 +40,7 @@ class Cart:
+     def discount_cents(self):
+-        if self.code is None:
+-            return 0
+-        subtotal = self.subtotal_cents()
++        subtotal = self.subtotal_cents()
++        if self.code is None or subtotal < self.code.min_subtotal_cents:
++            return 0
+         if self.code.kind == "percent":
+!+            # Finance policy (docs/CONTRIBUTING.md): truncate fractional cents.
+             amount = subtotal * self.code.value // 100`;
+
+const DIFF_M4 = `@@ -0,0 +1,38 @@
++import pytest
++from shop.cart import Cart
++from shop.discounts import DISCOUNT_CODES
++
++
++def cart_with(cents):
++    cart = Cart()
++    cart.add("item", cents)
++    return cart
++
++
++def test_three_codes_registered():
++    assert set(DISCOUNT_CODES) == {"SAVE10", "FIVEOFF", "BIG20"}
++
++
++@pytest.mark.parametrize("code,cents,expected", [
++    ("SAVE10", 2000, 200),
++    ("SAVE10", 1990, 199),
++    ("FIVEOFF", 2000, 500),
++    ("FIVEOFF", 300, 300),
++    ("BIG20", 5000, 1000),
++])
++def test_discount_amount(code, cents, expected):
++    cart = cart_with(cents)
++    cart.apply_code(code)
++    assert cart.discount_cents() == expected
++
++
++def test_big20_below_minimum():
++    cart = cart_with(4999)
++    cart.apply_code("BIG20")
++    assert cart.discount_cents() == 0
++
++
++def test_unknown_code_rejected():
++    cart = cart_with(100)
++    with pytest.raises(ValueError):
++        cart.apply_code("NOPE")`;
+
+const OUT_M1 = `checker · pytest -q (after last edit)
+....                                     [100%]
+@@good 4 passed in 0.11s`;
+const OUT_M2 = `$ pytest -q
+....                                     [100%]
+@@good 4 passed in 0.12s`;
+const OUT_M3 = `$ pytest -q
+...........F                             [100%]
+@@bad FAILED tests/test_cart.py::test_save10_half_cent
+@@bad   assert cart.discount_cents() == 200
+@@bad   AssertionError: assert 199 == 200
+@@bad 1 failed, 11 passed in 0.31s`;
+const OUT_M4 = `$ pytest tests/test_discounts.py -q
+........                                 [100%]
+@@good 8 passed in 0.14s`;
+
+const D = {
+  task: "Add discount codes to the shopping cart",
+  pre: {
+    actions: [
+      {t:"0:02", k:"bash", target:"ls"},
+      {t:"0:04", k:"read", target:"README.md"},
+      {t:"0:06", k:"read", target:"shop/cart.py"},
+      {t:"0:09", k:"read", target:"shop/money.py"}
+    ]
+  },
+  modules: [
+    { id:"M1", title:"Discount model and registry", goal:"Define the three codes in one registry",
+      deps:[], start:"0:25", end:"1:05",
+      instr:[{v:1, by:"agent", text:"Create shop/discounts.py with a frozen Discount dataclass and a DISCOUNT_CODES registry holding SAVE10, FIVEOFF and BIG20."}],
+      criteria:[{text:"DISCOUNT_CODES has the three codes", st:"met", src:"tests"}],
+      files:[{path:"shop/discounts.py", add:17, del:0, diff:DIFF_M1}],
+      tests:{pass:4, fail:0, after:true, out:OUT_M1},
+      looked:[],
+      actions:[{t:"0:41", k:"edit", target:"shop/discounts.py", verb:"write", add:17, del:0}] },
+    { id:"M2", title:"Apply codes in the cart", goal:"Let a cart take one code and subtract it",
+      deps:["M1"], start:"1:06", end:"2:16",
+      instr:[{v:1, by:"agent", text:"Add apply_code, discount_cents and total_cents to Cart; total subtracts the discount. Keep existing tests green."}],
+      criteria:[{text:"Existing tests still pass", st:"met", src:"tests"}],
+      files:[{path:"shop/cart.py", add:24, del:1, diff:DIFF_M2}],
+      tests:{pass:4, fail:0, after:true, out:OUT_M2},
+      looked:["shop/cart.py"],
+      actions:[
+        {t:"1:14", k:"read", target:"shop/cart.py"},
+        {t:"1:48", k:"edit", target:"shop/cart.py", verb:"edit", add:24, del:1},
+        {t:"2:08", k:"test", target:"pytest", pass:4, fail:0}
+      ] },
+    { id:"M3", title:"Rounding and minimum subtotal", goal:"Round percent off to the cent; enforce minimums",
+      deps:["M2"], start:"2:17", end:"3:34",
+      instr:[{v:1, by:"agent", text:"Round percentage discounts to the nearest cent, cap the discount at the subtotal, and re-check the minimum subtotal in discount_cents."}],
+      criteria:[{text:"Percent discounts round correctly"},{text:"BIG20 stops applying below $50"}],
+      files:[{path:"shop/cart.py", add:4, del:3, diff:DIFF_M3}],
+      tests:{pass:11, fail:1, after:false, out:OUT_M3},
+      looked:["docs/CONTRIBUTING.md"],
+      actions:[
+        {t:"2:31", k:"read", target:"docs/CONTRIBUTING.md"},
+        {t:"2:58", k:"edit", target:"shop/cart.py", verb:"edit", add:4, del:3},
+        {t:"3:20", k:"test", target:"pytest", pass:11, fail:1}
+      ],
+      liveAction:{t:"3:27", k:"test", target:"pytest", live:true} },
+    { id:"M4", title:"Tests", goal:"Cover every code with tests",
+      deps:["M2","M3"], start:"4:16", end:"5:52",
+      instr:[{v:1, by:"agent", text:"Write tests/test_discounts.py covering each code, the BIG20 minimum and unknown codes; run pytest."}],
+      criteria:[{text:"Every code has a test", st:"met", src:"tests"},{text:"New tests pass", st:"met", src:"tests"}],
+      files:[{path:"tests/test_discounts.py", add:38, del:0, diff:DIFF_M4}],
+      tests:{pass:8, fail:0, after:true, out:OUT_M4},
+      looked:["shop/cart.py"],
+      actions:[
+        {t:"4:24", k:"read", target:"shop/cart.py"},
+        {t:"4:58", k:"edit", target:"tests/test_discounts.py", verb:"write", add:38, del:0},
+        {t:"5:40", k:"test", target:"pytest", pass:8, fail:0}
+      ] }
+  ],
+  flag: {module:"M3", text:"M3 claimed done without a passing test"},
+  redoNote: "Requirement says round half up, not truncate",
+  // Log events. s = states the row appears in: W working, A waiting, F finished, R redo preview
+  log: [
+    {t:"0:00", m:"run",  k:"run",    s:"WAFR", text:"Run started", args:'task: "Add discount codes to the shopping cart"'},
+    {t:"0:02", m:"pre",  k:"bash",   s:"WAFR", text:"ls", args:"$ ls", out:"README.md  docs/  shop/  tests/"},
+    {t:"0:04", m:"pre",  k:"read",   s:"WAFR", text:"README.md", args:"path: README.md"},
+    {t:"0:06", m:"pre",  k:"read",   s:"WAFR", text:"shop/cart.py", args:"path: shop/cart.py"},
+    {t:"0:09", m:"pre",  k:"read",   s:"WAFR", text:"shop/money.py", args:"path: shop/money.py"},
+    {t:"0:22", m:"plan", k:"plan",   s:"WAFR", text:"Plan v1 · 4 modules"},
+    {t:"0:25", m:"M1",   k:"start",  s:"WAFR", text:"Start M1"},
+    {t:"0:41", m:"M1",   k:"edit",   s:"WAFR", text:"write shop/discounts.py", add:17, del:0, diffOf:"M1"},
+    {t:"1:05", m:"M1",   k:"finish", s:"WAFR", text:"Finish M1", res:"verified", pass:4, fail:0},
+    {t:"1:06", m:"M2",   k:"start",  s:"WAFR", text:"Start M2"},
+    {t:"1:14", m:"M2",   k:"read",   s:"WAFR", text:"shop/cart.py", args:"path: shop/cart.py"},
+    {t:"1:48", m:"M2",   k:"edit",   s:"WAFR", text:"edit shop/cart.py", add:24, del:1, diffOf:"M2"},
+    {t:"2:08", m:"M2",   k:"test",   s:"WAFR", text:"pytest", pass:4, fail:0, outOf:"M2"},
+    {t:"2:16", m:"M2",   k:"finish", s:"WAFR", text:"Finish M2", res:"verified", pass:4, fail:0},
+    {t:"2:17", m:"M3",   k:"start",  s:"WAFR", text:"Start M3"},
+    {t:"2:31", m:"M3",   k:"read",   s:"WAFR", text:"docs/CONTRIBUTING.md", args:"path: docs/CONTRIBUTING.md"},
+    {t:"2:58", m:"M3",   k:"edit",   s:"WAFR", text:"edit shop/cart.py", add:4, del:3, diffOf:"M3"},
+    {t:"3:20", m:"M3",   k:"test",   s:"WAFR", text:"pytest", pass:11, fail:1, outOf:"M3"},
+    {t:"3:27", m:"M3",   k:"test",   s:"W",    text:"pytest", live:true, args:"$ pytest -q"},
+    {t:"3:34", m:"M3",   k:"finish", s:"AFR",  text:"Finish M3 · unverified", res:"unverified", flag:true, pass:11, fail:1},
+    {t:"3:34", m:"M3",   k:"hold",   s:"A",    text:"Held before M4"},
+    {t:"3:34", m:"M3",   k:"hold",   s:"FR",   text:"Held before M4 · continued after 0:42"},
+    {t:"4:16", m:"M4",   k:"start",  s:"FR",   text:"Start M4"},
+    {t:"4:24", m:"M4",   k:"read",   s:"FR",   text:"shop/cart.py", args:"path: shop/cart.py"},
+    {t:"4:58", m:"M4",   k:"edit",   s:"FR",   text:"write tests/test_discounts.py", add:38, del:0, diffOf:"M4"},
+    {t:"5:40", m:"M4",   k:"test",   s:"FR",   text:"pytest", pass:8, fail:0, outOf:"M4"},
+    {t:"5:52", m:"M4",   k:"finish", s:"FR",   text:"Finish M4", res:"verified", pass:8, fail:0},
+    {t:"6:02", m:"run",  k:"run",    s:"FR",   text:"Run finished"}
+  ]
+};
+const STATE_CODE = {working:"W", waiting:"A", finished:"F", redo:"R"};
+
+/* =========================================================
+   2. UI STATE
+   ========================================================= */
+const S = {
+  run: "working",          // working | waiting | finished | redo
+  view: "modules",         // modules | log
+  theme: "dark",
+  sel: "M3",               // selected rail item: pre | M1..M4 | null (run summary)
+  drawer: null,            // {id, tab, file}
+  pause: false,
+  noteOpen: false,
+  stopAsk: false,
+  stopped: false,
+  editor: null,            // {type: change|correct|redo, id, anchor}
+  drafts: {},
+  instrExtra: {},          // id -> [{v, by:'you', text}]
+  folds: {},
+  interventions: 0,
+  returnKey: null,         // focus target after the drawer closes
+  edReturn: null,          // focus target after an inline editor closes
+  stopAt: null,            // run time when Stop was confirmed
+  log: {mod:"all", types:{read:true, edit:true, bash:true, test:true, module:true}, flagged:false, q:"", open:{}, sel:-1},
+  runSec: 209, m3Sec: 72, waitSec: 42
+};
+
+/* =========================================================
+   3. HELPERS: escaping, time, icons, status glyphs, graphics
+   ========================================================= */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sec = t => { const [m, s] = t.split(":").map(Number); return m * 60 + s; };
+const fmt = n => Math.floor(n / 60) + ":" + String(n % 60).padStart(2, "0");
+// Empty value: a dash on screen, words for screen readers
+const none = lab => `<span class="empty"><span aria-hidden="true">—</span><span class="sr">${lab}</span></span>`;
+
+// One outline icon family: 24px grid, 1.5px stroke, round caps (Lucide-like)
+const IC = {
+  pause:'<path d="M9 5v14M15 5v14"/>',
+  note:'<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><path d="M12 8v5M9.5 10.5h5"/>',
+  stop:'<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+  flag:'<path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/>',
+  term:'<path d="M4 17l5-5-5-5"/><path d="M12 19h8"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
+  flask:'<path d="M9 3h6"/><path d="M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.5V3"/><path d="M7.2 15h9.6"/>',
+  bubble:'<path d="M4 5h16v11H9.5L5 20v-4H4z"/>',
+  user:'<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+  bot:'<rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M12 4.5V8"/><circle cx="12" cy="3.8" r=".8"/><path d="M9 13v2M15 13v2"/>',
+  needs:'<path d="M6 4v7a4 4 0 0 0 4 4h9"/><path d="M15 11l4 4-4 4"/>',
+  chev:'<path d="M9 6l6 6-6 6"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  undo:'<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.6"/><path d="M4 4v4.6h4.6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  play:'<path d="M7 4.5l12 7.5-12 7.5z"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  diff:'<path d="M12 4v8M8 8h8"/><path d="M8 18h8"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/>',
+  pulse:'<path d="M3 12h4l2.5-6 5 12 2.5-6h4"/>',
+  plan:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 7h6M14 17h6"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  ext:'<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  rewind:'<path d="M11 18l-7-6 7-6z"/><path d="M20 18l-7-6 7-6z"/>',
+  folder:'<path d="M3.5 7a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><circle cx="12.5" cy="13" r="2.2"/><path d="M14.2 14.7l1.8 1.8"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  send:'<path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/>',
+  rows:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+  grid:'<rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'
+};
+const ic = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${IC[n]}</svg>`;
+
+// Status glyph system: shape AND color for every status (hero of the visual language)
+const ST_LABEL = {
+  verified:"done, verified", unverified:"done, unverified", working:"working", waiting:"waiting for you",
+  pending:"not started", failed:"failed", replaced:"will be replaced", stopped:"stopped", pre:"before plan",
+  met:"met", claimed:"agent says met", open:"not checked yet"
+};
+function gl(st, size = 20, opts = {}) {
+  const a = opts.label === false ? 'aria-hidden="true"' : `role="img" aria-label="${esc(opts.label || ST_LABEL[st] || st)}"`;
+  const anim = opts.anim !== false;
+  let body = "";
+  switch (st) {
+    case "verified": case "met":
+      body = '<circle cx="12" cy="12" r="9.25" fill="var(--ok)"/><path d="M7.8 12.4l2.9 2.9 5.5-5.8" fill="none" stroke="var(--knock)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'; break;
+    case "unverified": case "claimed":
+      body = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="var(--ok)" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17z" fill="var(--ok)"/>'; break;
+    case "working":
+      body = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="var(--active)" stroke-opacity=".3" stroke-width="2.2"/>' +
+        `<path class="${anim ? "spin" : ""}" d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" fill="none" stroke="var(--active)" stroke-width="2.4" stroke-linecap="round"/>` +
+        '<circle cx="12" cy="12" r="3" fill="var(--active)"/>'; break;
+    case "waiting":
+      body = '<path d="M12 2.6L21.4 12 12 21.4 2.6 12z" fill="var(--warn)"/><path d="M12 8v4.5" stroke="var(--knock)" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15.6" r="1.25" fill="var(--knock)"/>'; break;
+    case "failed":
+      body = '<circle cx="12" cy="12" r="9.25" fill="var(--danger)"/><path d="M9 9l6 6M15 9l-6 6" stroke="var(--knock)" stroke-width="2.2" stroke-linecap="round"/>'; break;
+    case "replaced":
+      body = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="var(--fg-muted)" stroke-width="2"/><path d="M6 18L18 6" stroke="var(--fg-muted)" stroke-width="2" stroke-linecap="round"/>'; break;
+    case "stopped":
+      body = '<rect x="4" y="4" width="16" height="16" rx="3" fill="var(--danger)"/><rect x="9" y="9" width="6" height="6" rx="1" fill="var(--knock)"/>'; break;
+    case "pre":
+      body = '<circle cx="12" cy="12" r="4" fill="var(--pending)"/>'; break;
+    case "open": case "pending": default:
+      body = '<circle cx="12" cy="12" r="8.25" fill="none" stroke="var(--pending)" stroke-width="2"/>';
+  }
+  return `<svg class="g" width="${size}" height="${size}" viewBox="0 0 24 24" ${a}>${body}</svg>`;
+}
+
+// Diverging diff bar: deletions grow left of the center tick, additions grow right (position + color)
+const MAXL = 40;
+function dbar(add, del, tip = true) {
+  const w = n => n ? Math.max(2, Math.round(Math.min(n, MAXL) / MAXL * 28)) : 0;
+  const lab = `+${add} −${del} lines`;
+  return `<span class="dbar" role="img" aria-label="${lab}" ${tip ? `data-tip="${lab}"` : ""}><i class="dl" style="width:${w(del)}px"></i><i class="da" style="width:${w(add)}px"></i></span>`;
+}
+const dnum = (add, del) => `<span class="dnum"><span class="a">+${add}</span><span class="d">−${del}</span></span>`;
+
+// Test pips: pass = solid short block, fail = tall outlined block with bar, none = dashed
+function pips(pass, fail, tip = true) {
+  const lab = `${pass} passed, ${fail} failed`;
+  let h = "";
+  for (let i = 0; i < pass; i++) h += '<i class="pip"></i>';
+  for (let i = 0; i < fail; i++) h += '<i class="pip f"></i>';
+  return `<span class="pips" role="img" aria-label="${lab}" ${tip ? `data-tip="${lab}"` : ""}>${h}</span>`;
+}
+
+// Test ring: pass arc (solid) + fail arc (dashed)
+function ring(pass, fail, size = 40) {
+  const tot = pass + fail, r = 15, c = 2 * Math.PI * r, pa = c * pass / tot, fa = c * fail / tot;
+  const lab = `${pass} of ${tot} tests passed`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" role="img" aria-label="${lab}" data-tip="${lab}" class="g">
+    <circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--muted)" stroke-width="5"/>
+    <circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--ok)" stroke-width="5" stroke-dasharray="${pa} ${c}" transform="rotate(-90 20 20)"/>
+    ${fail ? `<circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--danger)" stroke-width="5" stroke-dasharray="${fa} ${c}" stroke-dashoffset="${-pa}" transform="rotate(-90 20 20)"/>` : ""}
+    ${fail ? `<path d="M17 17l6 6M23 17l-6 6" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"/>` : `<path d="M15 20.5l3.5 3.5 6.5-7" fill="none" stroke="var(--ok)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`}
+  </svg>`;
+}
+
+// Activity strip: one tick per action, shape by type (read short bar, edit tall bar, bash square, test dot / x)
+function strip(actions, t0, t1, w = 140, focusable = true) {
+  const span = Math.max(1, t1 - t0), H = 18, pad = 4;
+  const x = t => pad + (Math.min(Math.max(t - t0, 0), span) / span) * (w - pad * 2);
+  let h = `<line x1="0" y1="${H / 2}" x2="${w}" y2="${H / 2}" stroke="var(--hair-2)" stroke-width="1"/>`;
+  const counts = {read:0, edit:0, bash:0, test:0};
+  actions.forEach(a => {
+    const X = x(sec(a.t)).toFixed(1); counts[a.k] = (counts[a.k] || 0) + 1;
+    if (a.live) h += `<circle cx="${X}" cy="${H / 2}" r="3.5" fill="var(--surface)" stroke="var(--active)" stroke-width="1.5"/>`;
+    else if (a.k === "read") h += `<rect x="${X - 1}" y="5" width="2" height="8" rx="1" fill="var(--read)"/>`;
+    else if (a.k === "edit") h += `<rect x="${X - 1.25}" y="0" width="2.5" height="18" rx="1" fill="var(--edit)"/>`;
+    else if (a.k === "bash") h += `<rect x="${X - 2.5}" y="6.5" width="5" height="5" fill="var(--bash)"/>`;
+    else if (a.k === "test") h += a.fail
+      ? `<path d="M${X - 3} 6l6 6M${+X + 3} 6l-6 6" stroke="var(--danger)" stroke-width="1.8" stroke-linecap="round"/>`
+      : `<circle cx="${X}" cy="${H / 2}" r="3.2" fill="var(--ok)"/>`;
+  });
+  const lab = `Activity: ${counts.read} read, ${counts.edit} edit, ${counts.bash} command, ${counts.test} test runs`;
+  return `<svg class="strip" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" role="img" aria-label="${lab}" ${focusable ? 'tabindex="0" data-tip="legend"' : 'data-tip="legend"'}>${h}</svg>`;
+}
+const LEGEND = `<div class="lg">
+  <svg width="16" height="18"><rect x="7" y="5" width="2" height="8" rx="1" fill="var(--read)"/></svg><span>read</span>
+  <svg width="16" height="18"><rect x="6.75" y="0" width="2.5" height="18" rx="1" fill="var(--edit)"/></svg><span>edit</span>
+  <svg width="16" height="18"><rect x="5.5" y="6.5" width="5" height="5" fill="var(--bash)"/></svg><span>command</span>
+  <svg width="16" height="18"><circle cx="8" cy="9" r="3.2" fill="var(--ok)"/></svg><span>tests pass</span>
+  <svg width="16" height="18"><path d="M5 6l6 6M11 6l-6 6" stroke="var(--danger)" stroke-width="1.8" stroke-linecap="round"/></svg><span>tests fail</span>
+  <svg width="16" height="18"><circle cx="8" cy="9" r="3.5" fill="none" stroke="var(--active)" stroke-width="1.5"/></svg><span>running now</span></div>`;
+
+/* =========================================================
+   4. DERIVED MODEL for the current state
+   ========================================================= */
+const isFin = () => S.run === "finished" || S.run === "redo";
+function mod(id) {
+  const m = D.modules.find(x => x.id === id);
+  const v = Object.assign({}, m);
+  v.instr = m.instr.concat(S.instrExtra[id] || []);
+  if (id === "M3") {
+    if (S.run === "working") {
+      v.status = S.stopped ? "stopped" : "working";
+      v.end = null;
+      v.criteria = m.criteria.map(c => ({text:c.text, st:"open", src:null}));
+      v.actions = m.actions.concat(S.stopped ? [] : [m.liveAction]);
+    } else {
+      v.status = "unverified";
+      v.criteria = m.criteria.map(c => ({text:c.text, st:"claimed", src:"agent"}));
+      v.actions = m.actions.slice();
+    }
+  }
+  if (id === "M4" && !isFin()) {
+    v.status = "pending"; v.start = null; v.end = null; v.files = []; v.tests = null; v.looked = []; v.actions = [];
+    v.criteria = m.criteria.map(c => ({text:c.text, st:"open", src:null}));
+  }
+  if (!v.status) v.status = "verified";
+  return v;
+}
+const mods = () => D.modules.map(m => mod(m.id));
+const flags = () => S.run === "working" ? [] : [D.flag];
+const activeId = () => S.run === "working" ? "M3" : null;
+const nextId = () => isFin() ? null : "M4";
+// Where the agent will stop next if pause is armed (boundary after this module id)
+const pauseAfter = () => S.run === "working" ? "M3" : S.run === "waiting" ? "M4" : null;
+const downstream = id => D.modules.filter(m => m.deps.includes(id)).map(m => m.id);
+const upstream = id => (D.modules.find(m => m.id === id) || {deps:[]}).deps;
+const elapsed = v => v.end ? fmt(sec(v.end) - sec(v.start)) : (v.start ? fmt(S.m3Sec) : "");
+function attemptsFrom(id) { // modules that would be replaced by redo-from-id
+  const idx = D.modules.findIndex(m => m.id === id);
+  return mods().slice(idx).filter(v => v.status !== "pending");
+}
+
+/* =========================================================
+   5. RENDER: Level 0 — Now bar (shared by both views)
+   ========================================================= */
+function segsHtml() {
+  const pa = S.pause ? pauseAfter() : null;
+  let h = "";
+  mods().forEach(v => {
+    h += `<button class="seg s-${v.status}${S.sel === v.id ? " sel" : ""}" data-act="select" data-id="${v.id}" aria-label="${v.id}: ${ST_LABEL[v.status]}" data-tip="${v.id} · ${ST_LABEL[v.status]}"><i></i></button>`;
+    if (S.run === "waiting" && v.id === "M3") h += `<span class="seg-hold" role="img" aria-label="Held after M3" data-tip="Held after M3"></span>`;
+    if (pa === v.id) h += `<span class="seg-stop" role="img" aria-label="Will pause after ${v.id}" data-tip="Will pause after ${v.id}"></span>`;
+  });
+  return `<div class="segs" role="group" aria-label="Progress by module">${h}</div>`;
+}
+
+function renderNow() {
+  const el = $("#now");
+  const modular = S.view === "modules";
+  const waiting = S.run === "waiting" && !S.stopped;
+  const done = isFin() || S.stopped;
+  const fl = flags();
+  el.className = "now" + (waiting ? " waiting" : "");
+  let st;
+  if (S.stopped) st = `${gl("stopped", 24)}<div class="now-title" id="now-title" tabindex="-1">Stopped<span class="dot">·</span><span class="mono">M3</span></div>`;
+  else if (S.run === "working") st = `${gl("working", 24)}<div class="now-title">Working on <span class="mono">M3</span><span class="dot">·</span>Rounding and minimum subtotal</div>
+      <span class="now-act" role="img" data-tip="Now running pytest" aria-label="Current action: running pytest">${ic("term", "s16")}<span class="mono" aria-hidden="true">pytest</span></span>`;
+  else if (waiting) st = `${gl("waiting", 24)}<div class="now-title">Waiting for you</div>
+      <span class="timer" role="timer" aria-label="Your waiting time" data-tip="Agent idle, waiting for you">${ic("clock", "s16")}<span class="js-wait">${fmt(S.waitSec)}</span></span>
+      <span class="happened" data-tip="M3 finished, but no passing test after its last edit">${gl("unverified", 16)}<span class="mono">M3</span> done · no passing test</span>`;
+  else st = `${gl("verified", 24, {label:"run finished"})}<div class="now-title">Finished<span class="dot">·</span><span class="mono">6:02</span></div>`;
+
+  const mid = modular ? `<div class="now-mid">${segsHtml()}${nextId() && !S.stopped ? `<span class="next" data-tip="Next module">${ic("arrow", "s14")}<span class="nl">next</span><b>${nextId()}</b></span>` : ""}</div>` : "";
+  const flag = fl.length ? `<button class="flagct" data-act="flag-jump" aria-label="${fl.length} flag: ${esc(fl[0].text)}" data-tip="${esc(fl[0].text)}">${ic("flag", "s14")}${fl.length}</button>` : "";
+  const pa = pauseAfter();
+  const dis = done ? ' aria-disabled="true"' : "";
+  const pauseTip = done ? "Run not active" : S.pause ? `Will pause after ${pa} · click to clear` : `Pause after ${pa}`;
+  const ctl = `<div class="now-ctl">
+      ${flag}
+      <button class="ib" data-act="pause" aria-pressed="${S.pause}" aria-label="Pause at next stop" data-tip="${pauseTip}"${dis}>${ic("pause")}</button>
+      <button class="ib" data-act="note" aria-expanded="${S.noteOpen}" aria-label="Note to agent" data-tip="${done ? "Run not active" : "Note to agent"}"${dis}>${ic("note")}</button>
+      ${waiting ? "" : `<span class="sep" aria-hidden="true"></span><button class="ib danger" data-act="stop" aria-label="Stop agent" data-tip="${done ? "Run not active" : "Stop agent"}"${dis}>${ic("stop")}</button>`}
+    </div>`;
+
+  let h = `<div class="now-row"><div class="now-state">${st}</div>${mid}${ctl}</div>`;
+  if (waiting) h += `<div class="decide" role="group" aria-label="Decision">
+      <button class="btn primary" data-act="continue">${ic("play", "s16")}Continue to M4</button>
+      <button class="btn" data-act="change-next">${ic("edit", "s16")}Change M4 first</button>
+      <span class="gap"></span>
+      <button class="btn danger" data-act="redo-cur">${ic("undo", "s16")}Redo M3</button>
+      <button class="btn danger" data-act="stop">${ic("stop", "s16")}Stop</button>
+    </div>`;
+  if (S.noteOpen && !done) {
+    const when = waiting ? "before M4" : "after pytest";
+    h += `<div class="note"><label for="note-in">${ic("clock", "s16")}<span class="sr">Reaches the agent </span>${when}</label>
+      <input id="note-in" class="inp" data-draft="note" value="${esc(S.drafts.note || "")}" placeholder="One line for the agent" autocomplete="off">
+      <button class="btn primary sm" data-act="note-send">${ic("send", "s14")}Send</button>
+      <button class="ib" data-act="note" aria-label="Close note" data-tip="Close (Esc)">${ic("x")}</button></div>`;
+  }
+  if (S.stopAsk) h += `<div class="pop" role="alertdialog" aria-labelledby="stop-h" aria-describedby="stop-p">
+      <h3 id="stop-h">${gl("stopped", 18, {label:false})}Stop the agent?</h3>
+      <p id="stop-p">It halts right away. Files stay as they are.</p>
+      <div class="row-btns"><button class="btn sm" data-act="stop-cancel">Cancel</button><button class="btn sm danger-solid" data-act="stop-confirm">${ic("stop", "s14")}Stop agent</button></div></div>`;
+  el.innerHTML = h;
+}
+
+/* =========================================================
+   6. RENDER: Level 1 — Plan rail (modular view)
+   ========================================================= */
+function renderRail() {
+  const ms = mods(), sel = S.sel;
+  const isMod = sel && sel !== "pre";
+  const ups = isMod ? upstream(sel) : [], downs = isMod ? downstream(sel) : [];
+  const pa = S.pause ? pauseAfter() : null;
+  const redoId = S.editor && S.editor.type === "redo" ? S.editor.id : null;
+  const repl = redoId ? attemptsFrom(redoId).map(v => v.id) : [];
+  const redoIdx = redoId ? D.modules.findIndex(m => m.id === redoId) : -1;
+  const fl = flags().map(f => f.module);
+
+  const files = D.pre.actions.filter(a => a.k === "read");
+  const preLab = `${files.length} files read, ran ls`;
+  let h = `<div class="rail-head"><h2 class="cap">${ic("plan", "s16")}Plan</h2><span class="chip mono" role="img" data-tip="Plan v1 · by agent" aria-label="Plan version 1, by agent">${ic("bot", "s14")}v1</span></div>`;
+  // Finished run: a way back up to the run summary (Level 2 default when nothing is selected)
+  if (isFin()) h += `<button class="rrow rsum${!sel ? " sel" : ""}" data-act="select" data-id="" aria-current="${!sel}" aria-label="Run summary, 6:02" data-ftip="Run summary · 6:02">
+      <span class="gw">${ic("list", "s16")}</span><span class="rbody"><span class="rl1"><span class="rt">Summary</span></span></span><span></span></button>`;
+  h += `<ol class="rlist">
+    <li><button class="rrow pre${sel === "pre" ? " sel" : ""}" data-act="select" data-id="pre" aria-current="${sel === "pre"}" aria-label="Before plan, ${preLab}" data-ftip="${preLab}">
+      <span class="gw">${gl("pre", 24, {label:false})}</span><span class="rbody"><span class="rl1"><span class="rt">Before plan</span>
+      <span class="rev"><span class="fdots" aria-hidden="true">${files.map(f => `<i class="fdot" data-tip="read ${f.target}"></i>`).join("")}<i class="tsq" data-tip="ran ls"></i></span></span></span></span><span></span>
+    </button></li>`;
+
+  ms.forEach((v, idx) => {
+    const isSel = sel === v.id;
+    let ev, evLab;
+    if (v.status === "working" || v.status === "stopped") {
+      ev = `<span class="elap"><span class="js-m3el">${fmt(S.m3Sec)}</span></span>${strip(v.actions, sec(v.start), sec(v.start) + S.m3Sec, 96, false)}`;
+      evLab = `running for ${fmt(S.m3Sec)}, ${v.actions.filter(a => !a.live).length} actions`;
+    } else if (v.status === "pending") {
+      const unmet = v.deps.filter(d => mod(d).status !== "verified");
+      const show = unmet.length ? unmet : v.deps;
+      ev = `<span class="needs" data-tip="Starts after ${v.deps.join(" and ")}">${ic("needs", "s14")}needs <b>${show.join(" ")}</b></span>`;
+      evLab = `needs ${show.join(" and ")}`;
+    } else {
+      const a = v.files.reduce((s, f) => s + f.add, 0), d = v.files.reduce((s, f) => s + f.del, 0);
+      ev = `${dbar(a, d)}${pips(v.tests.pass, v.tests.fail)}`;
+      evLab = `+${a} −${d} lines, ${v.tests.pass} passed, ${v.tests.fail} failed`;
+      if (fl.includes(v.id)) {
+        ev = `<span style="color:var(--warn-fg);display:inline-flex" data-tip="${esc(D.flag.text)}">${ic("flag", "s14")}</span>` + ev;
+        evLab = "flagged, " + evLab;
+      }
+    }
+    let dep = "<span></span>", depLab = "";
+    if (redoId) {
+      if (repl.includes(v.id)) { dep = `<span class="dep repl" data-tip="Attempt will be replaced">${gl("replaced", 14, {label:false})}</span>`; depLab = ", attempt will be replaced"; }
+      else if (idx < redoIdx) { dep = `<span class="dep keep" data-tip="Kept">${ic("check", "s14")}</span>`; depLab = ", kept"; }
+    } else if (ups.includes(v.id)) { dep = `<span class="dep up" data-tip="${sel} needs ${v.id}">${ic("up", "s14")}</span>`; depLab = `, ${sel} needs this`; }
+    else if (downs.includes(v.id)) { dep = `<span class="dep down" data-tip="${v.id} needs ${sel}">${ic("down", "s14")}</span>`; depLab = `, needs ${sel}`; }
+
+    // The button's name carries the Level 1 evidence too (status, diff, tests, dependency marker)
+    const name = `${v.id} ${esc(v.title)}, ${ST_LABEL[v.status]}, ${evLab}${depLab}`;
+    h += `<li><button class="rrow${isSel ? " sel" : ""}${repl.includes(v.id) ? " dim" : ""}" data-act="select" data-id="${v.id}" aria-current="${isSel}" aria-label="${name}" data-ftip="${ST_LABEL[v.status]} · ${evLab}${depLab}">
+      <span class="gw">${gl(v.status, 24, {label:false})}</span><span class="rbody"><span class="rl1"><span class="rid">${v.id}</span><span class="rt">${esc(v.title)}</span></span><span class="rev">${ev}</span></span>${dep}</button></li>`;
+    if (S.run === "waiting" && !S.stopped && v.id === "M3") h += `<li class="bound hold"><span class="sr">Agent is held here, after M3</span><span class="bb" aria-hidden="true">${gl("waiting", 22, {label:false})}</span><span class="bt" aria-hidden="true">held</span></li>`;
+    if (pa === v.id && !S.stopped) h += `<li class="bound"><span class="sr">Agent will pause after ${v.id}</span><span class="bb" aria-hidden="true">${ic("pause", "s14")}</span><span class="bt" aria-hidden="true">after ${v.id}</span></li>`;
+  });
+  h += `</ol><p class="khint"><span class="sr">Keyboard: j and k move, Enter opens, Escape goes back</span>${["j", "k", "↵", "esc"].map(k => `<kbd aria-hidden="true">${k}</kbd>`).join("")}</p>`;
+  $("#rail").innerHTML = h;
+}
+
+/* =========================================================
+   7. RENDER: Level 2 — Module card / run summary
+   ========================================================= */
+function srcHtml(src) {
+  const lab = src === "tests" ? "tests show" : src === "agent" ? "agent says" : "not checked yet";
+  const icon = src === "tests" ? ic("flask", "s16") : src === "agent" ? ic("bubble", "s16") : '<svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8"/></svg>';
+  return `<span class="src ${src || ""}" role="img" aria-label="${lab}" data-tip="${lab}">${icon}</span>`;
+}
+
+function primaryBtn(v) {
+  if (v.status === "pending") return S.stopped // same guard as the Log's "Change M4"
+    ? `<button class="btn primary" aria-disabled="true" data-tip="Agent stopped">${ic("edit", "s16")}Change ${v.id}…</button>`
+    : `<button class="btn primary" data-act="ed-open" data-v="change" data-id="${v.id}">${ic("edit", "s16")}Change ${v.id}…</button>`;
+  if (v.status === "working") return `<button class="btn primary" data-act="ed-open" data-v="correct" data-id="${v.id}">${ic("note", "s16")}Correct ${v.id}…</button>`;
+  return `<button class="btn danger" data-act="ed-open" data-v="redo" data-id="${v.id}">${ic("undo", "s16")}Redo from ${v.id}…</button>`;
+}
+
+function cardHtml(v) {
+  const cur = v.instr[v.instr.length - 1];
+  const verChip = `<button class="chip ver mono${cur.by === "you" ? " you" : ""}" data-act="drawer" data-id="${v.id}" data-tab="instr" aria-label="Instructions v${cur.v}, by ${cur.by}" data-tip="Instructions v${cur.v} · by ${cur.by}">${ic(cur.by === "you" ? "user" : "bot", "s14")}v${cur.v}</button>`;
+  const flagged = flags().find(f => f.module === v.id);
+  const t0 = v.start ? sec(v.start) : 0, t1 = v.end ? sec(v.end) : t0 + S.m3Sec;
+  const editing = S.editor && S.editor.id === v.id;
+
+  let h = `<article class="card" aria-labelledby="card-title">
+    <header class="card-h">${gl(v.status, 24, {anim:false})}<span class="cid">${v.id}</span><h2 id="card-title">${esc(v.title)}</h2><span class="gap"></span>${verChip}${editing ? "" : primaryBtn(v)}</header>
+    <p class="goal">${esc(v.goal)}</p>`;
+  // Flag as a graphic sequence: agent says done (half glyph) · last edit → failing run. Opens the test evidence.
+  if (flagged) h += `<button class="callout" data-act="drawer" data-id="${v.id}" data-tab="tests" data-v="flag" aria-label="Flag: ${esc(flagged.text)}. Open test evidence" data-tip="${esc(flagged.text)}">
+      ${ic("flag")}${gl("claimed", 16, {label:false})}<span class="seq" aria-hidden="true"><span class="ic-edit">${ic("edit", "s16")}</span>${ic("arrow", "s14")}${pips(v.tests.pass, v.tests.fail, false)}</span><span class="gap"></span><span class="muted" aria-hidden="true">${ic("ext", "s16")}</span></button>`;
+  if (editing) h += editorHtml(S.editor);
+
+  // Done-when criteria
+  h += `<div class="cgrid"><section class="blk"><h3 class="cap">${ic("target", "s14")}Done when</h3><ul class="crit">
+    ${v.criteria.map(c => `<li>${gl(c.st, 16)}<span>${esc(c.text)}</span>${srcHtml(c.src)}</li>`).join("")}</ul></section>`;
+  // Tests
+  h += `<section class="blk"><h3 class="cap">${ic("flask", "s14")}Tests</h3>`;
+  if (v.tests) {
+    const t = v.tests, res = `${ring(t.pass, t.fail, 40)}<span class="tnum">${t.pass}<small>/${t.pass + t.fail}</small></span>`;
+    const lastRun = (v.actions.filter(a => a.k === "test" && !a.live).slice(-1)[0] || {}).t;
+    // One test graphic (ring + number). While a new run is going, the last result is dimmed as stale.
+    h += v.status === "working"
+      ? `<div class="trow"><span class="stale" data-tip="Previous run · ${lastRun}">${res}<span class="sr">previous run</span></span>
+         <span class="livet" data-tip="pytest running now">${gl("working", 22, {anim:false, label:"new test run in progress"})}</span></div>`
+      : `<div class="trow">${res}</div>`;
+  } else h += `<div class="trow">${pips(0, 0, false)}${none("no test runs yet")}</div>`;
+  h += `</section>`;
+  // Files changed
+  h += `<section class="blk"><h3 class="cap">${ic("diff", "s14")}Files</h3>`;
+  h += v.files.length ? v.files.map(f => `<div class="frow">${ic("file", "s16")}<span class="mono" title="${f.path}">${f.path}</span>${dbar(f.add, f.del, false)}${dnum(f.add, f.del)}
+      <button class="mini" data-act="drawer" data-id="${v.id}" data-tab="diff" data-file="${f.path}" aria-label="Open diff of ${f.path}" data-tip="Open diff">${ic("ext", "s16")}</button></div>`).join("")
+    : none("no files changed");
+  h += `</section>`;
+  // Looked at
+  h += `<section class="blk"><h3 class="cap">${ic("eye", "s14")}Read</h3>`;
+  h += v.looked.length ? `<div class="chips">${v.looked.map(f => `<span class="chip">${ic("file", "s14")}<span class="mono">${f}</span></span>`).join("")}</div>` : none("nothing read");
+  h += `</section></div>`;
+  // Activity
+  h += `<div class="actblk"><h3 class="cap">${ic("pulse", "s14")}Activity</h3>`;
+  h += v.actions.length ? `<div class="stripw"><span class="mono">0:00</span>${strip(v.actions, t0, t1, 300, true)}<span class="mono${v.status === "working" ? " js-m3el" : ""}">${v.start ? elapsed(v) : ""}</span></div>`
+    : `<div class="stripw">${none("no activity yet")}</div>`;
+  h += `<button class="btn" data-act="drawer" data-id="${v.id}" data-tab="actions"${v.actions.length ? "" : ' aria-disabled="true"'}>${ic("list", "s16")}Evidence<span class="mono muted">${v.actions.length}</span></button></div></article>`;
+  return h;
+}
+
+function preCardHtml() {
+  const acts = D.pre.actions;
+  return `<article class="card" aria-labelledby="card-title">
+    <header class="card-h">${gl("pre", 24)}<h2 id="card-title">Before plan</h2><span class="gap"></span></header>
+    <p class="goal">${esc(D.task)}</p>
+    <div class="cgrid"><section class="blk"><h3 class="cap">${ic("eye", "s14")}Read</h3><div class="chips">${acts.filter(a => a.k === "read").map(a => `<span class="chip">${ic("file", "s14")}<span class="mono">${a.target}</span></span>`).join("")}</div></section>
+    <section class="blk"><h3 class="cap">${ic("term", "s14")}Ran</h3><div class="chips"><span class="chip">${ic("term", "s14")}<span class="mono">ls</span></span></div></section></div>
+    <div class="actblk"><h3 class="cap">${ic("pulse", "s14")}Activity</h3><div class="stripw"><span class="mono">0:00</span>${strip(acts, 0, 22, 300, true)}<span class="mono">0:22</span></div>
+    <button class="btn" data-act="drawer" data-id="pre" data-tab="actions">${ic("list", "s16")}Evidence<span class="mono muted">${acts.length}</span></button></div></article>`;
+}
+
+function summaryHtml() {
+  const ms = mods();
+  const tot = {};
+  ms.forEach(v => v.files.forEach(f => { tot[f.path] = tot[f.path] || {add:0, del:0}; tot[f.path].add += f.add; tot[f.path].del += f.del; }));
+  const ta = Object.values(tot).reduce((s, f) => s + f.add, 0), td = Object.values(tot).reduce((s, f) => s + f.del, 0);
+  const rows = ms.map(v => {
+    const a = v.files.reduce((s, f) => s + f.add, 0), d = v.files.reduce((s, f) => s + f.del, 0);
+    return `<tr data-act="select" data-id="${v.id}"><td>${gl(v.status, 20)}</td><td class="mono muted">${v.id}</td>
+      <td><button class="linkbtn" data-act="select" data-id="${v.id}">${esc(v.title)}</button></td>
+      <td>${dbar(a, d)} ${dnum(a, d)}</td><td>${v.tests ? pips(v.tests.pass, v.tests.fail) + ` <span class="mono muted">${v.tests.pass}/${v.tests.pass + v.tests.fail}</span>` : ""}</td>
+      <td class="mono muted">${elapsed(v)}</td></tr>`;
+  }).join("");
+  const n = S.interventions;
+  return `<article class="card" aria-labelledby="card-title">
+    <header class="card-h">${gl("verified", 24, {label:"run finished"})}<h2 id="card-title">Run summary</h2><span class="gap"></span><span class="mono muted" style="display:inline-flex;gap:6px;align-items:center">${ic("clock", "s14")}6:02</span></header>
+    <p class="goal">${esc(D.task)}</p>
+    <table class="sum"><caption class="sr">Modules in this run</caption><tbody>${rows}</tbody></table>
+    <div class="sumfoot">
+      <span class="stat" role="img" aria-label="${Object.keys(tot).length} files, +${ta} −${td} lines">${ic("diff", "s16")}<span class="mono">${Object.keys(tot).length}</span>${ic("file", "s14")}${dbar(ta, td, false)}${dnum(ta, td)}</span>
+      <button class="stat flag" data-act="select" data-id="${D.flag.module}" aria-label="1 flag: ${esc(D.flag.text)}" data-tip="${esc(D.flag.text)}">${ic("flag", "s16")}<span class="mono">${D.flag.module}</span>${gl("unverified", 16, {label:false})}</button>
+      <span class="stat">${ic("user", "s16")}Interventions <span class="mono">${n ? n : "none"}</span></span>
+    </div></article>`;
+}
+
+function renderCard() {
+  const el = $("#cardpane");
+  if (!S.sel) el.innerHTML = summaryHtml();
+  else if (S.sel === "pre") el.innerHTML = preCardHtml();
+  else el.innerHTML = cardHtml(mod(S.sel));
+}
+
+/* =========================================================
+   8. RENDER: inline editors (change / correct / redo + consequence preview)
+   ========================================================= */
+function editorHtml(e) {
+  const v = mod(e.id), cur = v.instr[v.instr.length - 1];
+  if (e.type === "change") {
+    const k = "change-" + e.id, val = S.drafts[k] != null ? S.drafts[k] : cur.text;
+    return `<div class="ed" role="group" aria-labelledby="ed-h">
+      <h3 id="ed-h">${ic("edit", "s16")}Change ${e.id} · v${cur.v + 1}</h3>
+      <label for="ed-text">${ic("clock", "s14")}<span class="sr">Takes effect </span>when ${e.id} starts</label>
+      <textarea id="ed-text" data-draft="${k}">${esc(val)}</textarea>
+      <div class="acts"><button class="btn" data-act="ed-cancel">Cancel</button><button class="btn primary" data-act="change-save" data-id="${e.id}">${ic("check", "s16")}Save v${cur.v + 1}</button></div></div>`;
+  }
+  if (e.type === "correct") {
+    const k = "correct-" + e.id;
+    return `<div class="ed" role="group" aria-labelledby="ed-h">
+      <h3 id="ed-h">${ic("note", "s16")}Correct ${e.id}</h3>
+      <label for="ed-line">${ic("clock", "s14")}<span class="sr">Reaches the agent </span>after pytest</label>
+      <input id="ed-line" class="inp" data-draft="${k}" value="${esc(S.drafts[k] || "")}" placeholder="e.g. Round half up; do not truncate" autocomplete="off">
+      <div class="acts"><button class="btn" data-act="ed-cancel">Cancel</button><button class="btn primary" data-act="correct-send" data-id="${e.id}">${ic("send", "s16")}Send</button></div></div>`;
+  }
+  return redoHtml(e);
+}
+
+function redoHtml(e) {
+  const id = e.id, v = mod(id), cur = v.instr[v.instr.length - 1];
+  const idx = D.modules.findIndex(m => m.id === id);
+  const repl = attemptsFrom(id);
+  const kept = D.modules.slice(0, idx).map(m => m.id);
+  const files = [...new Set(repl.flatMap(r => r.files.map(f => f.path)))];
+  const running = S.run === "working" && !S.stopped;
+  const ki = "redo-instr-" + id, kn = "redo-note-" + id;
+  const instr = S.drafts[ki] != null ? S.drafts[ki] : cur.text;
+  const note = S.drafts[kn] != null ? S.drafts[kn] : "";
+  // conversation mini timeline: before-plan + each started module; cut marker before the redo module
+  const started = mods().filter(x => x.status !== "pending");
+  let tl = "", lab = "";
+  [{id:"pre"}].concat(started).forEach(sg => {
+    const gone = sg.id !== "pre" && D.modules.findIndex(m => m.id === sg.id) >= idx;
+    const w = sg.id === "pre" ? 18 : 30;
+    if (sg.id === id) { tl += '<i class="cut"></i>'; lab += '<span style="width:8px"></span>'; }
+    tl += `<span class="${gone ? "gone" : ""}" style="width:${w}px"></span>`;
+    lab += `<span style="width:${w}px">${sg.id === "pre" ? "·" : sg.id}</span>`;
+  });
+  return `<section class="ed redo" aria-labelledby="redo-h">
+    <h3 id="redo-h">${ic("undo", "s16")}Redo from ${id}</h3>
+    <div class="redo-cols">
+      <div>
+        <label for="redo-instr">${ic("file", "s14")}Instructions for ${id} · v${cur.v + 1}</label>
+        <textarea id="redo-instr" data-draft="${ki}">${esc(instr)}</textarea>
+        <label for="redo-note" style="margin-top:12px">${ic("bubble", "s14")}What went wrong <span>(optional)</span></label>
+        <input id="redo-note" class="inp" data-draft="${kn}" value="${esc(note)}" autocomplete="off">
+      </div>
+      <ul class="cq" aria-label="What will happen">
+        <li><span class="cqi">${ic("undo", "s16")}</span><div><div class="cqt">Restored</div><div class="chips">${files.length ? files.map(f => `<span class="chip"><span class="ri">${ic("file", "s14")}${ic("undo", "s14")}</span><span class="mono">${f}</span></span>`).join("") : none("no files to restore")}</div></div></li>
+        <li><span class="cqi">${ic("rewind", "s16")}</span><div><div class="cqt">Rewound</div>
+          <div class="tl" role="img" aria-label="Conversation kept up to the start of ${id}; later turns removed">${tl}</div><div class="tl-lab" aria-hidden="true">${lab}</div></div></li>
+        <li><span class="cqi">${gl("replaced", 16, {label:false})}</span><div><div class="cqt">Replaced</div><div class="chips">${repl.map(r => `<span class="chip strike"><span class="mono">${r.id}</span> attempt 1</span>`).join("")}</div></div></li>
+        <li><span class="cqi">${gl("verified", 16, {label:false})}</span><div><div class="cqt">Kept</div><div class="chips">${kept.length ? kept.map(k => `<span class="chip ok">${ic("check", "s14")}<span class="mono">${k}</span></span>`).join("") : none("nothing kept")}</div></div></li>
+        <li><span class="cqi${running ? " stopi" : ""}">${ic("stop", "s16")}</span><div><div class="cqt">Agent</div><span>${running ? "Will be stopped now" : "Idle · nothing to stop"}</span></div></li>
+      </ul>
+    </div>
+    <div class="acts"><button class="btn" data-act="ed-cancel">Cancel</button><button class="btn danger-solid" data-act="redo-confirm" data-id="${id}">${ic("undo", "s16")}${running ? "Stop &amp; redo" : "Redo"} from ${id}</button></div>
+  </section>`;
+}
+
+/* =========================================================
+   9. RENDER: Level 3 — Evidence drawer
+   ========================================================= */
+const KIND_IC = {read:["eye", "ic-read"], edit:["edit", "ic-edit"], bash:["term", "ic-bash"], test:["flask", "ic-test"]};
+function actRow(a, v, sub) {
+  const [n, c] = KIND_IC[a.k];
+  const icon = `<span class="${c}" role="img" aria-label="${a.k}">${ic(n, "s16")}</span>`;
+  let lbl, res = "", act = "";
+  if (a.k === "read") { lbl = `<span class="mono">${a.target}</span>`; res = `<span class="badge" role="img" aria-label="ok">${ic("check", "s14")}</span>`; }
+  if (a.k === "bash") { lbl = `<span class="mono">$ ${a.target}</span>`; res = `<span class="badge">exit 0</span>`; }
+  if (a.k === "edit") { lbl = `${a.verb} <span class="mono">${a.target}</span>`; res = `${dbar(a.add, a.del, false)}${dnum(a.add, a.del)}`; act = `data-act="open-diff" data-id="${v.id}" data-file="${a.target}"`; }
+  if (a.k === "test") {
+    lbl = `<span class="mono">pytest</span>`; act = `data-act="tab" data-tab="tests"`;
+    res = a.live ? `<span class="badge live">${gl("working", 14, {anim:false})}running</span>`
+      : `${pips(a.pass, a.fail, false)}<span class="badge ${a.fail ? "bad" : "ok"}">${a.pass}/${a.pass + a.fail}</span>`;
+  }
+  const inner = `<span class="tm">${a.t}</span>${icon}<span class="lbl">${lbl}</span><span class="badge">${res}</span>`;
+  return act ? `<li><button class="arow${sub ? " sub" : ""}" ${act}>${inner}</button></li>` : `<li><div class="arow${sub ? " sub" : ""}">${inner}</div></li>`;
+}
+function actionsHtml(v) {
+  const acts = v.actions, out = [];
+  for (let i = 0; i < acts.length;) { // fold runs of 2+ consecutive reads; edits and failures never fold
+    if (acts[i].k === "read") { let j = i; while (j < acts.length && acts[j].k === "read") j++; if (j - i >= 2) { out.push({fold:acts.slice(i, j), key:v.id + "-" + i}); i = j; continue; } }
+    out.push(acts[i]); i++;
+  }
+  if (!out.length) return `<p class="empty">No actions yet.</p>`;
+  return `<ul class="alist">${out.map(a => {
+    if (!a.fold) return actRow(a, v);
+    const open = !!S.folds[a.key];
+    return `<li><button class="arow" data-act="fold" data-v="${a.key}" aria-expanded="${open}"><span class="tm">${a.fold[0].t}</span><span class="ic-read">${ic("folder", "s16")}</span><span class="lbl">Explored <span class="mono">${a.fold.length}</span> files</span><span class="badge">${ic(open ? "up" : "down", "s14")}</span></button>
+      ${open ? `<ul class="sublist">${a.fold.map(x => actRow(x, v, true)).join("")}</ul>` : ""}</li>`;
+  }).join("")}</ul>`;
+}
+function diffLines(text) {
+  return text.split("\n").map(l => {
+    let hl = false;
+    if (l[0] === "!") { hl = true; l = l.slice(1); }
+    const c = l[0], cls = c === "+" ? "add" : c === "-" ? "del" : c === "@" ? "hunk" : "";
+    const body = c === "@" ? l : l.slice(1);
+    return `<span class="dl-l ${cls}${hl ? " hl" : ""}"${hl ? ' data-tip="Cites docs/CONTRIBUTING.md"' : ""}><span class="gt">${c === "+" ? "+" : c === "-" ? "−" : ""}</span>${esc(body)}</span>`;
+  }).join("");
+}
+const diffId = (mid, path) => `diff-${mid}-${path.replace(/[^a-z0-9]/gi, "-")}`;
+// mid given (drawer) = scroll target id; omitted (log details) = no id, so expanded rows never duplicate ids
+const diffBlock = (f, mid) => `<div class="diff"${mid ? ` id="${diffId(mid, f.path)}"` : ""}><div class="diff-h">${ic("file", "s16")}<span class="mono">${f.path}</span>${dbar(f.add, f.del, false)}${dnum(f.add, f.del)}</div><pre>${diffLines(f.diff)}</pre></div>`;
+const outHtml = t => t.split("\n").map(l => l.startsWith("@@good ") ? `<span class="good">${esc(l.slice(7))}</span>` : l.startsWith("@@bad ") ? `<span class="bad">${esc(l.slice(6))}</span>` : esc(l)).join("\n");
+function testsHtml(v) {
+  if (!v.tests) return `<p class="empty">No test runs yet.</p>`;
+  const t = v.tests;
+  const live = v.status === "working" ? `<p class="badge live" style="margin:12px 0 0">${gl("working", 14, {anim:false})}pytest running · new result pending</p>` : "";
+  const after = t.after ? `${gl("verified", 16)}<span>Passing run after last edit</span>` : `${gl("unverified", 16)}<span>No passing run after last edit</span>`;
+  return `<div class="trow">${ring(t.pass, t.fail, 48)}<span class="tnum">${t.pass}<small>/${t.pass + t.fail}</small></span>${pips(t.pass, t.fail)}</div>
+    <p class="badge" style="margin:12px 0 0;font-family:var(--sans)">${after}</p>${live}<pre class="out">${outHtml(t.out)}</pre>`;
+}
+function instrHtml(v) {
+  const cur = v.instr[v.instr.length - 1];
+  return `<ul class="vlist">${v.instr.slice().reverse().map(x => `<li class="${x === cur ? "cur" : ""}"><div class="vh">${ic(x.by === "you" ? "user" : "bot", "s14")}<span class="mono">v${x.v}</span>by ${x.by}${x === cur ? " · current" : ""}</div><p>${esc(x.text)}</p></li>`).join("")}</ul>`;
+}
+function renderDrawer() {
+  const el = $("#drawer");
+  if (!S.drawer || S.view !== "modules") { el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-labelledby"); return; }
+  const id = S.drawer.id, isPre = id === "pre";
+  const v = isPre ? {id:"pre", title:"Before plan", status:"pre", actions:D.pre.actions, files:[], tests:null, instr:[]} : mod(id);
+  const tabs = isPre ? [["actions", "Actions", v.actions.length]]
+    : [["actions", "Actions", v.actions.length], ["diff", "Diff", v.files.length], ["tests", "Tests", v.tests ? v.tests.pass + v.tests.fail : 0], ["instr", "Instructions", v.instr.length]];
+  if (!tabs.some(t => t[0] === S.drawer.tab)) S.drawer.tab = "actions";
+  const tab = S.drawer.tab;
+  const body = tab === "actions" ? actionsHtml(v) : tab === "diff" ? (v.files.length ? v.files.map(f => diffBlock(f, v.id)).join("") : `<p class="empty">No file changes yet.</p>`) : tab === "tests" ? testsHtml(v) : instrHtml(v);
+  el.hidden = false;
+  el.innerHTML = `<div class="dr-h">${gl(v.status, 20, {anim:false})}${isPre ? "" : `<span class="mono muted">${id}</span>`}<h2 id="dr-title">${esc(v.title)}</h2>
+      <button class="ib" data-act="drawer-close" aria-label="Close evidence" data-tip="Close (Esc)">${ic("x")}</button></div>
+    <div class="tabs" role="tablist" aria-label="Evidence">${tabs.map(([k, l, n]) => `<button class="tab" role="tab" id="tab-${k}" aria-selected="${tab === k}" aria-controls="dr-panel" tabindex="${tab === k ? 0 : -1}" data-act="tab" data-tab="${k}">${l}<span class="mono muted">${n}</span></button>`).join("")}</div>
+    <div class="dr-b" id="dr-panel" role="tabpanel" aria-labelledby="tab-${tab}">${body}</div>`;
+  el.setAttribute("aria-labelledby", "dr-title");
+  if (tab === "diff" && S.drawer.file) {
+    const t = document.getElementById(diffId(id, S.drawer.file));
+    if (t) t.scrollIntoView({block:"start"});
+  }
+}
+
+/* =========================================================
+   10. RENDER: Log view (baseline condition)
+   ========================================================= */
+const TYPE_GROUP = {read:"read", edit:"edit", bash:"bash", test:"test", start:"module", finish:"module", plan:"module", run:"module", hold:"module", stopped:"module"};
+function logEvents() {
+  const L = D.log.filter(e => e.s.includes(STATE_CODE[S.run]) && !(S.stopped && e.live));
+  if (S.stopped) L.push({t:S.stopAt, m:"run", k:"stopped", text:"Agent stopped"});
+  return L;
+}
+function visibleLog() {
+  const F = S.log, q = F.q.trim().toLowerCase();
+  return logEvents().map((e, i) => ({e, i})).filter(({e}) =>
+    (F.mod === "all" || e.m === F.mod) && F.types[TYPE_GROUP[e.k]] && (!F.flagged || e.flag) &&
+    (!q || (e.text + " " + (e.args || "") + " " + e.m).toLowerCase().includes(q)));
+}
+function logIcon(e) {
+  if (e.k === "finish") return gl(e.res, 16);
+  if (e.k === "hold") return gl("waiting", 16);
+  if (e.k === "stopped") return gl("stopped", 16);
+  if (e.k === "test" && e.live) return gl("working", 16, {anim:false, label:"running"});
+  const m = {run:["pulse", "ic-test"], plan:["plan", "ic-test"], start:["play", "ic-test"], read:KIND_IC.read, edit:KIND_IC.edit, bash:KIND_IC.bash, test:KIND_IC.test}[e.k];
+  return `<span class="${m[1]}" role="img" aria-label="${e.k}">${ic(m[0], "s16")}</span>`;
+}
+function logBadge(e) {
+  if (e.k === "edit") return dbar(e.add, e.del, false) + dnum(e.add, e.del);
+  if (e.k === "test") return e.live ? `<span class="badge live">running</span>` : pips(e.pass, e.fail, false) + `<span class="badge ${e.fail ? "bad" : "ok"}">${e.pass}/${e.pass + e.fail}</span>`;
+  if (e.k === "finish") return pips(e.pass, e.fail, false) + (e.flag ? `<span style="color:var(--warn-fg);display:inline-flex" role="img" aria-label="flagged">${ic("flag", "s14")}</span>` : "");
+  return "";
+}
+// Same intervention set as the Modules view: Change (plan row), Correct (active module's live row), Redo (start/finish rows)
+function logActs(e, i) {
+  if (e.k === "plan" && !isFin() && !S.stopped) return `<button class="btn sm" data-act="log-change" data-id="M4" data-i="${i}" aria-label="Change M4" data-tip="Change M4">${ic("edit", "s14")}<span class="lbl">Change M4</span></button>`;
+  if (e.live && S.run === "working" && !S.stopped) return `<button class="btn sm" data-act="log-correct" data-id="${e.m}" data-i="${i}" aria-label="Correct ${e.m}" data-tip="Correct ${e.m}">${ic("note", "s14")}<span class="lbl">Correct ${e.m}</span></button>`;
+  if ((e.k === "start" || e.k === "finish") && /^M\d$/.test(e.m)) return `<button class="btn sm ghost danger" data-act="log-redo" data-id="${e.m}" data-i="${i}" aria-label="Redo from ${e.m}" data-tip="Redo from ${e.m}">${ic("undo", "s14")}<span class="lbl">Redo from here</span></button>`;
+  return "";
+}
+function logDetail(e) {
+  let h = "";
+  if (e.args) h += `<div class="kv"><b>args</b>${esc(e.args)}</div>`;
+  if (e.out) h += `<pre class="out">${esc(e.out)}</pre>`;
+  if (e.diffOf) h += mod(e.diffOf).files.map(f => diffBlock(f)).join("");
+  if (e.outOf) h += `<pre class="out">${outHtml(mod(e.outOf).tests.out)}</pre>`;
+  if (e.k === "test" && e.live) h += `<p class="badge live">${gl("working", 14, {anim:false})}running · output streams here</p>`;
+  // The plan as issued at 0:22 (id, title, deps). No live status here: that aggregate is treatment-only.
+  if (e.k === "plan") h += `<ul class="crit plan-issued" style="margin-top:8px">${D.modules.map(m => `<li><span class="pbul" aria-hidden="true"></span><span><span class="mono muted">${m.id}</span> ${esc(m.title)}</span><span class="mono muted pdeps">${m.deps.length ? ic("needs", "s14") + `<span class="sr">needs </span>` + m.deps.join(" ") : ""}</span></li>`).join("")}</ul>`;
+  if (e.k === "start") { const v = mod(e.m), c = v.instr[v.instr.length - 1]; h += `<div class="kv"><b>instructions v${c.v}</b>${esc(c.text)}</div>`; }
+  if (e.k === "finish") h += `<ul class="crit" style="margin-top:8px">${mod(e.m).criteria.map(c => `<li>${gl(c.st, 16)}<span>${esc(c.text)}</span>${srcHtml(c.src)}</li>`).join("")}</ul>`;
+  if (e.k === "hold") h += `<div class="kv"><b>reason</b>pause armed · ${esc(D.flag.text)}</div>`;
+  if (e.k === "run" || e.k === "stopped") h += `<div class="kv"><b>at</b>${e.t}</div>`;
+  return h || `<div class="kv muted">No details.</div>`;
+}
+function editorAnchor() { // log row index the inline editor sits under
+  const e = S.editor; if (!e) return -1;
+  if (e.anchor != null) return e.anchor;
+  const L = logEvents();
+  if (e.type === "change") return L.findIndex(x => x.k === "plan");
+  if (e.type === "redo") return L.findIndex(x => x.k === "start" && x.m === e.id);
+  let last = -1; L.forEach((x, i) => { if (x.m === e.id) last = i; }); return last;
+}
+function renderLog() {
+  const F = S.log;
+  const types = [["read", "eye", "Reads"], ["edit", "edit", "Edits"], ["bash", "term", "Commands"], ["test", "flask", "Test runs"], ["module", "plan", "Plan and module events"]];
+  $("#logpane").innerHTML = `<div class="logwrap"><div class="lbar" role="toolbar" aria-label="Log filters">
+      <div class="lsearch">${ic("search", "s16")}<input id="log-q" class="inp" type="search" placeholder="Search" aria-label="Search events" value="${esc(F.q)}" autocomplete="off"></div>
+      <div class="fgroup" role="group" aria-label="Module">${["all", "pre", "M1", "M2", "M3", "M4"].map(m => `<button class="fchip" data-act="log-mod" data-v="${m}" aria-pressed="${F.mod === m}">${m === "all" ? "All" : m}</button>`).join("")}</div>
+      <div class="fgroup" role="group" aria-label="Event type">${types.map(([k, i, l]) => `<button class="fchip" data-act="log-type" data-v="${k}" aria-pressed="${F.types[k]}" aria-label="${l}" data-tip="${l}">${ic(i, "s16")}</button>`).join("")}</div>
+      <button class="fchip solo" data-act="log-flag" aria-pressed="${F.flagged}" aria-label="Flagged only" data-tip="Flagged only">${ic("flag", "s16")}</button>
+      <span class="lcount" id="log-count" aria-live="polite"></span>
+    </div><ul class="llist" id="log-list" aria-label="Events, oldest first"></ul></div>`;
+  renderLogList();
+}
+function renderLogList() {
+  const rows = visibleLog(), anchor = editorAnchor();
+  $("#log-count").textContent = `${rows.length}/${logEvents().length}`;
+  let h = rows.map(({e, i}) => {
+    const open = !!S.log.open[i];
+    const tag = /^M\d$/.test(e.m) ? `<span class="mtag">${e.m}</span>` : `<span class="mtag sys">${e.m}</span>`;
+    const sm = e.k === "read" ? `read <span class="mono">${esc(e.text)}</span>` : e.k === "edit" || e.k === "bash" || e.k === "test" ? `<span class="mono">${esc(e.text)}</span>` : esc(e.text);
+    let r = `<li><div class="lrow${S.log.sel === i ? " sel" : ""}">
+      <button class="lmain" data-act="log-row" data-i="${i}" aria-expanded="${open}"${open ? ` aria-controls="ld-${i}"` : ""}>
+        <span class="tm">${e.t}</span>${tag}${logIcon(e)}<span class="sm">${sm}${e.flag ? `<span style="color:var(--warn-fg);display:inline-flex" role="img" aria-label="flagged: ${esc(D.flag.text)}" data-tip="${esc(D.flag.text)}">${ic("flag", "s14")}</span>` : ""}</span><span class="lb">${logBadge(e)}</span>${ic("chev", "s16 chev")}
+      </button><div class="lacts">${logActs(e, i)}</div></div>`;
+    if (open) r += `<div class="ldet" id="ld-${i}">${logDetail(e)}</div>`;
+    if (S.editor && anchor === i) r += `<div class="ledit">${editorHtml(S.editor)}</div>`;
+    return r + "</li>";
+  }).join("");
+  if (!rows.length) h = `<li class="lghost none">${ic("search", "s16")}<span>0</span></li>`;
+  const L = logEvents(), last = L[L.length - 1];
+  if (S.run === "working" && !S.stopped && rows.length && last.live) h += `<li class="lghost">${gl("working", 16, {label:"still running"})}<span>${fmt(S.runSec)}</span></li>`;
+  if (S.run === "waiting" && !S.stopped) h += `<li class="lghost hold">${gl("waiting", 16, {label:"waiting for you"})}<span class="js-wait">${fmt(S.waitSec)}</span></li>`;
+  if (S.pause && pauseAfter() && !S.stopped) h += `<li class="lghost"><span class="sr">Agent will pause after ${pauseAfter()}</span>${ic("pause", "s16")}<span aria-hidden="true">after ${pauseAfter()}</span></li>`;
+  $("#log-list").innerHTML = h;
+}
+
+/* =========================================================
+   11. RENDER: mockup-only chrome + root render
+   ========================================================= */
+function renderMock() {
+  const states = [["working", "1", "Working"], ["waiting", "2", "Waiting for you"], ["finished", "3", "Finished"], ["redo", "4", "Redo preview"]];
+  $("#mock").innerHTML = `<span class="ml">Mockup</span>
+    <span class="mg" role="group" aria-label="State">${states.map(([k, n, l]) => `<button data-act="m-state" data-v="${k}" aria-pressed="${S.run === k}"><kbd>${n}</kbd>${l}</button>`).join("")}</span>
+    <span class="mg" role="group" aria-label="View">${[["modules", "grid", "Modules"], ["log", "rows", "Log"]].map(([k, i, l]) => `<button data-act="m-view" data-v="${k}" aria-pressed="${S.view === k}">${ic(i, "s14")}${l}</button>`).join("")}</span>
+    <span class="mg" role="group" aria-label="Theme">${[["dark", "moon"], ["light", "sun"]].map(([k, i]) => `<button data-act="m-theme" data-v="${k}" aria-pressed="${S.theme === k}">${ic(i, "s14")}${k}</button>`).join("")}</span>`;
+}
+
+// Focus keys are scoped by region, so the Now-bar segment for M2 and the rail row for M2 never collide
+const REGIONS = "#now,#rail,#cardpane,#logpane,#drawer,#mock";
+function keyOf(el) {
+  if (!el || !el.dataset) return "";
+  const r = el.closest && el.closest(REGIONS);
+  return [r ? r.id : "", el.dataset.act, el.dataset.id, el.dataset.v, el.dataset.tab, el.dataset.i, el.dataset.file].join("|");
+}
+const railKey = id => `rail|select|${id || ""}||||`;
+const railSel = id => `#rail [data-act="select"][data-id="${id || ""}"]`;
+const focusable = x => x.matches("button,input,textarea,select,a[href],[tabindex]") && !x.closest("[inert]");
+function focusKey(k, opts) {
+  const n = k && [...document.querySelectorAll("[data-act]")].find(x => keyOf(x) === k && focusable(x));
+  if (n) n.focus(opts);
+  return !!n;
+}
+const NARROW = matchMedia("(max-width:768px)");
+function render() {
+  const a = document.activeElement;
+  const fk = a && a.dataset && a.dataset.act ? keyOf(a) : null, fid = a && a.id && !(a.dataset && a.dataset.act) ? a.id : null;
+  document.documentElement.dataset.theme = S.theme;
+  const modular = S.view === "modules";
+  $("#main").className = "main" + (modular ? "" : " logv");
+  $("#rail").hidden = !modular; $("#cardpane").hidden = !modular; $("#logpane").hidden = modular;
+  renderNow();
+  // Hidden panes are emptied so no stale markup (or duplicate ids) survives a view switch
+  if (modular) { renderRail(); renderCard(); $("#logpane").innerHTML = ""; }
+  else { renderLog(); $("#rail").innerHTML = ""; $("#cardpane").innerHTML = ""; }
+  renderDrawer();
+  // Whatever the drawer covers leaves the Tab order (the card; at phone width, everything behind it)
+  const cover = modular && !!S.drawer, full = cover && NARROW.matches;
+  $("#cardpane").inert = cover; $("#rail").inert = full; $("#now").inert = full;
+  renderMock();
+  hideTip(true);
+  if (fk) focusKey(fk, {preventScroll:true});
+  else if (fid) { const n = document.getElementById(fid); if (n && !n.closest("[inert]")) n.focus({preventScroll:true}); }
+}
+NARROW.addEventListener("change", () => render());
+function focusSel(sel) { requestAnimationFrame(() => { const n = document.querySelector(sel); if (n) n.focus(); }); }
+function toast(msg, icon = "check") {
+  const t = document.createElement("div");
+  t.className = "toast"; t.innerHTML = ic(icon, "s16") + `<span>${esc(msg)}</span>`;
+  $("#toasts").appendChild(t); setTimeout(() => t.remove(), 3400);
+}
+
+/* =========================================================
+   12. ACTIONS
+   ========================================================= */
+const tip = $("#tip");
+const RAIL_ITEMS = ["pre", "M1", "M2", "M3", "M4"];
+// carry = true only for the in-product Continue path; the mockup state switcher always gives a canonical state
+function setRun(k, carry = false) {
+  Object.assign(S, {run:k, stopped:false, stopAsk:false, noteOpen:false, drawer:null, editor:null, folds:{}, pause:false, returnKey:null, edReturn:null});
+  if (!carry) Object.assign(S, {instrExtra:{}, interventions:0, drafts:{}});
+  S.log.open = {}; S.log.sel = -1;
+  if (k === "working") { S.sel = "M3"; S.runSec = 209; S.m3Sec = 72; }
+  if (k === "waiting") { S.sel = "M3"; S.waitSec = 42; }
+  if (k === "finished") S.sel = null;
+  if (k === "redo") { S.sel = "M3"; S.editor = {type:"redo", id:"M3"}; S.drafts["redo-note-M3"] = D.redoNote; delete S.drafts["redo-instr-M3"]; }
+  render();
+}
+function closeEditor() {
+  S.editor = null;
+  if (S.run === "redo") S.run = "finished";
+}
+function select(id) { // id null = run summary (finished runs only)
+  if (S.editor && S.editor.id !== id) closeEditor();
+  S.sel = id;
+  if (S.drawer) S.drawer = id ? {id, tab:S.drawer.tab} : null;
+  render();
+}
+function openEditor(type, id, anchor, trigger) {
+  S.editor = {type, id, anchor};
+  S.edReturn = trigger ? keyOf(trigger) : null;
+  if (S.view === "modules") S.sel = id;
+  S.drawer = null;
+  render();
+  focusSel(type === "correct" ? "#ed-line" : type === "change" ? "#ed-text" : "#redo-instr");
+}
+function afterEditor() { // focus back to whatever opened the editor, else the card's primary action
+  const k = S.edReturn; S.edReturn = null;
+  requestAnimationFrame(() => {
+    if (focusKey(k)) return;
+    const n = $('#cardpane [data-act="ed-open"]') || $(railSel(S.sel));
+    if (n) n.focus();
+  });
+}
+function sendNote() {
+  const n = $("#note-in"), val = (n && n.value.trim()) || "";
+  if (!val) { if (n) n.focus(); return; }
+  S.drafts.note = ""; S.noteOpen = false; S.interventions++;
+  toast(S.run === "waiting" ? "Note queued · reaches the agent when it continues" : "Note queued · reaches the agent after pytest", "send");
+  render();
+  focusSel('[data-act="note"]');
+}
+function escape() {
+  hideTip(true);
+  if (S.stopAsk) { S.stopAsk = false; render(); focusSel('[data-act="stop"]'); return; }
+  if (S.noteOpen) { S.noteOpen = false; render(); focusSel('[data-act="note"]'); return; }
+  if (S.editor) { closeEditor(); render(); afterEditor(); return; }
+  if (S.drawer) { S.drawer = null; render(); restoreReturn(); return; }
+  if (S.view === "log") { const o = Object.keys(S.log.open); if (o.length) { S.log.open = {}; render(); } return; }
+  const inRail = document.activeElement && document.activeElement.closest && document.activeElement.closest("#rail");
+  const up = id => { S.sel = id; render(); if (inRail) focusSel(railSel(id)); };
+  if (isFin()) { if (S.sel) up(null); return; } // the run summary is the top level of a finished run
+  if (S.sel !== (activeId() || "M3")) up(activeId() || "M3");
+}
+function restoreReturn() {
+  const k = S.returnKey; S.returnKey = null;
+  if (!focusKey(k)) focusSel(railSel(S.sel));
+}
+function move(dir) {
+  if (S.view === "modules") {
+    const items = isFin() ? [null].concat(RAIL_ITEMS) : RAIL_ITEMS;
+    let i = items.indexOf(S.sel);
+    i = i < 0 ? (dir > 0 ? 0 : items.length - 1) : Math.max(0, Math.min(items.length - 1, i + dir));
+    select(items[i]);
+    focusSel(railSel(S.sel));
+  } else {
+    const rows = visibleLog(); if (!rows.length) return;
+    let p = rows.findIndex(r => r.i === S.log.sel);
+    p = p < 0 ? (dir > 0 ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, p + dir));
+    S.log.sel = rows[p].i; render();
+    focusSel(`[data-act="log-row"][data-i="${S.log.sel}"]`);
+  }
+}
+function openLevel() {
+  if (S.view === "modules") {
+    if (!S.sel) { select("M1"); focusSel(railSel("M1")); return; }
+    S.drawer = {id:S.sel, tab:"actions"}; S.returnKey = railKey(S.sel);
+    render(); focusSel('[data-act="drawer-close"]');
+  } else if (S.log.sel >= 0) { S.log.open[S.log.sel] = !S.log.open[S.log.sel]; render(); }
+}
+
+/* =========================================================
+   13. EVENTS (one delegated handler per event type)
+   ========================================================= */
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("[data-act]");
+  if (!t || t.getAttribute("aria-disabled") === "true") return;
+  const a = t.dataset.act, id = t.dataset.id, v = t.dataset.v;
+  switch (a) {
+    case "m-state": setRun(v); break;
+    case "m-view":
+      S.view = v; S.drawer = null; S.stopAsk = false;
+      if (v === "modules" && S.editor) S.sel = S.editor.id; // an editor opened in the Log shows on its module's card
+      render(); break;
+    case "m-theme": S.theme = v; render(); break;
+    case "select": select(id || null); if (t.closest("#rail")) focusSel(railSel(id)); break;
+    case "flag-jump":
+      if (S.view === "log") { S.log.flagged = true; render(); }
+      else select(D.flag.module);
+      break;
+    case "drawer":
+      S.returnKey = keyOf(t); S.drawer = {id, tab:t.dataset.tab || "actions", file:t.dataset.file};
+      render(); focusSel('[data-act="drawer-close"]'); break;
+    case "drawer-close": S.drawer = null; render(); restoreReturn(); break;
+    case "tab": S.drawer.tab = t.dataset.tab; S.drawer.file = null; render(); focusSel(`#tab-${t.dataset.tab}`); break;
+    case "open-diff": S.drawer = {id, tab:"diff", file:t.dataset.file}; render(); focusSel("#tab-diff"); break;
+    case "fold": S.folds[v] = !S.folds[v]; render(); break;
+    case "pause":
+      S.pause = !S.pause;
+      toast(S.pause ? `Agent will pause after ${pauseAfter()}` : "Pause cleared", S.pause ? "pause" : "check");
+      render(); break;
+    case "note": S.noteOpen = !S.noteOpen; S.stopAsk = false; render(); if (S.noteOpen) focusSel("#note-in"); break;
+    case "note-send": sendNote(); break;
+    case "stop": S.stopAsk = true; S.noteOpen = false; render(); focusSel('[data-act="stop-cancel"]'); break;
+    case "stop-cancel": S.stopAsk = false; render(); focusSel('[data-act="stop"]'); break;
+    case "stop-confirm":
+      S.stopAt = S.run === "waiting" ? fmt(sec(D.modules[2].end) + S.waitSec) : fmt(S.runSec);
+      S.stopAsk = false; S.stopped = true; S.pause = false; S.editor = null; S.noteOpen = false;
+      toast("Agent stopped · files left as they are", "stop"); render(); focusSel("#now-title"); break;
+    case "ed-open": openEditor(v, id, undefined, t); break;
+    case "ed-cancel": closeEditor(); render(); afterEditor(); break;
+    case "change-save": {
+      const cur = mod(id).instr.slice(-1)[0], k = "change-" + id;
+      const text = (S.drafts[k] != null ? S.drafts[k] : cur.text).trim() || cur.text;
+      S.instrExtra[id] = (S.instrExtra[id] || []).concat({v:cur.v + 1, by:"you", text});
+      delete S.drafts[k]; S.interventions++; closeEditor();
+      toast(`${id} instructions saved as v${cur.v + 1} · used when ${id} starts`); render(); afterEditor(); break;
+    }
+    case "correct-send": {
+      const k = "correct-" + id, val = (S.drafts[k] || "").trim();
+      if (!val) { focusSel("#ed-line"); break; }
+      delete S.drafts[k]; S.interventions++; closeEditor();
+      toast(`Correction queued · reaches ${id} after pytest`, "send"); render(); afterEditor(); break;
+    }
+    case "redo-confirm": {
+      const running = S.run === "working" && !S.stopped;
+      closeEditor(); S.interventions++;
+      toast(`${running ? "Agent stopped · " : ""}Redo from ${id} started (mockup)`, "undo"); render(); afterEditor(); break;
+    }
+    case "continue": toast("Continuing to M4 · mockup jumps to the finished run", "play"); setRun("finished", true); break;
+    case "change-next": openEditor("change", "M4", undefined, t); break;
+    case "redo-cur": openEditor("redo", "M3", undefined, t); break;
+    case "log-mod": S.log.mod = v; render(); break;
+    case "log-type": S.log.types[v] = !S.log.types[v]; render(); break;
+    case "log-flag": S.log.flagged = !S.log.flagged; render(); break;
+    case "log-row": { const i = +t.dataset.i; S.log.sel = i; S.log.open[i] = !S.log.open[i]; render(); break; }
+    case "log-change": openEditor("change", id, +t.dataset.i, t); break;
+    case "log-correct": openEditor("correct", id, +t.dataset.i, t); break;
+    case "log-redo": openEditor("redo", id, +t.dataset.i, t); break;
+  }
+});
+
+document.addEventListener("input", ev => {
+  const d = ev.target.dataset && ev.target.dataset.draft;
+  if (d) S.drafts[d] = ev.target.value;
+  if (ev.target.id === "log-q") { S.log.q = ev.target.value; renderLogList(); }
+});
+
+document.addEventListener("keydown", ev => {
+  const t = ev.target, typing = t.tagName === "INPUT" || t.tagName === "TEXTAREA";
+  if (ev.key === "Escape") { if (typing) t.blur(); ev.preventDefault(); escape(); return; }
+  if (typing) {
+    if (ev.key === "Enter" && t.id === "note-in") { ev.preventDefault(); sendNote(); }
+    if (ev.key === "Enter" && t.id === "ed-line") { ev.preventDefault(); $('[data-act="correct-send"]').click(); }
+    return;
+  }
+  if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (t.getAttribute && t.getAttribute("role") === "tab" && (ev.key === "ArrowRight" || ev.key === "ArrowLeft")) {
+    const tabs = [...document.querySelectorAll('#drawer [role="tab"]')], i = tabs.indexOf(t);
+    const n = tabs[(i + (ev.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
+    if (n) { ev.preventDefault(); n.click(); }
+    return;
+  }
+  if (ev.key === "j" || ev.key === "k") { ev.preventDefault(); move(ev.key === "j" ? 1 : -1); return; }
+  if (ev.key === "Enter") {
+    const onRow = t.closest && t.closest("#rail [data-act='select']");
+    if (onRow && (onRow.dataset.id || null) === S.sel) { ev.preventDefault(); openLevel(); return; }
+    if (t === document.body || !t.closest("button, a, input, textarea, [tabindex]")) { ev.preventDefault(); openLevel(); }
+    return;
+  }
+  if (["1", "2", "3", "4"].includes(ev.key)) setRun(["working", "waiting", "finished", "redo"][+ev.key - 1]);
+});
+
+// Tooltips on hover AND keyboard focus. data-tip = hover + focus; data-ftip = focus only (rail rows,
+// whose parts already have hover tips). The tip is hoverable (stays while the pointer is over it),
+// dismissable with Esc, and linked to the focused element with aria-describedby.
+let tipEl = null, tipTimer = 0;
+function showTip(el, text) {
+  if (!text) return;
+  clearTimeout(tipTimer);
+  if (tipEl && tipEl !== el) tipEl.removeAttribute("aria-describedby");
+  if (text === "legend") tip.innerHTML = LEGEND; else tip.textContent = text;
+  tip.hidden = false; tipEl = el;
+  if (el === document.activeElement && text !== el.getAttribute("aria-label")) el.setAttribute("aria-describedby", "tip");
+  const r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  const x = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, innerWidth - tw - 8));
+  let y = r.bottom + 6; if (y + th > innerHeight - 8) y = r.top - th - 6;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip(now) {
+  clearTimeout(tipTimer);
+  const go = () => { tip.hidden = true; if (tipEl) { tipEl.removeAttribute("aria-describedby"); tipEl = null; } };
+  if (now) go(); else tipTimer = setTimeout(go, 150);
+}
+document.addEventListener("mouseover", ev => {
+  if (!ev.target.closest) return;
+  if (ev.target.closest("#tip")) { clearTimeout(tipTimer); return; }
+  const el = ev.target.closest("[data-tip]");
+  if (el) showTip(el, el.dataset.tip); else hideTip();
+});
+document.addEventListener("focusin", ev => {
+  const el = ev.target.closest && ev.target.closest("[data-tip],[data-ftip]");
+  if (el && ev.target.matches(":focus-visible")) showTip(el, el.dataset.tip || el.dataset.ftip); else hideTip(true);
+});
+document.addEventListener("focusout", () => hideTip(true));
+document.addEventListener("scroll", () => hideTip(true), true);
+
+// Live clocks (text only; the working glyph is the only animation)
+setInterval(() => {
+  if (S.stopped) return;
+  if (S.run === "working") {
+    S.runSec++; S.m3Sec++;
+    document.querySelectorAll(".js-m3el").forEach(n => { n.textContent = fmt(S.m3Sec); });
+  } else if (S.run === "waiting") {
+    S.waitSec++;
+    document.querySelectorAll(".js-wait").forEach(n => { n.textContent = fmt(S.waitSec); });
+  }
+}, 1000);
+
+render();
+</script>
+</body>
+</html>
