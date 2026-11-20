@@ -3,8 +3,8 @@
  * Module changes, for every skin: what arrives, fills, pops or sweeps when a module changes. ui/motion.ts
  * runs the parts CSS cannot see change (train, track, glyph, card, Now bar) through the Web Animations
  * API on the hooks below (.st-dot::before, .card::after, the ghost copies). Loaded after the skin, so
- * these rules win over its decoration (a ghost copy never floats in with the skin's entrances); a skin
- * colours them through its motion tokens (--ring, --ring-glow, --flash-glow, --sweep). Nothing here
+ * these rules win over its decoration (the card or marker copy that leaves never floats in with the
+ * skin's entrances; what is inside it is the skin's to stop); a skin colours them through its motion tokens (--ring, --ring-glow, --flash-glow, --sweep). Nothing here
  * moves a metro station's box (drawMetro() measures it), and final.css stops all of it under reduced
  * motion.
  */

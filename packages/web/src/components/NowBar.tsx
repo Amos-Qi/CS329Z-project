@@ -21,6 +21,7 @@ import {
 	shownLabel,
 	shownStatus,
 } from "../model/panel.ts";
+import { useSkinEpoch } from "../skins/index.ts";
 import { editorOn, type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
 import { announce } from "../ui/announce.tsx";
 import { Icon, type IconName } from "../ui/icons.tsx";
@@ -209,6 +210,8 @@ export function NowBar({ panel, ui }: NowBarProps) {
 function useStateChange(nowRef: RefObject<HTMLElement | null>, key: string) {
 	const last = useRef(key);
 	const height = useRef<number | null>(null);
+	// a skin change re-renders, so the effect below keeps the bar's height current without animating
+	useSkinEpoch();
 	useLayoutEffect(() => {
 		const bar = nowRef.current;
 		if (!bar) return;

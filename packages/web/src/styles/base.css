@@ -7,7 +7,7 @@
  * bar (.harness), and Home and the Raw table get a few rules in the same tokens. Keep class names in
  * sync with the mockup.
  *
- * Load order (skins/index.ts): base.css, the skin, motion.css, final.css.
+ * Load order (written into index.html by vite-skins.ts): base.css, the skin, motion.css, final.css.
  */
 /* ---------- Base ---------- */
 * {
@@ -24,7 +24,7 @@ html {
 body {
 	background-color: var(--bg);
 	color: var(--fg);
-	font: 500 14px / 1.5 var(--font-ui);
+	font: 400 14px / 1.45 var(--font-ui);
 	font-variant-numeric: tabular-nums;
 	-webkit-font-smoothing: antialiased;
 	overflow-x: hidden;
@@ -53,7 +53,7 @@ textarea {
 :focus-visible {
 	outline: 2px solid var(--focus);
 	outline-offset: 2px;
-	border-radius: 6px;
+	border-radius: var(--focus-radius, 4px);
 }
 .sr-only {
 	position: absolute !important;
@@ -1066,7 +1066,7 @@ textarea.field {
 	padding: 10px 12px 10px 16px;
 	background: var(--card);
 	border: 1px solid var(--hair-2);
-	border-radius: 12px;
+	border-radius: 8px;
 }
 .ov-h {
 	display: flex;
@@ -1149,7 +1149,6 @@ textarea.field {
 .ovb[aria-current="true"] {
 	background: var(--muted);
 	border-color: var(--act);
-	box-shadow: inset 0 0 18px var(--act-soft);
 }
 .ov-node {
 	justify-self: center;

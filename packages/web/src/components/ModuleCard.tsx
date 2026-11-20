@@ -28,6 +28,7 @@ import {
 	shownStatus,
 	type TestsView,
 } from "../model/panel.ts";
+import { useSkinEpoch } from "../skins/index.ts";
 import { type EvTab, type PanelProps, redoTarget, type Ui } from "../state/ui.ts";
 import { Icon, type IconName } from "../ui/icons.tsx";
 import { EASE, EASE_TRAIN, ghostOf, play, reducedMotion } from "../ui/motion.ts";
@@ -70,6 +71,8 @@ export function Work({ panel, ui }: WorkProps) {
 	const last = useRef({ key: shown, id: shownId });
 	const snap = useRef<Snapshot | null>(null);
 	const cardH = useRef<number | null>(null);
+	// a skin change re-renders, so the effects below keep the measured heights current
+	useSkinEpoch();
 	/* a card that gets much shorter while the page is scrolled (a redo panel closing) would make the page
 	   snap up as the scroll clamps: hold the old height and let it go, so the page glides up instead */
 	useLayoutEffect(() => {
@@ -161,6 +164,8 @@ export function ModuleCard({ panel, ui, mod: m }: ModuleCardProps) {
 	const cardRef = useRef<HTMLElement>(null);
 	const ceRef = useRef<HTMLElement>(null);
 	const shape = useRef({ ev: evOpen, redo: redoHere, h: 0 });
+	// a skin change re-renders, so the effect below keeps the card's height current without animating
+	useSkinEpoch();
 	/* opening or closing the evidence column (or the redo panel in it) fades the column in and eases the
 	   card's height, instead of reflowing the card in one frame */
 	useLayoutEffect(() => {

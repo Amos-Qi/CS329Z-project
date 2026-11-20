@@ -9,7 +9,10 @@
 
 import { useSyncExternalStore } from "react";
 
-/** Floating ease-out (the CSS `--ease`): quick start, long soft landing, no bounce. */
+/**
+ * Floating ease-out: quick start, long soft landing, no bounce. Passed as `easing` to play(), it stands
+ * for the skin's `--ease` token (this curve when the skin leaves it out).
+ */
 export const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 /** A train's ease: pulls away, cruises, brakes into the platform. */
 export const EASE_TRAIN = "cubic-bezier(0.65, 0, 0.35, 1)";
@@ -77,6 +80,11 @@ export function ghostOf(el: Element): HTMLElement {
 	return g;
 }
 
+/** The skin's `--ease` (read on each call, so a skin switch applies at once), else EASE. */
+function skinEase(): string {
+	return getComputedStyle(document.documentElement).getPropertyValue("--ease").trim() || EASE;
+}
+
 /**
  * `el.animate(keyframes, options)`, or nothing when there is no element, motion is reduced or the
  * engine lacks Web Animations (or the pseudo-element target). Callers never fill forwards, so once
@@ -88,6 +96,7 @@ export function play(
 	options: KeyframeAnimationOptions,
 ): Animation | undefined {
 	if (!el || typeof el.animate !== "function" || reducedMotion()) return undefined;
+	if (options.easing === EASE) options = { ...options, easing: skinEase() };
 	try {
 		return el.animate(keyframes, options);
 	} catch {

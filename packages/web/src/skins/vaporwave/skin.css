@@ -110,6 +110,7 @@
 		);
 	--font-ui: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
 	--font-mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--focus-radius: 6px;
 	/* motion tokens (styles/motion.css): a station's ring, its glow, a failure's flash, the card's sweep */
 	--ring: var(--pink);
 	--ring-glow: var(--glow-cyan);
@@ -215,6 +216,8 @@ body {
 		50px 50px,
 		100% 100%;
 	background-attachment: fixed;
+	font-weight: 500;
+	line-height: 1.5;
 }
 /* VHS scanlines over everything (never takes the pointer), and one slow tracking band rolling down */
 body::before,
@@ -245,6 +248,14 @@ body::after {
 	to {
 		translate: 0 100vh;
 	}
+}
+
+/* ---------- Plan overview: rounder, and the module the card shows glows from inside ---------- */
+.ov {
+	border-radius: 12px;
+}
+.ovb[aria-current="true"] {
+	box-shadow: inset 0 0 18px var(--act-soft);
 }
 
 /* ---------- Vaporwave skin: surfaces, type, controls, motion ---------- */
