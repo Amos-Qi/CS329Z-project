@@ -1,0 +1,1160 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: a skin layers over styles/base.css in its order; reordering changes the cascade */
+/*
+ * Particles: points and links drifting in deep space; the data moves, the interface is only glass.
+ * The page is a blue-black field with a far violet nebula, two drifting layers of particles linked
+ * by distance (near: data blue, far: violet, slower, for depth), and the panel's surfaces are frosted
+ * glass in front of it. Depth comes from glows, never from drop shadows; motion is quick on the
+ * controls (200 ms) and slow in the field. Loaded after styles/base.css, before styles/motion.css
+ * and styles/final.css.
+ *
+ * The field is two tiles drawn ahead of time (field-near.svg, field-far.svg: about one particle per
+ * 10000 px², links under 140 px, their opacity falling with distance), used as masks so each theme
+ * colours them, and drifted with translate so the compositor moves them. With reduced motion or
+ * Motion off it is one still frame.
+ */
+/* ---------- Tokens: dark (default) — "deep field" ---------- */
+/*
+ * Cold accents on blue-black: data blue (working, links, the main action), pulse teal (verified, the
+ * "hit"), nebula violet (shell commands, the far layer). Held is a pale flare and failed a cool rose,
+ * small and rare against the cold field. Every text colour passes WCAG AA on the glass over --bg.
+ */
+:root {
+	--bg: #0a0e1a;
+	/* the glass over the field, as one opaque colour (sticky heads and cut-outs that must hide what is behind) */
+	--card: #151a27;
+	--glass: rgba(224, 232, 255, 0.06);
+	--glass-h: rgba(224, 232, 255, 0.1);
+	--glass-float: rgba(16, 21, 35, 0.86);
+	--edge: rgba(224, 232, 255, 0.12);
+	--edge-h: rgba(224, 232, 255, 0.22);
+	--glow: 0 0 40px rgba(100, 200, 255, 0.25);
+	--glow-h: 0 0 60px rgba(100, 200, 255, 0.4);
+	--glow-soft: 0 0 40px rgba(100, 200, 255, 0.14);
+	--glow-soft-h: 0 0 60px rgba(100, 200, 255, 0.24);
+	--well: rgba(4, 7, 14, 0.42);
+	--node: #0f1419;
+	--node-h: #1a2231;
+	--muted: rgba(224, 232, 255, 0.08);
+	--control-border: #6b7898;
+	--ctl-on-warn: #a8936a;
+	--hair: rgba(224, 232, 255, 0.08);
+	--hair-2: rgba(224, 232, 255, 0.14);
+	--fg: #e0e8ff;
+	--fg-2: #b8c3e0;
+	--muted-fg: #97a3c4;
+	--accent-fg: #b9a6ff;
+	/* --primary: the fill of ordinary buttons; --btn-bg is the main action (the brief's glow button) */
+	--primary: rgba(224, 232, 255, 0.06);
+	--primary-h: rgba(224, 232, 255, 0.11);
+	--btn-bg: rgba(100, 200, 255, 0.14);
+	--btn-bg-h: rgba(100, 200, 255, 0.22);
+	--btn-fg: #e0e8ff;
+	--btn-fg-h: #ffffff;
+	--btn-edge: rgba(100, 200, 255, 0.45);
+	/* the ring of what is selected or pressed (a tab, a filter, the harness switch) */
+	--sel-ring: rgba(100, 200, 255, 0.5);
+	--btn-glow: 0 0 24px rgba(100, 200, 255, 0.28);
+	--btn-glow-h: 0 0 40px rgba(100, 200, 255, 0.42);
+	--field-bg: rgba(4, 7, 14, 0.38);
+	--field-bg-f: rgba(4, 7, 14, 0.58);
+	--ok: #64ffc8;
+	--ok-fg: #8fffd8;
+	--ok-soft: rgba(100, 255, 200, 0.13);
+	--on-ok: #0a0e1a;
+	--warn: #ffcf7a;
+	--warn-fg: #ffdc9e;
+	--warn-soft: rgba(255, 207, 122, 0.14);
+	--warn-surface: #1b1d25;
+	--now-held: linear-gradient(
+		90deg,
+		rgba(255, 207, 122, 0.12) 0%,
+		rgba(255, 207, 122, 0.05) 55%,
+		rgba(255, 207, 122, 0.03) 100%
+	);
+	--warn-solid: #ffcf7a;
+	--warn-solid-h: #ffdc9e;
+	--on-warn: #1a1408;
+	/* the held and the stop buttons are glow buttons too, tinted in their state's colour */
+	--warn-btn: rgba(255, 207, 122, 0.14);
+	--warn-btn-h: rgba(255, 207, 122, 0.24);
+	--warn-edge: rgba(255, 207, 122, 0.55);
+	--warn-glow: 0 0 22px rgba(255, 207, 122, 0.2);
+	--warn-glow-h: 0 0 36px rgba(255, 207, 122, 0.36);
+	--bad: #ff6b8b;
+	--bad-fg: #ff9db2;
+	--bad-fg-h: #ff9db2;
+	--bad-soft: rgba(255, 107, 139, 0.14);
+	--bad-solid: #ff6b8b;
+	--bad-solid-h: #ff8aa3;
+	--on-bad: #1a0a10;
+	--bad-btn: rgba(255, 107, 139, 0.14);
+	--bad-btn-h: rgba(255, 107, 139, 0.24);
+	--bad-edge: rgba(255, 107, 139, 0.55);
+	--bad-glow: 0 0 22px rgba(255, 107, 139, 0.22);
+	--act: #64c8ff;
+	--act-fg: #8fd8ff;
+	--act-soft: rgba(100, 200, 255, 0.16);
+	--pulse: #64ffc8;
+	--pend: #7f8bad;
+	--pend-line: #6c789b;
+	--run: #a78bfa;
+	--line-done: #64c8ff;
+	--add-bg: rgba(100, 255, 200, 0.09);
+	--add-fg: #8fffd8;
+	--del-bg: rgba(255, 107, 139, 0.11);
+	--del-fg: #ffadc0;
+	--focus: #8fd8ff;
+	--tip-bg: rgba(16, 21, 35, 0.92);
+	--now-bg: rgba(10, 14, 26, 0.74);
+	--select: rgba(100, 200, 255, 0.3);
+	/* floating surfaces: a hairline and a glow, never a drop shadow */
+	--shadow: 0 0 0 1px rgba(224, 232, 255, 0.05), 0 0 36px rgba(100, 200, 255, 0.18);
+	--harness-bg: rgba(16, 21, 35, 0.88);
+	--harness-fg: #e0e8ff;
+	--harness-sub: rgba(224, 232, 255, 0.1);
+	/* the field: near and far particles, and the nebula behind them */
+	--p-near: rgba(100, 200, 255, 0.9);
+	--p-far: rgba(167, 139, 250, 0.72);
+	--nebula:
+		radial-gradient(60vmax 42vmax at 14% 16%, rgba(167, 139, 250, 0.08) 0%, transparent 70%),
+		radial-gradient(56vmax 44vmax at 88% 82%, rgba(100, 200, 255, 0.06) 0%, transparent 70%);
+	/* Home's hub and the round icon badges on its cards */
+	--hub: #64ffc8;
+	--hub-glow:
+		0 0 0 4px rgba(100, 255, 200, 0.14), 0 0 22px rgba(100, 255, 200, 0.55), 0 0 64px rgba(100, 255, 200, 0.22);
+	--title-glow: 0 0 32px rgba(100, 200, 255, 0.22);
+	--tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5l2.3 2.3 4.7-5' fill='none' stroke='%230a0e1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	/* quick and smooth: a long ease-out, the way a point settles after a nudge */
+	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--font-ui: "Inter", -apple-system, "Helvetica Neue", system-ui, sans-serif;
+	--font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--focus-radius: 12px;
+	/* motion tokens (styles/motion.css): a station's ring, its glow, a failure's flash, the card's sweep */
+	--ring: var(--act);
+	--ring-glow: rgba(100, 200, 255, 0.45);
+	--flash-glow: rgba(255, 107, 139, 0.5);
+	--sweep: linear-gradient(
+		100deg,
+		transparent 25%,
+		rgba(100, 200, 255, 0.08) 44%,
+		rgba(100, 255, 200, 0.12) 52%,
+		transparent 72%
+	);
+	color-scheme: dark;
+}
+/* ---------- Tokens: light — "frost" ---------- */
+/*
+ * The brief is dark only; the panel has a light theme, so this is the same field seen through frosted
+ * glass by day: a pale cold ground, ink-blue and violet particles, white glass, the same cold accents
+ * deepened to pass AA. Still no warm or earthy ground.
+ */
+[data-theme="light"] {
+	--bg: #eef2fa;
+	--card: #f9fbfe;
+	--glass: rgba(255, 255, 255, 0.62);
+	--glass-h: rgba(255, 255, 255, 0.82);
+	--glass-float: rgba(250, 252, 255, 0.9);
+	--edge: rgba(30, 50, 110, 0.12);
+	--edge-h: rgba(30, 50, 110, 0.22);
+	--glow: 0 0 40px rgba(47, 127, 216, 0.18);
+	--glow-h: 0 0 60px rgba(47, 127, 216, 0.28);
+	--glow-soft: 0 0 40px rgba(47, 127, 216, 0.1);
+	--glow-soft-h: 0 0 60px rgba(47, 127, 216, 0.16);
+	--well: rgba(30, 50, 110, 0.045);
+	--node: #f9fbfe;
+	--node-h: #e6edf9;
+	--muted: rgba(30, 50, 110, 0.07);
+	--control-border: #7b86a4;
+	--ctl-on-warn: #9a6a10;
+	--hair: rgba(30, 50, 110, 0.1);
+	--hair-2: rgba(30, 50, 110, 0.17);
+	--fg: #111a33;
+	--fg-2: #2f3a5c;
+	--muted-fg: #4e5a7e;
+	--accent-fg: #5b3fc4;
+	--primary: rgba(255, 255, 255, 0.7);
+	--primary-h: #ffffff;
+	--btn-bg: rgba(47, 127, 216, 0.12);
+	--btn-bg-h: rgba(47, 127, 216, 0.2);
+	--btn-fg: #0f4a96;
+	--btn-fg-h: #0b3a78;
+	--btn-edge: rgba(47, 127, 216, 0.45);
+	--sel-ring: #2f7fd8;
+	--btn-glow: 0 0 22px rgba(47, 127, 216, 0.18);
+	--btn-glow-h: 0 0 34px rgba(47, 127, 216, 0.28);
+	--field-bg: rgba(255, 255, 255, 0.72);
+	--field-bg-f: #ffffff;
+	--ok: #0f9a74;
+	--ok-fg: #08704f;
+	--ok-soft: rgba(15, 154, 116, 0.12);
+	--on-ok: #ffffff;
+	--warn: #b07512;
+	--warn-fg: #764900;
+	--warn-soft: rgba(201, 135, 20, 0.14);
+	--warn-surface: #f9f1df;
+	--now-held: linear-gradient(
+		90deg,
+		rgba(232, 166, 48, 0.2) 0%,
+		rgba(232, 166, 48, 0.09) 55%,
+		rgba(232, 166, 48, 0.05) 100%
+	);
+	--warn-solid: #e9a630;
+	--warn-solid-h: #dc9618;
+	--on-warn: #2b1a00;
+	--warn-btn: rgba(201, 135, 20, 0.14);
+	--warn-btn-h: rgba(201, 135, 20, 0.22);
+	--warn-edge: rgba(176, 117, 18, 0.6);
+	--warn-glow: 0 0 22px rgba(201, 135, 20, 0.16);
+	--warn-glow-h: 0 0 32px rgba(201, 135, 20, 0.26);
+	--bad: #b3264c;
+	--bad-fg: #b0244a;
+	--bad-fg-h: #9c1f43;
+	--bad-soft: rgba(220, 63, 103, 0.1);
+	--bad-solid: #c8325a;
+	--bad-solid-h: #b0244a;
+	--on-bad: #ffffff;
+	--bad-btn: rgba(220, 63, 103, 0.1);
+	--bad-btn-h: rgba(220, 63, 103, 0.18);
+	--bad-edge: rgba(200, 50, 90, 0.55);
+	--bad-glow: 0 0 22px rgba(220, 63, 103, 0.14);
+	--act: #2f7fd8;
+	--act-fg: #165cb0;
+	--act-soft: rgba(47, 127, 216, 0.14);
+	--pulse: #0f9a74;
+	--pend: #6b7796;
+	--pend-line: #7a85a3;
+	--run: #5a3cc4;
+	--line-done: #2f7fd8;
+	--add-bg: rgba(15, 154, 116, 0.1);
+	--add-fg: #08704f;
+	--del-bg: rgba(220, 63, 103, 0.09);
+	--del-fg: #a8213f;
+	--focus: #165cb0;
+	--tip-bg: rgba(250, 252, 255, 0.94);
+	--now-bg: rgba(247, 250, 255, 0.76);
+	--select: rgba(47, 127, 216, 0.22);
+	--shadow: 0 0 0 1px rgba(30, 50, 110, 0.06), 0 0 36px rgba(47, 127, 216, 0.14);
+	--harness-bg: rgba(250, 252, 255, 0.9);
+	--harness-fg: #111a33;
+	--harness-sub: rgba(30, 50, 110, 0.08);
+	--p-near: rgba(36, 98, 196, 0.5);
+	--p-far: rgba(109, 79, 216, 0.36);
+	--nebula:
+		radial-gradient(60vmax 42vmax at 14% 16%, rgba(109, 79, 216, 0.07) 0%, transparent 70%),
+		radial-gradient(56vmax 44vmax at 88% 82%, rgba(47, 127, 216, 0.08) 0%, transparent 70%);
+	--hub: #0f9a74;
+	--hub-glow: 0 0 0 4px rgba(15, 154, 116, 0.14), 0 0 20px rgba(15, 154, 116, 0.4), 0 0 56px rgba(15, 154, 116, 0.16);
+	--title-glow: none;
+	--tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5l2.3 2.3 4.7-5' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	--ring-glow: rgba(47, 127, 216, 0.4);
+	--flash-glow: rgba(220, 63, 103, 0.45);
+	--sweep: linear-gradient(
+		100deg,
+		transparent 25%,
+		rgba(255, 255, 255, 0.5) 44%,
+		rgba(224, 240, 255, 0.6) 52%,
+		transparent 72%
+	);
+	color-scheme: light;
+}
+
+/* ---------- Ground: blue-black, a far nebula, and two layers of linked particles drifting ---------- */
+body {
+	background-image: var(--nebula);
+	background-attachment: fixed;
+	line-height: 1.6;
+	scrollbar-color: var(--hair-2) transparent;
+}
+::selection {
+	background: var(--select);
+}
+/*
+ * Each layer is one tile wider and taller than the screen and drifts by exactly one tile (up and to
+ * the right), so the loop has no seam. The far layer is a larger, slower tile, so the two never line
+ * up and the near one seems closer.
+ */
+body::before,
+body::after {
+	content: "";
+	position: fixed;
+	z-index: -1;
+	pointer-events: none;
+	left: calc(-1 * var(--tw));
+	top: 0;
+	width: calc(100vw + var(--tw));
+	height: calc(100vh + var(--th));
+	mask-repeat: repeat;
+	mask-position: 0 0;
+	mask-size: var(--tw) var(--th);
+	will-change: translate;
+}
+body::before {
+	--tw: 1180px;
+	--th: 860px;
+	background: var(--p-far);
+	mask-image: url(./field-far.svg);
+	animation: particles-drift 560s steps(2360) infinite;
+}
+body::after {
+	--tw: 960px;
+	--th: 720px;
+	background: var(--p-near);
+	mask-image: url(./field-near.svg);
+	animation: particles-drift 300s steps(1920) infinite;
+}
+/* (in half-pixel steps, four to six a second: a smooth crawl, without redrawing every frame the glass
+   that blurs it) */
+@keyframes particles-drift {
+	to {
+		translate: var(--tw) calc(-1 * var(--th));
+	}
+}
+
+/* ---------- Type: Inter, restrained, so the field stays the picture ---------- */
+body {
+	font-optical-sizing: auto;
+}
+.now-title,
+.dc-title {
+	font-size: 17px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+.ch h2 {
+	font-size: 24px;
+	font-weight: 600;
+	letter-spacing: -0.015em;
+	line-height: 1.3;
+}
+.pop h3,
+.redo-h h3 {
+	font-weight: 600;
+}
+.home h2 {
+	font-size: 17px;
+	font-weight: 600;
+	gap: 10px;
+}
+.cid {
+	color: var(--accent-fg);
+	font-weight: 500;
+}
+.ov-t {
+	font-weight: 600;
+}
+/* labels: the brief's small tracked capitals */
+.lab {
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	line-height: 1.4;
+}
+/* Inter is the only face for the interface: ids, times, counts and badges set in it, with even figures.
+   Code (diffs, the Raw JSON, commands, file paths) keeps a monospace face, Geist Mono */
+.mono:not(.fn):not(.lnk),
+.cid,
+.dn,
+.tn,
+.vchip,
+.tag,
+.step .tm,
+.lrb .tm,
+.rlb .tm,
+.hb .kb {
+	font-family: var(--font-ui);
+	font-variant-numeric: tabular-nums slashed-zero;
+}
+/* (the action the Now bar names is a file or a command, and Restore chips are file paths: code) */
+.now-state + .pill > .mono,
+.chip.mono.rst {
+	font-family: var(--font-mono);
+	font-variant-numeric: slashed-zero;
+}
+/* a version chip inside a label keeps its own case */
+.lab .vchip {
+	text-transform: none;
+	letter-spacing: normal;
+}
+.ed .lab,
+.redo .lab {
+	flex-wrap: wrap;
+	row-gap: 6px;
+}
+.code,
+.fn,
+.step .tg,
+.det .dh,
+.rawt {
+	font-variant-ligatures: none;
+	font-variant-numeric: slashed-zero;
+}
+
+/* ---------- Surfaces: frosted glass in front of the field, separated by glows ---------- */
+.card,
+.hcard,
+.ov,
+.ll {
+	background: var(--glass);
+	border: 1px solid var(--edge);
+	border-radius: 16px;
+	box-shadow: var(--glow-soft);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+	transition:
+		background-color 300ms var(--ease),
+		border-color 300ms var(--ease),
+		box-shadow 300ms var(--ease);
+}
+.card:hover,
+.ov:hover,
+.ll:hover {
+	border-color: var(--edge-h);
+	box-shadow: var(--glow-soft-h);
+}
+/* the plan overview opens and closes, so its glass also brightens like the brief's hovered card */
+.ov:hover {
+	background: var(--glass-h);
+}
+/* Home's cards are the brief's glass cards: the glow carries them, and grows under the pointer */
+.hcard {
+	padding: 20px 24px;
+	box-shadow: var(--glow);
+}
+.hcard:hover {
+	background: var(--glass-h);
+	border-color: var(--edge-h);
+	box-shadow: var(--glow-h);
+}
+.ce {
+	border-left: 1px solid var(--hair);
+}
+.pop,
+.toast,
+#tip {
+	background: var(--glass-float);
+	border: 1px solid var(--edge-h);
+	box-shadow: var(--shadow);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+}
+.pop {
+	border-radius: 16px;
+	padding: 16px;
+}
+.toast {
+	border-radius: 12px;
+}
+#tip {
+	background: var(--tip-bg);
+	border-radius: 10px;
+	padding: 7px 10px;
+}
+/* boxes inside a card are wells: darker glass with one hairline */
+.ed,
+.det,
+.cq,
+.lred .redo,
+.rl {
+	background: var(--well);
+	border: 1px solid var(--hair);
+	border-radius: 12px;
+}
+.vers li,
+.flagbar {
+	border-radius: 10px;
+}
+.nq li,
+.step,
+.ovb,
+.frow,
+.st {
+	border-radius: 10px;
+}
+.pill,
+.chip,
+.tag,
+.src .sx,
+.vchip,
+.fgrp,
+.fh {
+	border-radius: 8px;
+}
+.tab,
+.fc {
+	border-radius: 10px;
+}
+/* the Raw table: separate borders, so it takes the glass's round corners; its sticky head stays readable */
+.rawt {
+	border-collapse: separate;
+	border-spacing: 0;
+	border-color: var(--edge);
+	border-radius: 16px;
+	overflow: clip;
+	background: var(--glass);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+	box-shadow: var(--glow-soft);
+}
+/* (opaque: inside the table's own frost a second blur samples nothing, so rows would show through) */
+.rawt thead th {
+	border-top: 0;
+	background: var(--card);
+	font-size: 12px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+/* ---------- Now bar: a glass band over the field; held washes it with a pale flare ---------- */
+/* the bar's own fill is clear: the frost is ::before (so the bar is never the containing block of its
+   fixed popovers), the held flare ::after, both under its content (.now is sticky with a z-index) */
+/* its bottom edge is drawn by the frost too (a translucent border on the bar itself would show what
+   scrolls under it, sharp) */
+.now,
+.now.waiting {
+	background: transparent;
+	border-bottom: 1px solid transparent;
+}
+.now::before,
+.now::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+.now::before {
+	bottom: -1px;
+	border-bottom: 1px solid var(--edge);
+	background: var(--now-bg);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+	transition: border-color 400ms var(--ease);
+}
+.now.waiting::before {
+	border-bottom-color: var(--warn-edge);
+}
+.now::after {
+	background: var(--now-held);
+	box-shadow: 0 1px 24px -6px rgba(255, 207, 122, 0.3);
+	opacity: 0;
+	transition: opacity 400ms var(--ease);
+}
+.now.waiting::after {
+	opacity: 1;
+}
+.now.waiting .ib .dot {
+	box-shadow: 0 0 0 2px var(--warn-surface);
+}
+.s {
+	border-radius: 3px;
+}
+
+/* ---------- Buttons: glass, 12px corners; the main one is the brief's glow button ---------- */
+.btn,
+.ib,
+.chip.lnk,
+.vchip,
+.pill.flag,
+.tab,
+.fc,
+.hb {
+	transition:
+		background-color 200ms var(--ease),
+		border-color 200ms var(--ease),
+		color 200ms var(--ease),
+		box-shadow 200ms var(--ease),
+		opacity 200ms var(--ease);
+}
+.btn {
+	flex-shrink: 0;
+	border-radius: 12px;
+	background: var(--primary);
+	border-color: var(--edge-h);
+}
+.btn:hover {
+	background: var(--primary-h);
+	border-color: var(--control-border);
+}
+.btn.primary {
+	background: var(--btn-bg);
+	border-color: var(--btn-edge);
+	color: var(--btn-fg);
+	box-shadow: var(--btn-glow);
+}
+.btn.primary:hover {
+	background: var(--btn-bg-h);
+	border-color: var(--btn-edge);
+	color: var(--btn-fg-h);
+	box-shadow: var(--btn-glow-h);
+}
+.btn.warn {
+	background: var(--warn-btn);
+	border-color: var(--warn-edge);
+	color: var(--warn-fg);
+	box-shadow: var(--warn-glow);
+}
+.btn.warn:hover {
+	background: var(--warn-btn-h);
+	border-color: var(--warn-edge);
+	box-shadow: var(--warn-glow-h);
+}
+.btn.danger {
+	background: var(--bad-btn);
+	border-color: var(--bad-edge);
+	color: var(--bad-fg);
+	box-shadow: var(--bad-glow);
+}
+/* (base dims a danger button on hover; here it brightens like the others) */
+.btn.danger:hover {
+	opacity: 1;
+	background: var(--bad-btn-h);
+	border-color: var(--bad-edge);
+}
+.btn.ghost,
+.btn.dghost {
+	background: transparent;
+}
+.btn.ghost {
+	border-color: transparent;
+}
+.btn.dghost {
+	border-color: var(--bad-edge);
+}
+.btn.ghost:hover {
+	background: var(--muted);
+	border-color: transparent;
+}
+.btn.dghost:hover {
+	background: var(--bad-soft);
+	border-color: var(--bad-edge);
+}
+/* the held bar: quiet buttons are outlines in the flare's colour; a stop brightens in rose, never solid */
+.now.waiting .dc-acts > .btn:not(.warn):not(.danger):not(.dghost) {
+	background: transparent;
+	border-color: var(--ctl-on-warn);
+}
+.now.waiting .dc-acts > .btn:not(.warn):not(.danger):not(.dghost):hover {
+	background: var(--warn-soft);
+}
+.now.waiting .dc-acts > .btn.dghost:hover,
+.now.waiting .dc-acts > .ctl > .btn.dghost:hover {
+	background: var(--bad-btn-h);
+	color: var(--bad-fg-h);
+	border-color: var(--bad-edge);
+}
+/* the flag pill answers the pointer like the other controls */
+.pill.flag:hover {
+	background: var(--warn-btn-h);
+	box-shadow: var(--warn-glow);
+}
+/* chips switched off while a redo is open stay still under the pointer */
+.vchip[aria-disabled="true"]:hover,
+.chip.lnk[aria-disabled="true"]:hover {
+	background: transparent;
+}
+.btn:not(:disabled):not([aria-disabled="true"]):active,
+.chip.lnk:not([aria-disabled="true"]):active,
+button.vchip:not([aria-disabled="true"]):active {
+	transition-duration: 80ms;
+	box-shadow: none;
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+	opacity: 0.45;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+/* disabled keeps its resting face under the pointer */
+.btn:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--primary);
+	border-color: var(--edge-h);
+	box-shadow: none;
+}
+.btn.primary:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--btn-bg);
+	border-color: var(--btn-edge);
+	color: var(--btn-fg);
+}
+.btn.warn:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--warn-btn);
+	border-color: var(--warn-edge);
+}
+.btn.danger:is(:disabled, [aria-disabled="true"]):hover {
+	opacity: 0.45;
+	background: var(--bad-btn);
+	border-color: var(--bad-edge);
+}
+.btn.ghost:is(:disabled, [aria-disabled="true"]):hover {
+	background: transparent;
+	border-color: transparent;
+}
+.btn.dghost:is(:disabled, [aria-disabled="true"]):hover {
+	background: transparent;
+	border-color: var(--bad-edge);
+}
+.ib {
+	border-radius: 10px;
+}
+.ib:not([aria-disabled="true"]):hover {
+	box-shadow: 0 0 16px var(--act-soft);
+}
+.tab[aria-selected="true"],
+.fc[aria-pressed="true"],
+.fc[aria-checked="true"] {
+	background: var(--btn-bg);
+	color: var(--fg);
+	box-shadow:
+		inset 0 0 0 1.5px var(--sel-ring),
+		0 0 16px var(--act-soft);
+}
+.vchip.you {
+	box-shadow:
+		0 0 0 1px var(--btn-edge),
+		0 0 14px var(--act-soft);
+}
+.ib .dot {
+	box-shadow: 0 0 0 2px var(--card);
+}
+
+/* ---------- Fields: dark glass wells; focus lights the edge data blue ---------- */
+.field,
+.search {
+	border-radius: 12px;
+	background: var(--field-bg);
+	transition:
+		border-color 200ms var(--ease),
+		background-color 200ms var(--ease),
+		box-shadow 200ms var(--ease);
+}
+.field,
+.search {
+	padding: 0 12px;
+}
+textarea.field {
+	padding: 9px 12px;
+	line-height: 1.6;
+}
+.field:focus,
+.search:focus-within {
+	border-color: var(--focus);
+	background: var(--field-bg-f);
+	box-shadow:
+		0 0 0 3px var(--act-soft),
+		0 0 24px var(--act-soft);
+}
+select.field option {
+	background: var(--card);
+	color: var(--fg);
+}
+select.field {
+	font: inherit;
+}
+.field::placeholder {
+	color: var(--muted-fg);
+	opacity: 1;
+}
+.check input {
+	appearance: none;
+	flex-shrink: 0;
+	border: 1px solid var(--control-border);
+	border-radius: 5px;
+	background: var(--field-bg) center / 12px no-repeat;
+	cursor: pointer;
+	transition:
+		background-color 200ms var(--ease),
+		border-color 200ms var(--ease),
+		box-shadow 200ms var(--ease);
+}
+.check input:checked {
+	border-color: var(--act);
+	background-color: var(--act);
+	background-image: var(--tick);
+	box-shadow: 0 0 12px var(--act-soft);
+}
+.check input:hover {
+	border-color: var(--act);
+	box-shadow: 0 0 10px var(--act-soft);
+}
+/* forced colours drop the fills and rings that mark a selection: use the system's selected colours */
+@media (forced-colors: active) {
+	.check input {
+		appearance: auto;
+	}
+	.tab[aria-selected="true"],
+	.fc[aria-pressed="true"],
+	.fc[aria-checked="true"],
+	.hb[aria-pressed="true"],
+	.ib[aria-pressed="true"] {
+		forced-color-adjust: none;
+		background: SelectedItem;
+		color: SelectedItemText;
+	}
+	.now.waiting {
+		border-bottom: 2px solid CanvasText;
+	}
+}
+
+/* ---------- Metro line: stations are nodes; the travelled link carries the data blue ---------- */
+/* the line sits on a band of glass, so the field never runs through a station's label */
+.metro {
+	background: var(--glass);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+	border-bottom: 1px solid var(--edge);
+}
+.ln.done,
+.ln.term {
+	stroke: var(--line-done);
+}
+.ln.done.hl,
+.ln.term.hl {
+	stroke: var(--fg);
+}
+/* (a redo's discarded tail stays rose, as in base, though it is also "done") */
+.ln.done.gone {
+	stroke: var(--bad);
+}
+/* the Log's filter groups and search are glass too: their labels sit over the field otherwise */
+.fgrp {
+	border-radius: 12px;
+	background: var(--glass);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+}
+.search {
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+}
+.st-dot,
+.cutmk,
+.train i::before,
+.train i::after {
+	background: var(--node);
+}
+/* each node glows in its status's colour (the glyph inside keeps the shape) */
+.st-dot {
+	box-shadow: 0 0 0 1px var(--edge);
+	transition:
+		background-color 200ms var(--ease),
+		box-shadow 300ms var(--ease);
+}
+.st-dot[data-s="working"] {
+	box-shadow:
+		0 0 0 1px var(--btn-edge),
+		0 0 18px var(--act-soft);
+}
+.st-dot[data-s="verified"] {
+	box-shadow:
+		0 0 0 1px var(--edge),
+		0 0 14px var(--ok-soft);
+}
+.st-dot[data-s="unverified"],
+.st-dot[data-s="waiting"] {
+	box-shadow:
+		0 0 0 1px var(--warn-edge),
+		0 0 16px var(--warn-soft);
+}
+.st-dot[data-s="failed"] {
+	box-shadow:
+		0 0 0 1px var(--bad-edge),
+		0 0 16px var(--bad-soft);
+}
+.st:hover .st-dot {
+	background: var(--node-h);
+}
+.st[aria-current="true"] .st-dot {
+	box-shadow:
+		0 0 0 2px var(--node),
+		0 0 0 3.5px var(--ok-fg),
+		0 0 20px var(--ok-soft);
+}
+
+/* ---------- Plan overview, Log and Home lists ---------- */
+.rlb,
+.lrb,
+.step,
+button.frow,
+.st {
+	transition: background-color 200ms var(--ease);
+}
+.ovb {
+	transition:
+		background-color 200ms var(--ease),
+		border-color 200ms var(--ease);
+}
+.ovb[aria-current="true"] {
+	box-shadow:
+		0 0 0 1px var(--btn-edge),
+		0 0 18px var(--act-soft);
+}
+.lr.cur .lrb {
+	box-shadow: inset 2px 0 0 var(--act);
+}
+
+/* ---------- Harness bar (researcher chrome): a floating glass pill ---------- */
+.harness {
+	background: var(--harness-bg);
+	box-shadow: var(--shadow);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	backdrop-filter: blur(20px) saturate(140%);
+}
+/* the pressed switch is a lit glass key, not the brightest thing on screen */
+.hb[aria-pressed="true"] {
+	background: var(--btn-bg);
+	color: var(--fg);
+	box-shadow: inset 0 0 0 1.5px var(--sel-ring);
+}
+
+/* ---------- Home: the title on the left; on the right only the field, and one pulsing hub ---------- */
+.hero {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	min-height: 300px;
+	padding: 48px 4px;
+}
+.hero-art {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+.sun {
+	position: absolute;
+	right: 16%;
+	top: calc(50% - 7px);
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--hub);
+	box-shadow: var(--hub-glow);
+}
+/* its pulse ring (the brief's): a 1px ring growing from 8 to 48 px in radius as it fades. Drawn at its
+   largest and scaled up to it, so the compositor runs it and the line stays a hairline */
+.sun::before {
+	content: "";
+	position: absolute;
+	inset: -41px;
+	border-radius: 50%;
+	border: 1px solid var(--pulse);
+	opacity: 0;
+	animation: particles-ring 2.4s ease-out infinite;
+}
+.floor {
+	display: none;
+}
+.home .hero h1 {
+	font-size: 48px;
+	line-height: 1.1;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	gap: 14px;
+	text-shadow: var(--title-glow);
+}
+.hero h1 .i {
+	color: var(--act);
+}
+/* a Home card's icon sits on a small glowing node */
+.home h2 > .i {
+	box-sizing: content-box;
+	padding: 6px;
+	border-radius: 50%;
+	background: var(--btn-bg);
+	color: var(--act-fg);
+	box-shadow:
+		inset 0 0 0 1px var(--btn-edge),
+		0 0 14px var(--act-soft);
+	transition: box-shadow 300ms var(--ease);
+}
+.hcard:hover h2 > .i {
+	box-shadow:
+		inset 0 0 0 1px var(--btn-edge),
+		0 0 22px var(--ring-glow);
+}
+/* narrow: the hub moves under the title, and the page never grows wider than the screen */
+@media (max-width: 768px) {
+	.home {
+		overflow-x: clip;
+	}
+	.hero {
+		justify-content: flex-start;
+		min-height: 200px;
+		padding: 28px 0 96px;
+	}
+	.sun {
+		top: auto;
+		right: 56px;
+		bottom: 44px;
+	}
+	.home .hero h1 {
+		flex-wrap: wrap;
+		font-size: 36px;
+	}
+	.ch h2 {
+		font-size: 17px;
+	}
+	/* Home's runs: the name keeps the first line; model and date go under it */
+	.rlb {
+		grid-template-columns: 20px minmax(0, 1fr) auto;
+		row-gap: 2px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+	.rlb > :first-child {
+		grid-row: 1 / span 2;
+		align-self: start;
+	}
+	.rlb .nm {
+		grid-column: 2 / -1;
+	}
+	.rlb .tm {
+		grid-row: 2;
+		min-width: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	/* a toast sits above the harness bar, which wraps taller here */
+	.toast {
+		bottom: calc(var(--harness-h, 64px) + 12px);
+	}
+}
+
+/* ---------- Particles motion: panes settle out of the field; pulses mark where to look ---------- */
+/*
+ * Decoration over the states above; final.css stops all of it under reduced motion or with Motion off.
+ * Entrances fill backwards only. Nothing here moves or resizes a metro station's box (drawMetro()
+ * measures it): its pulse is a free pseudo-element. At most two pulse rings run at once (the station
+ * on screen and the one working; Home's hub is never on screen with them), plus the held flare.
+ */
+@keyframes particles-in {
+	from {
+		opacity: 0;
+		translate: 0 8px;
+	}
+}
+@keyframes particles-pop {
+	from {
+		opacity: 0;
+		translate: 0 -4px;
+	}
+}
+@keyframes particles-fade {
+	from {
+		opacity: 0;
+	}
+}
+/* the rings run for 1.2 s, ease-out, then rest as long (the brief's pulse), on scale and opacity only */
+@keyframes particles-ring {
+	0% {
+		scale: 0.167;
+		opacity: 1;
+	}
+	50%,
+	100% {
+		scale: 1;
+		opacity: 0;
+	}
+}
+@keyframes particles-node {
+	0% {
+		scale: var(--ring-from);
+		opacity: 0.9;
+	}
+	50%,
+	100% {
+		scale: 1;
+		opacity: 0;
+	}
+}
+@keyframes particles-flare {
+	0%,
+	100% {
+		box-shadow: var(--warn-glow);
+	}
+	50% {
+		box-shadow: var(--warn-glow-h);
+	}
+}
+.hero,
+.hcard,
+.ov,
+.card,
+.ll,
+.ed,
+.redo {
+	animation: particles-in 600ms var(--ease) backwards;
+}
+.home > :nth-child(2) {
+	animation-delay: 90ms;
+}
+.home > :nth-child(3) {
+	animation-delay: 180ms;
+}
+.work > .card {
+	animation-delay: 80ms;
+}
+/* the copies that leave replay nothing inside them: the plan overview folding away, and the card being
+   replaced (motion.css stops that copy itself; this also stops what is inside it) */
+.ov-ghost,
+.ov-ghost *,
+.work > .card-ghost * {
+	animation: none;
+}
+.pop {
+	animation: particles-pop 240ms var(--ease) backwards;
+}
+#tip,
+.toast {
+	animation: particles-fade 200ms var(--ease) backwards;
+}
+/* held: the main choice's glow breathes, and holds still under the pointer, a press or focus so those
+   states show */
+.now.waiting .dc-acts .btn.warn {
+	animation: particles-flare 2.4s ease-in-out infinite;
+}
+.now.waiting .dc-acts .btn.warn:is(:hover, :active, :focus-visible) {
+	animation: none;
+}
+/* the station on screen sends out a teal pulse ring, and the one working a blue one: from the node's
+   edge to 96 px across (68 px on a phone, where stations are closer together) */
+.st[aria-current="true"] .st-dot::after,
+.st-dot[data-s="working"]::after {
+	--ring-from: 0.42;
+	content: "";
+	position: absolute;
+	inset: -30px;
+	border-radius: 50%;
+	border: 1px solid var(--pulse);
+	opacity: 0;
+	animation: particles-node 2.4s ease-out infinite;
+	pointer-events: none;
+}
+.st:not([aria-current="true"]) .st-dot[data-s="working"]::after {
+	border-color: var(--act);
+}
+@media (max-width: 768px) {
+	.st[aria-current="true"] .st-dot::after,
+	.st-dot[data-s="working"]::after {
+		--ring-from: 0.59;
+		inset: -16px;
+	}
+}
+
+/* reduced motion (final.css stops every animation, transition and translate): the field holds one
+   still frame, and the pulse rings, which have no still form, are hidden */
+@media (prefers-reduced-motion: reduce) {
+	.sun::before,
+	.st[aria-current="true"] .st-dot::after,
+	.st-dot[data-s="working"]::after {
+		display: none;
+	}
+}
+:root[data-motion="off"] .sun::before,
+:root[data-motion="off"] .st[aria-current="true"] .st-dot::after,
+:root[data-motion="off"] .st-dot[data-s="working"]::after {
+	display: none;
+}
