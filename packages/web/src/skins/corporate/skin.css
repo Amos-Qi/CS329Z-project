@@ -1,0 +1,1011 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: a skin layers over styles/base.css in its order; reordering changes the cascade */
+/* biome-ignore-all lint/complexity/noImportantStyles: reduced motion has to beat the skin's own press scale */
+/*
+ * Corporate: restrained business blue; everything gives way to legibility and trust. A slate-mist
+ * canvas, white cards with a 1px hairline and a light shadow, one blue for actions and links (a
+ * brighter one only for focus, selection and data), 12px corners on cards and 8px on controls. What
+ * you can press lifts by a pixel or two and deepens its shadow, and shrinks 2% when pressed; every
+ * focus ring has a 2px offset; no motion of the skin's own runs longer than 200 ms.
+ * Loaded after styles/base.css, before styles/motion.css and styles/final.css.
+ */
+/* ---------- Tokens: dark (default) — "slate night" ---------- */
+/*
+ * The brief is light only and the panel opens dark, so this is the same system at night: slate-950
+ * canvas, slate-900 cards, one brighter action blue that keeps white text at AA, and the state
+ * colours lifted to read on dark. Every text colour passes WCAG AA on --card and --bg.
+ */
+:root {
+	--bg: #0b1220;
+	--card: #111a2b;
+	--well: #0d1526;
+	--edge: #24324a;
+	--muted: #1a2539;
+	--control-border: #64748b;
+	--ctl-on-warn: #a8862f;
+	--hair: #1e293b;
+	--hair-2: #263449;
+	--fg: #e2e8f0;
+	--fg-2: #cbd5e1;
+	--muted-fg: #94a3b8;
+	--accent-fg: #93c5fd;
+	/* --primary: the fill of ordinary buttons; --btn-bg is the main action, the one blue */
+	--primary: #111a2b;
+	--primary-h: #1a2539;
+	--btn-bg: #2563eb;
+	--btn-bg-h: #1d4ed8;
+	--btn-fg: #ffffff;
+	/* the selected tab or filter: a tint of the action blue, its ring and its text */
+	--sel-bg: rgba(96, 165, 250, 0.14);
+	--sel-fg: #bfdbfe;
+	--sel-bg-h: rgba(96, 165, 250, 0.24);
+	/* pressed fills, a step deeper than hover: neutral, held (amber) and stop (red) */
+	--press-2: #334155;
+	--warn-press: rgba(251, 191, 36, 0.24);
+	--bad-press: rgba(248, 113, 113, 0.24);
+	--ok: #34d399;
+	--ok-fg: #6ee7b7;
+	--ok-soft: rgba(52, 211, 153, 0.14);
+	--on-ok: #0b1220;
+	--warn: #fbbf24;
+	--warn-fg: #fcd34d;
+	--warn-soft: rgba(251, 191, 36, 0.14);
+	--warn-surface: #211b0c;
+	--warn-solid: #f59e0b;
+	--warn-solid-h: #fbbf24;
+	--on-warn: #1a1203;
+	--bad: #f87171;
+	--bad-fg: #fca5a5;
+	--bad-soft: rgba(248, 113, 113, 0.14);
+	--bad-solid: #f87171;
+	--bad-solid-h: #fca5a5;
+	--on-bad: #1f0a0a;
+	--act: #60a5fa;
+	--act-fg: #93c5fd;
+	--act-soft: rgba(96, 165, 250, 0.16);
+	--pend: #7d8ba1;
+	--pend-line: #617089;
+	--run: #e9d5ff;
+	--line-done: #94a3b8;
+	--add-bg: rgba(52, 211, 153, 0.12);
+	--add-fg: #6ee7b7;
+	--del-bg: rgba(248, 113, 113, 0.12);
+	--del-fg: #fca5a5;
+	--focus: #60a5fa;
+	--tip-bg: #1a2539;
+	--select: rgba(96, 165, 250, 0.3);
+	/* the brief's two shadows, and the floating one for popovers, tooltip and toast */
+	--sh-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--sh-md: 0 4px 12px rgba(0, 0, 0, 0.36);
+	--shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+	--harness-bg: #1e293b;
+	--harness-fg: #e2e8f0;
+	--harness-sub: rgba(226, 232, 240, 0.1);
+	/* Home: the icon squares on its cards, and the sketch of the panel in the hero */
+	--icon-bg: rgba(96, 165, 250, 0.14);
+	--icon-fg: #93c5fd;
+	--hero-art: url(./hero-dark.svg);
+	--tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5l2.3 2.3 4.7-5' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	/* short and settled: ease-out, never more than 200 ms for the skin's own motion */
+	--ease: cubic-bezier(0, 0, 0.2, 1);
+	--font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+	--focus-radius: 8px;
+	/* motion tokens (styles/motion.css): a station's ring, its glow, a failure's flash; no card sweep */
+	--ring: var(--act);
+	--ring-glow: rgba(96, 165, 250, 0.35);
+	--flash-glow: rgba(248, 113, 113, 0.4);
+	--sweep: none;
+	color-scheme: dark;
+}
+/* ---------- Tokens: light — the brief ---------- */
+[data-theme="light"] {
+	--bg: #f8fafc;
+	--card: #ffffff;
+	--well: #f8fafc;
+	--edge: #e5e7eb;
+	--muted: #f1f5f9;
+	--control-border: #7d899d;
+	--ctl-on-warn: #c2700c;
+	--hair: #eef1f5;
+	--hair-2: #e5e7eb;
+	--fg: #0f172a;
+	--fg-2: #334155;
+	--muted-fg: #5f6e84;
+	--accent-fg: #1e40af;
+	--primary: #ffffff;
+	--primary-h: #f1f5f9;
+	--btn-bg: #1e40af;
+	--btn-bg-h: #1e3a8a;
+	--btn-fg: #ffffff;
+	--sel-bg: #eff6ff;
+	--sel-fg: #1e40af;
+	--sel-bg-h: #dbeafe;
+	--press-2: #cbd5e1;
+	--warn-press: #fde68a;
+	--bad-press: #fecaca;
+	--ok: #059669;
+	--ok-fg: #047857;
+	--ok-soft: #ecfdf5;
+	--on-ok: #ffffff;
+	--warn: #c2650a;
+	--warn-fg: #b45309;
+	--warn-soft: #fef3c7;
+	--warn-surface: #fffbeb;
+	--warn-solid: #b45309;
+	--warn-solid-h: #92400e;
+	--on-warn: #ffffff;
+	--bad: #b91c1c;
+	--bad-fg: #b91c1c;
+	--bad-soft: #fef2f2;
+	--bad-solid: #dc2626;
+	--bad-solid-h: #b91c1c;
+	--on-bad: #ffffff;
+	--act: #3b82f6;
+	--act-fg: #1e40af;
+	--act-soft: #dbeafe;
+	--pend: #74839a;
+	--pend-line: #7d8aa0;
+	--run: #6b21a8;
+	--line-done: #64748b;
+	--add-bg: #ecfdf5;
+	--add-fg: #047857;
+	--del-bg: #fef2f2;
+	--del-fg: #b91c1c;
+	--focus: #3b82f6;
+	--tip-bg: #ffffff;
+	--select: rgba(59, 130, 246, 0.22);
+	--sh-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+	--sh-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+	--shadow: 0 4px 12px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.06);
+	--harness-bg: #1e293b;
+	--harness-fg: #f1f5f9;
+	--harness-sub: rgba(241, 245, 249, 0.12);
+	--icon-bg: #eff6ff;
+	--icon-fg: #1e40af;
+	--hero-art: url(./hero-light.svg);
+	--ring-glow: rgba(59, 130, 246, 0.3);
+	--flash-glow: rgba(220, 38, 38, 0.35);
+	color-scheme: light;
+}
+
+/* ---------- Ground and type: Inter on slate mist; hierarchy from weight and size ---------- */
+html {
+	scrollbar-color: var(--control-border) transparent;
+}
+body {
+	line-height: 1.6;
+	font-optical-sizing: auto;
+}
+::selection {
+	background: var(--select);
+}
+.now-title,
+.dc-title {
+	font-size: 16px;
+	font-weight: 600;
+}
+.ch h2 {
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 1.4;
+	letter-spacing: -0.01em;
+}
+.pop h3,
+.redo-h h3 {
+	font-weight: 600;
+}
+.cid {
+	color: var(--accent-fg);
+	font-weight: 600;
+}
+.ov-t {
+	font-weight: 600;
+}
+/* (the plan overview's 13px lines go to the scale's 14px; its chevron turns within 200 ms) */
+.ov-why,
+.ov-g,
+.ovr .cid {
+	font-size: 14px;
+}
+.ov-tg .i {
+	transition-duration: 150ms;
+}
+/* labels: small capitals with a little air (the brief's 0.04em) */
+.lab,
+.rawt thead th {
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	line-height: 1.4;
+}
+.lab .vchip {
+	text-transform: none;
+	letter-spacing: normal;
+}
+.ed .lab,
+.redo .lab {
+	flex-wrap: wrap;
+	row-gap: 6px;
+}
+/* Inter is the only typeface: ids, times, counts and badges set in it with even figures. Code (diffs,
+   the Raw JSON, commands, file paths) uses the system's monospace, so no second web font loads */
+.mono:not(.fn):not(.lnk),
+.cid,
+.dn,
+.tn,
+.vchip,
+.tag,
+.step .tm,
+.lrb .tm,
+.rlb .tm,
+.hb .kb {
+	font-family: var(--font-ui);
+	font-variant-numeric: tabular-nums;
+}
+/* (the action the Now bar names is a file or a command, and Restore chips are file paths: code) */
+.now-state + .pill > .mono,
+.chip.mono.rst {
+	font-family: var(--font-mono);
+}
+
+/* ---------- Surfaces: white cards, a 1px hairline, the brief's small shadow ---------- */
+.card,
+.hcard,
+.ov,
+.ll {
+	background: var(--card);
+	border: 1px solid var(--edge);
+	border-radius: 12px;
+	box-shadow: var(--sh-sm);
+}
+.hcard {
+	padding: 24px;
+	gap: 16px;
+	transition:
+		translate 150ms var(--ease),
+		box-shadow 150ms var(--ease);
+}
+/* Home's cards are the brief's feature cards: they lift 2px and take the larger shadow. Only with a
+   mouse (a tap would leave them lifted), never while you type text in one (ticking the box or picking
+   from a list keeps it lifted), and not the Runs card, whose rows would slide under the pointer. A
+   transparent margin under the lifted card covers the strip it rose from, so a pointer resting at its
+   bottom edge stays on it */
+.hcard {
+	position: relative;
+	isolation: isolate;
+}
+.hcard::before {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	z-index: -1;
+}
+@media (hover: hover) and (pointer: fine) {
+	.hcard:not(:has(.rl)):not(:has(:is(input:not([type="checkbox"], [type="radio"]), textarea):focus)):hover {
+		translate: 0 -2px;
+		box-shadow: var(--sh-md);
+	}
+	.hcard:not(:has(.rl)):not(:has(:is(input:not([type="checkbox"], [type="radio"]), textarea):focus)):hover::before {
+		bottom: -4px;
+	}
+	/* (a button in a lifted card does not lift on top of it) */
+	.hcard:hover .btn:hover {
+		translate: none;
+	}
+}
+.ce {
+	border-left: 1px solid var(--hair-2);
+}
+.pop,
+.toast,
+#tip {
+	border: 1px solid var(--edge);
+	box-shadow: var(--shadow);
+}
+.pop {
+	border-radius: 12px;
+	padding: 16px;
+}
+.toast {
+	border-radius: 10px;
+	background: var(--card);
+}
+#tip {
+	border-radius: 8px;
+	padding: 6px 10px;
+}
+/* boxes inside a card are insets: the canvas tone and one hairline */
+.ed,
+.det,
+.cq,
+.lred .redo,
+.rl {
+	background: var(--well);
+	border: 1px solid var(--edge);
+	border-radius: 8px;
+}
+.vers li,
+.flagbar,
+.nq li,
+.step,
+.ovb,
+.frow,
+.st {
+	border-radius: 8px;
+}
+/* badges are pills (the brief's status badge); tabs and filters are controls, 8px */
+.pill,
+.chip,
+.tag,
+.src .sx,
+.vchip {
+	border-radius: 999px;
+}
+.chip,
+.tag {
+	padding-inline: 10px;
+	font-weight: 500;
+}
+.tab,
+.fc,
+.fgrp {
+	border-radius: 8px;
+}
+.fgrp {
+	border-color: var(--edge);
+	background: var(--card);
+}
+/* the Raw table: separate borders, so it takes the card's corners */
+.rawt {
+	border-collapse: separate;
+	border-spacing: 0;
+	border-color: var(--edge);
+	border-radius: 12px;
+	overflow: clip;
+	background: var(--card);
+	box-shadow: var(--sh-sm);
+}
+.rawt thead th {
+	border-top: 0;
+	background: var(--well);
+	box-shadow: inset 0 -1px 0 var(--edge);
+}
+
+/* ---------- Now bar: the brief's top navigation, white with one hairline and no shadow ---------- */
+.now {
+	border-bottom-color: var(--edge);
+	transition:
+		background-color 150ms var(--ease),
+		border-color 150ms var(--ease);
+}
+.s {
+	border-radius: 3px;
+}
+
+/* ---------- Buttons: 8px corners; the main one is the one blue ---------- */
+.btn,
+.ib,
+.chip.lnk,
+.vchip,
+.pill.flag,
+.tab,
+.fc,
+.hb {
+	transition:
+		translate 150ms var(--ease),
+		scale 150ms var(--ease),
+		box-shadow 150ms var(--ease),
+		background-color 150ms var(--ease),
+		border-color 150ms var(--ease),
+		color 150ms var(--ease),
+		opacity 150ms var(--ease);
+}
+.btn {
+	position: relative;
+	flex-shrink: 0;
+	padding: 0 14px;
+	border-radius: 8px;
+	box-shadow: var(--sh-sm);
+}
+/* a transparent margin that grows over the strip a lifted button rose from (and over the strip above a
+   pressed one, which drops back), so the button never slips out from under a resting pointer */
+.btn::after {
+	content: "";
+	position: absolute;
+	inset: -1px;
+}
+.btn.sm {
+	padding: 0 12px;
+}
+.btn:hover {
+	background: var(--primary-h);
+}
+.btn.primary,
+.btn.primary:hover {
+	border-color: transparent;
+}
+.btn.ghost,
+.btn.dghost {
+	box-shadow: none;
+}
+/* (base dims a danger button on hover; here it deepens like the main one) */
+.btn.danger:hover {
+	opacity: 1;
+	background: var(--bad-solid-h);
+	border-color: var(--bad-solid-h);
+}
+/* hover lifts: the main action 2px with the larger shadow, other filled buttons 1px; ghosts stay put.
+   (:where() keeps these light, so the main action's rule and the pressed rules below win) */
+@media (hover: hover) and (pointer: fine) {
+	.btn:where(:not(.ghost, .dghost, :disabled, [aria-disabled="true"])):hover {
+		translate: 0 -1px;
+		box-shadow: var(--sh-md);
+	}
+	.btn:where(:not(.ghost, .dghost, :disabled, [aria-disabled="true"])):hover::after {
+		bottom: -3px;
+	}
+	.btn.primary:where(:not(:disabled, [aria-disabled="true"])):hover {
+		translate: 0 -2px;
+	}
+	.btn.primary:where(:not(:disabled, [aria-disabled="true"])):hover::after {
+		bottom: -4px;
+	}
+}
+/* (a pressed button shrinks 2%, so its margin widens with it: 1% of the width on each side) */
+.btn:not(:disabled):not([aria-disabled="true"]):active::after {
+	inset: -3px calc(-1px - 1.1%) -2px;
+}
+.pill.flag {
+	position: relative;
+}
+.pill.flag::after {
+	content: "";
+	position: absolute;
+	inset: -1px;
+}
+.pill.flag:active::after {
+	inset: -1px calc(-1px - 1.1%);
+}
+/* pressed: down to its place and 2% smaller, quickly */
+.btn:not(:disabled):not([aria-disabled="true"]):active,
+.ib:not([aria-disabled="true"]):active,
+.chip.lnk:not([aria-disabled="true"]):active,
+button.vchip:not([aria-disabled="true"]):active,
+.pill.flag:active,
+.tab:active,
+.fc:active,
+.hb:not([aria-disabled="true"]):active {
+	translate: none;
+	scale: 0.98;
+	transition-duration: 75ms;
+}
+.btn:not(:disabled):not([aria-disabled="true"]):active {
+	box-shadow: var(--sh-sm);
+}
+/* every control also answers a press with a deeper fill, so the press shows with Motion off too */
+.ib:not([aria-disabled="true"], [aria-pressed="true"], .danger):active,
+.tab:not([aria-selected="true"]):active,
+.fc:not([aria-pressed="true"], [aria-checked="true"]):active,
+button.vchip:not([aria-disabled="true"], .you):active {
+	background: var(--hair-2);
+}
+.chip.lnk:not([aria-disabled="true"]):active {
+	background: var(--press-2);
+}
+.tab[aria-selected="true"]:active,
+.fc:is([aria-pressed="true"], [aria-checked="true"]):active,
+button.vchip.you:not([aria-disabled="true"]):active {
+	background: var(--sel-bg-h);
+}
+.ib[aria-pressed="true"]:not([aria-disabled="true"]):active {
+	background: var(--warn-press);
+}
+.ib.danger:not([aria-disabled="true"]):active {
+	background: var(--bad-press);
+}
+.hb:not([aria-disabled="true"], [aria-pressed="true"]):active {
+	background: rgba(241, 245, 249, 0.2);
+}
+.hb[aria-pressed="true"]:not([aria-disabled="true"]):active {
+	background: #cbd5e1;
+}
+/* the flag pill: amber like a button on hover, deeper on press */
+.pill.flag:hover {
+	background: var(--warn-solid);
+	border-color: var(--warn-solid);
+	color: var(--on-warn);
+}
+.pill.flag:active {
+	background: var(--warn-solid-h);
+	border-color: var(--warn-solid-h);
+	color: var(--on-warn);
+}
+/* on the held (amber) bar, icon buttons hover and press in amber, not slate */
+.now.waiting .ib:not([aria-pressed="true"]):not([aria-disabled="true"]):hover {
+	background: var(--warn-soft);
+}
+.now.waiting .ib:not([aria-pressed="true"]):not([aria-disabled="true"]):active {
+	background: var(--warn-press);
+}
+.btn.ghost:not(:disabled):not([aria-disabled="true"]):active,
+.btn.dghost:not(:disabled):not([aria-disabled="true"]):active {
+	box-shadow: none;
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+/* disabled keeps its resting face under the pointer */
+.btn:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--primary);
+}
+.btn.primary:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--btn-bg);
+}
+.btn.warn:is(:disabled, [aria-disabled="true"]):hover {
+	background: var(--warn-solid);
+	border-color: var(--warn-solid);
+}
+.btn.danger:is(:disabled, [aria-disabled="true"]):hover {
+	opacity: 0.5;
+	background: var(--bad-solid);
+	border-color: var(--bad-solid);
+}
+.btn.ghost:is(:disabled, [aria-disabled="true"]):hover,
+.btn.dghost:is(:disabled, [aria-disabled="true"]):hover {
+	background: transparent;
+}
+.ib {
+	border-radius: 8px;
+}
+/* selected tab or filter: the action blue's tint, ring and text */
+.tab[aria-selected="true"],
+.fc[aria-pressed="true"],
+.fc[aria-checked="true"] {
+	background: var(--sel-bg);
+	color: var(--sel-fg);
+	box-shadow: inset 0 0 0 1px var(--act);
+}
+.vchip.you {
+	border-color: var(--act);
+	color: var(--sel-fg);
+	background: var(--sel-bg);
+}
+button.vchip.you:not([aria-disabled="true"]):hover {
+	background: var(--sel-bg-h);
+}
+/* chips switched off while a redo is open keep their resting fill under the pointer */
+.vchip[aria-disabled="true"]:hover {
+	background: transparent;
+}
+.vchip.you[aria-disabled="true"]:hover {
+	background: var(--sel-bg);
+}
+.chip.lnk[aria-disabled="true"]:hover {
+	background: var(--muted);
+}
+/* the badges in a card's header share one height and weight */
+.ch .tools :is(.pill, .chip, .vchip) {
+	height: 26px;
+	font-size: 12px;
+	font-weight: 500;
+}
+.ib .dot {
+	box-shadow: 0 0 0 2px var(--card);
+}
+
+/* ---------- Fields: white, 8px, the blue edge and an offset ring on focus ---------- */
+.field,
+.search {
+	border-radius: 8px;
+	background: var(--card);
+	transition:
+		border-color 150ms var(--ease),
+		box-shadow 150ms var(--ease);
+}
+.field {
+	padding: 0 12px;
+}
+textarea.field {
+	padding: 8px 12px;
+	line-height: 1.6;
+}
+.field:focus {
+	border-color: var(--btn-bg);
+	outline-offset: 2px;
+}
+.search:focus-within {
+	border-color: var(--btn-bg);
+	outline-offset: 2px;
+}
+/* rings that an edge would clip draw inside instead, still 2px clear of it: the evidence panel (a
+   scroller inside the card) and the rows of the Log and Home lists */
+.evb:focus-visible,
+.lrb:focus-visible,
+.rlb:focus-visible {
+	outline-offset: -4px;
+}
+/* (a Log row's ring stays square, so it never bends round the current row's bar, and on the current
+   row it keeps 2px clear of that bar) */
+.lrb:focus-visible {
+	border-radius: 0;
+}
+.lr.cur .lrb:focus-visible {
+	outline-offset: -6px;
+}
+.field::placeholder {
+	color: var(--muted-fg);
+	opacity: 1;
+}
+select.field {
+	font: inherit;
+	padding-inline: 12px 8px;
+}
+select.field option {
+	background: var(--card);
+	color: var(--fg);
+}
+.check input {
+	appearance: none;
+	flex-shrink: 0;
+	border: 1px solid var(--control-border);
+	border-radius: 4px;
+	background: var(--card) center / 12px no-repeat;
+	cursor: pointer;
+	transition:
+		background-color 150ms var(--ease),
+		border-color 150ms var(--ease);
+}
+.check input:hover {
+	border-color: var(--btn-bg);
+}
+.check input:checked {
+	border-color: var(--btn-bg);
+	background-color: var(--btn-bg);
+	background-image: var(--tick);
+}
+/* forced colours drop the fills and rings that mark a selection: use the system's selected colours */
+@media (forced-colors: active) {
+	.check input {
+		appearance: auto;
+	}
+	.tab[aria-selected="true"],
+	.fc[aria-pressed="true"],
+	.fc[aria-checked="true"],
+	.hb[aria-pressed="true"],
+	.ib[aria-pressed="true"] {
+		forced-color-adjust: none;
+		background: SelectedItem;
+		color: SelectedItemText;
+	}
+	/* the station on screen and the Now bar's progress segments lose their shadow ring and fills */
+	.st[aria-current="true"] .st-dot {
+		outline: 2px solid Highlight;
+	}
+	.s.verified::after,
+	.s.unverified::after,
+	.s.working::after,
+	.s.stopped::after,
+	.s.replaced::after {
+		background: CanvasText;
+	}
+	.s.failed {
+		background: CanvasText;
+	}
+	.s.failed::before,
+	.s.failed::after {
+		background: Canvas;
+	}
+	/* the plan overview's and the Log's current rows */
+	.ovb:not([aria-current="true"]) {
+		border-color: Canvas;
+	}
+	.ovb[aria-current="true"] {
+		border-color: Highlight;
+	}
+	.ovb[aria-current="true"]:not(:focus-visible) {
+		outline: 1px solid Highlight;
+		outline-offset: 0;
+	}
+	.lr.cur .lrb {
+		border-left: 3px solid Highlight;
+		padding-left: 9px;
+	}
+}
+
+/* ---------- Metro line: white stations on the canvas; the travelled line in slate ---------- */
+/* slate like the Home sketch, so a highlighted route (--fg) stands out from it; a redo's discarded
+   tail stays red, as in base */
+.ln.done,
+.ln.term {
+	stroke: var(--line-done);
+}
+.ln.done.hl,
+.ln.term.hl {
+	stroke: var(--fg);
+}
+.ln.done.gone {
+	stroke: var(--bad);
+}
+.st-dot,
+.cutmk,
+.train i::before,
+.train i::after {
+	background: var(--card);
+}
+.st-dot {
+	box-shadow:
+		0 0 0 1px var(--edge),
+		var(--sh-sm);
+	transition:
+		background-color 150ms var(--ease),
+		box-shadow 150ms var(--ease);
+}
+.st:hover .st-dot {
+	background: var(--muted);
+}
+/* selected is the action blue everywhere; this ring sits on the dot itself, while the focus ring has
+   a 2px gap around the whole station, so the two never look alike */
+.st[aria-current="true"] .st-dot {
+	box-shadow:
+		0 0 0 2px var(--act),
+		var(--sh-md);
+}
+
+/* ---------- Plan overview, Log and Home lists ---------- */
+.rlb,
+.lrb,
+.step,
+button.frow,
+.st,
+.ovb {
+	transition:
+		background-color 150ms var(--ease),
+		border-color 150ms var(--ease);
+}
+/* rows answer a press with a deeper fill (never a scale: the metro measures stations) */
+button.rlb:active,
+button.lrb:active,
+button.ovb:active,
+button.step:active,
+button.frow:not([aria-disabled="true"]):active,
+.st:active .st-dot,
+.lr.open button.lrb:active {
+	background: var(--hair-2);
+}
+/* the plan overview's current row takes the selected tint, so a hovered row never looks as chosen */
+.ovb[aria-current="true"] {
+	background: var(--sel-bg);
+}
+/* a module id inside a heading sits at the heading's size */
+.redo-h h3 .mono,
+.dc-what .mono {
+	font-size: inherit;
+}
+.redo-h h3 .mono {
+	color: var(--accent-fg);
+}
+.card .cm {
+	padding: 24px;
+}
+
+/* ---------- Harness bar (researcher chrome): a dark slate pill in both themes ---------- */
+.harness {
+	box-shadow: var(--shadow);
+}
+
+/* ---------- Home: the title on the left, a sketch of the panel on the right (the brief's 6:6) ---------- */
+.hero {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-items: center;
+	gap: 48px;
+	padding: 40px 0 16px;
+}
+/* the sketch sits in a white frame like a product screenshot (decoration only, aria-hidden) */
+.hero-art {
+	grid-column: 2;
+	grid-row: 1;
+	aspect-ratio: 480 / 288;
+	background: var(--hero-art) center / 100% 100% no-repeat var(--card);
+	border: 1px solid var(--edge);
+	border-radius: 12px;
+	box-shadow: var(--sh-md);
+	overflow: hidden;
+}
+.sun,
+.floor {
+	display: none;
+}
+.home .hero h1 {
+	grid-column: 1;
+	grid-row: 1;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 20px;
+	font-size: 60px;
+	line-height: 1.1;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+/* the title's icon in the brief's 40px light-blue square */
+.home .hero h1 .i {
+	box-sizing: content-box;
+	width: 24px;
+	height: 24px;
+	padding: 8px;
+	border-radius: 12px;
+	background: var(--icon-bg);
+	color: var(--icon-fg);
+}
+.home h2 {
+	font-size: 20px;
+	font-weight: 600;
+	gap: 12px;
+}
+/* a Home card's icon square: light blue; when the card lifts it fills with the blue and grows 10% */
+.home h2 > .i {
+	box-sizing: content-box;
+	padding: 12px;
+	border-radius: 12px;
+	background: var(--icon-bg);
+	color: var(--icon-fg);
+	transition:
+		background-color 150ms var(--ease),
+		color 150ms var(--ease),
+		scale 150ms var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+	.hcard:not(:has(.rl)):not(:has(:is(input:not([type="checkbox"], [type="radio"]), textarea):focus)):hover h2 > .i {
+		background: var(--btn-bg);
+		color: var(--btn-fg);
+		scale: 1.1;
+	}
+}
+@media (max-width: 768px) {
+	.hero {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 24px;
+		padding: 24px 0 8px;
+	}
+	.hero-art {
+		grid-column: 1;
+		grid-row: 2;
+		max-width: 480px;
+	}
+	.home .hero h1 {
+		font-size: 36px;
+		line-height: 1.2;
+		gap: 16px;
+	}
+	.ch h2 {
+		font-size: 18px;
+	}
+	.card .cm {
+		padding: 16px;
+	}
+	/* fields at 16px, so a phone does not zoom into them */
+	.field,
+	.search {
+		font-size: 16px;
+	}
+	/* Home's runs: the name keeps the first line; model and date go under it */
+	.rlb {
+		grid-template-columns: 20px minmax(0, 1fr) auto;
+		row-gap: 2px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+	.rlb > :first-child {
+		grid-row: 1 / span 2;
+		align-self: start;
+	}
+	.rlb .nm {
+		grid-column: 2 / -1;
+	}
+	.rlb .tm {
+		grid-row: 2;
+		min-width: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	/* a toast sits above the harness bar, which wraps taller here */
+	.toast {
+		bottom: calc(var(--harness-h, 64px) + 12px);
+	}
+	/* the open plan overview: drop the goal column, so module titles keep their width */
+	.ov-l {
+		grid-template-columns: 34px auto minmax(0, 1fr) 0 auto auto auto 0 32px;
+		column-gap: 8px;
+	}
+	.ov-g {
+		visibility: hidden;
+	}
+}
+/* on a phone the goal comes back on a second line under the title */
+@media (max-width: 480px) {
+	.ovb {
+		padding-block: 4px;
+		row-gap: 0;
+	}
+	.ov-t {
+		grid-column: 3 / 8;
+	}
+	.ov-g {
+		visibility: visible;
+		grid-row: 2;
+		grid-column: 3 / 5;
+	}
+	.ovb > .ov-f:nth-child(5) {
+		grid-row: 2;
+		grid-column: 5;
+	}
+	.ovb > .ov-f:nth-child(6) {
+		grid-row: 2;
+		grid-column: 6;
+	}
+	.ovb > .ov-f:nth-child(7) {
+		grid-row: 2;
+		grid-column: 7;
+	}
+}
+
+/* a short landscape screen (a phone held sideways): the sketch is decoration, so it gives its height to the form */
+@media (max-height: 500px) and (orientation: landscape) {
+	.hero {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px;
+		padding: 16px 0 8px;
+	}
+	.hero-art {
+		display: none;
+	}
+	.home .hero h1 {
+		font-size: 36px;
+		line-height: 1.2;
+		gap: 12px;
+	}
+}
+
+/* ---------- Corporate motion: popovers and tips appear quickly; nothing else of the skin's moves ---------- */
+@keyframes corporate-pop {
+	from {
+		opacity: 0;
+		translate: 0 -4px;
+	}
+}
+@keyframes corporate-fade {
+	from {
+		opacity: 0;
+	}
+}
+.pop {
+	animation: corporate-pop 150ms var(--ease) backwards;
+}
+#tip,
+.toast {
+	animation: corporate-fade 150ms var(--ease) backwards;
+}
+
+/* reduced motion (final.css stops every animation, transition, translate and rotate): no press or
+   hover scale either */
+@media (prefers-reduced-motion: reduce) {
+	.btn,
+	.ib,
+	.chip.lnk,
+	.vchip,
+	.pill.flag,
+	.tab,
+	.fc,
+	.hb,
+	.home h2 > .i {
+		scale: none !important;
+	}
+}
+:root[data-motion="off"] :is(.btn, .ib, .chip.lnk, .vchip, .pill.flag, .tab, .fc, .hb, .home h2 > .i) {
+	scale: none !important;
+}
